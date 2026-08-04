@@ -1,87 +1,95 @@
-    const nameInput =
-      document.getElementById("nameInput");
+const nameInput =
+  document.getElementById("nameInput");
 
-    const namePreview =
-      document.getElementById("namePreview");
+const namePreview =
+  document.getElementById("namePreview");
 
-    const fontSelect =
-      document.getElementById("fontSelect");
+const fontSelect =
+  document.getElementById("fontSelect");
 
-    const keychain =
-      document.getElementById("keychain");
+const keychain =
+  document.getElementById("keychain");
 
-    const price =
-      document.getElementById("price");
+const price =
+  document.getElementById("price");
 
-    function updateName() {
-      let name = nameInput.value.trim();
 
-      if (name === "") {
-        name = "KIRIN";
-      }
+function updateName() {
+  let name = nameInput.value.trim();
 
-      namePreview.textContent = name.toUpperCase();
+  if (name === "") {
+    name = "KIRIN";
+  }
 
-      const extraLetters =
-        Math.max(0, name.length - 6);
+  namePreview.textContent =
+    name.toUpperCase();
 
-      const calculatedPrice =
-        90 + (extraLetters * 10);
+  const extraLetters =
+    Math.max(0, name.length - 6);
 
-      price.textContent =
-        "฿" + calculatedPrice;
-    }
+  const calculatedPrice =
+    90 + (extraLetters * 10);
 
-    nameInput.addEventListener(
-      "input",
-      updateName
+  price.textContent =
+    "฿" + calculatedPrice;
+}
+
+
+nameInput.addEventListener(
+  "input",
+  updateName
+);
+
+
+// เปลี่ยนฟอนต์พรีวิว 2D
+// ส่วน 3D จะถูกเปลี่ยนโดย viewer.js
+fontSelect.addEventListener(
+  "change",
+  function () {
+    namePreview.style.fontFamily =
+      fontSelect.value;
+  }
+);
+
+
+function setupColorButtons(
+  containerId,
+  callback
+) {
+  const container =
+    document.getElementById(containerId);
+
+  const buttons =
+    container.querySelectorAll(
+      ".color-button"
     );
 
-    fontSelect.addEventListener(
-      "change",
+  buttons.forEach(function (button) {
+    button.addEventListener(
+      "click",
       function () {
-        namePreview.style.fontFamily =
-          fontSelect.value;
+        buttons.forEach(function (item) {
+          item.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        callback(
+          button.dataset.color
+        );
       }
     );
+  });
+}
 
-    function setupColorButtons(
-      containerId,
-      callback
-    ) {
-      const container =
-        document.getElementById(containerId);
 
-      const buttons =
-        container.querySelectorAll(
-          ".color-button"
-        );
-
-      buttons.forEach(function (button) {
-
-        button.addEventListener(
-          "click",
-          function () {
-
-            buttons.forEach(function (item) {
-              item.classList.remove("active");
-            });
-
-            button.classList.add("active");
-
-            callback(
-              button.dataset.color
-            );
-          }
-        );
-
-      });
-    }
-
-    setupColorButtons(
+// สีฐาน
+setupColorButtons(
   "baseColors",
   function (color) {
-    keychain.style.background = color;
+    if (keychain) {
+      keychain.style.background = color;
+    }
 
     if (window.set3DBaseColor) {
       window.set3DBaseColor(color);
@@ -89,24 +97,34 @@
   }
 );
 
-    setupColorButtons(
-      "textColors",
-      function (color) {
-        namePreview.style.color = color;
-      }
-    );
 
-    document
-      .getElementById("orderButton")
-      .addEventListener(
-        "click",
-        function () {
-          alert(
-            "บันทึกแบบชื่อ " +
-            namePreview.textContent +
-            " แล้ว 🎉"
-          );
-        }
+// สีตัวอักษร
+setupColorButtons(
+  "textColors",
+  function (color) {
+    if (namePreview) {
+      namePreview.style.color = color;
+    }
+
+    if (window.set3DTextColor) {
+      window.set3DTextColor(color);
+    }
+  }
+);
+
+
+document
+  .getElementById("orderButton")
+  .addEventListener(
+    "click",
+    function () {
+      alert(
+        "บันทึกแบบชื่อ " +
+        namePreview.textContent +
+        " แล้ว 🎉"
       );
+    }
+  );
 
-    updateName();
+
+updateName();
