@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Cutescape Studio</title>
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.167.1/build/three.module.js"
+  }
+}
+</script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <main class="page">
+
+    <header class="header">
+      <h1>✨ Cutescape Studio ✨</h1>
+      <p>ออกแบบพวงกุญแจชื่อของคุณเอง</p>
+    </header>
+
+    <section class="studio">
+
+      <aside class="panel">
+
+        <h2>ออกแบบสินค้า</h2>
+
+        <div class="field">
+          <label for="nameInput">ชื่อ</label>
+
+          <input
+            id="nameInput"
+            type="text"
+            value="KIRIN"
+            maxlength="12"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="field">
+          <label for="fontSelect">รูปแบบตัวอักษร</label>
+
+          <select id="fontSelect">
+            <option value="Arial Black">หนา</option>
+            <option value="Arial Rounded MT Bold">กลมมน</option>
+            <option value="Comic Sans MS">น่ารัก</option>
+            <option value="Georgia">คลาสสิก</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>สีฐาน</label>
+
+          <div class="color-row" id="baseColors">
+            <button
+              class="color-button active"
+              data-color="#111111"
+              style="background:#111111"
+              title="ดำ"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ff7eb6"
+              style="background:#ff7eb6"
+              title="ชมพู"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#78c8ff"
+              style="background:#78c8ff"
+              title="ฟ้า"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#a889ff"
+              style="background:#a889ff"
+              title="ม่วง"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#fff3a3"
+              style="background:#fff3a3"
+              title="เหลือง"
+            ></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>สีตัวอักษร</label>
+
+          <div class="color-row" id="textColors">
+            <button
+              class="color-button active"
+              data-color="#ffffff"
+              style="background:#ffffff"
+              title="ขาว"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#111111"
+              style="background:#111111"
+              title="ดำ"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffeb3b"
+              style="background:#ffeb3b"
+              title="เหลือง"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ff70b7"
+              style="background:#ff70b7"
+              title="ชมพู"
+            ></button>
+          </div>
+        </div>
+
+        <div class="price-box">
+          <div class="price-label">ราคาโดยประมาณ</div>
+          <div class="price" id="price">฿90</div>
+        </div>
+
+        <button class="order-button" id="orderButton">
+          ยืนยันแบบนี้
+        </button>
+
+      </aside>
+
+      <section class="preview-panel">
+
+        <div class="preview-title">
+          <h2>ตัวอย่างสินค้า</h2>
+          <span class="live-badge">● LIVE PREVIEW</span>
+        </div>
+
+        <div class="preview-stage">
+            
+            <div id="threeViewer"></div>
+
+          <div class="keychain-wrap">
+
+            <div class="keychain" id="keychain">
+
+              <div class="hole-area"></div>
+              <div class="hole"></div>
+
+              <div
+                class="name-preview"
+                id="namePreview"
+              >
+                KIRIN
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="hint">
+          พิมพ์ชื่อหรือเลือกสี แล้วตัวอย่างจะเปลี่ยนทันที
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+<script src="script.js"></script>
+<script type="module" src="viewer.js"></script>
+
+</body>
+</html>
