@@ -50,12 +50,99 @@
           <label for="fontSelect">รูปแบบตัวอักษร</label>
 
           <select id="fontSelect">
-            <option value="Arial Black">หนา</option>
-            <option value="Arial Rounded MT Bold">กลมมน</option>
-            <option value="Comic Sans MS">น่ารัก</option>
-            <option value="Georgia">คลาสสิก</option>
+            <optgroup label="ฟอนต์พื้นฐาน">
+              <option value="Arial Black">หนา</option>
+              <option value="Arial Rounded MT Bold">กลมมน</option>
+              <option value="Comic Sans MS">น่ารัก</option>
+              <option value="Georgia">คลาสสิก</option>
+            </optgroup>
+
+            <optgroup label="ฟอนต์ไทยของร้าน">
+              <option value="18jindaEclair">18jindaEclair</option>
+              <option value="18jindaEclairBold" selected>18jindaEclairBold</option>
+              <option value="18jindaEclairThin">18jindaEclairThin</option>
+              <option value="33JindaKoko">33JindaKoko</option>
+              <option value="33JindaKokoBold">33JindaKokoBold</option>
+              <option value="33JindaKokoThin">33JindaKokoThin</option>
+              <option value="HappyThursday">HappyThursday</option>
+              <option value="HappyThursdayCute">HappyThursdayCute</option>
+              <option value="HappyThursdayThin">HappyThursdayThin</option>
+              <option value="JindaApollo">JindaApollo</option>
+              <option value="JindaApolloBold">JindaApolloBold</option>
+              <option value="JindaApolloSp">JindaApolloSp</option>
+              <option value="JindaApolloThin">JindaApolloThin</option>
+              <option value="JindaBiscuit">JindaBiscuit</option>
+              <option value="JindaBiscuitBold">JindaBiscuitBold</option>
+              <option value="JindaBiscuitPie">JindaBiscuitPie</option>
+              <option value="JindaBiscuitPieBold">JindaBiscuitPieBold</option>
+              <option value="JindaBiscuitPieThin">JindaBiscuitPieThin</option>
+              <option value="JindaBiscuitThin">JindaBiscuitThin</option>
+              <option value="JindaWhisky">JindaWhisky</option>
+              <option value="JindaWhiskyBold">JindaWhiskyBold</option>
+              <option value="JindaWhiskyPremium">JindaWhiskyPremium</option>
+              <option value="JindaWhiskyThin">JindaWhiskyThin</option>
+              <option value="JindGoody">JindGoody</option>
+              <option value="JindGoodyBold">JindGoodyBold</option>
+              <option value="JindGoodyThin">JindGoodyThin</option>
+              <option value="Lovebird">Lovebird</option>
+              <option value="magic love">magic love</option>
+              <option value="MiMarshmallow">MiMarshmallow</option>
+              <option value="MiMarshmallowBold">MiMarshmallowBold</option>
+              <option value="MiMarshmallowThin">MiMarshmallowThin</option>
+              <option value="MiPie">MiPie</option>
+              <option value="MiPieBold">MiPieBold</option>
+              <option value="MiPieThin">MiPieThin</option>
+              <option value="MN KAOPAT Italic">MN KAOPAT Italic</option>
+              <option value="MN KAOPAT">MN KAOPAT</option>
+              <option value="MN MOCHI Italic">MN MOCHI Italic</option>
+              <option value="MN MOCHI">MN MOCHI</option>
+              <option value="MN Mocktail Italic">MN Mocktail Italic</option>
+              <option value="MN Mocktail">MN Mocktail</option>
+              <option value="MN Saikrok Isan Italic">MN Saikrok Isan Italic</option>
+              <option value="MN Saikrok Isan">MN Saikrok Isan</option>
+              <option value="MN Tomyam Italic">MN Tomyam Italic</option>
+              <option value="MN Tomyam">MN Tomyam</option>
+              <option value="Moji">Moji</option>
+              <option value="Saturn">Saturn</option>
+              <option value="SaturnThin">SaturnThin</option>
+            </optgroup>
           </select>
         </div>
+
+        <div class="field">
+  <label for="baseStyleSelect">รูปทรงฐาน</label>
+
+  <select id="baseStyleSelect">
+    <option value="outline">
+      ไดคัทตามชื่อ
+    </option>
+
+    <option value="capsule">
+      ป้ายแคปซูล
+    </option>
+    <option value="sticker">
+     ไดคัท (เหมือนตัวเลือกแรก)
+    </option>
+  </select>
+  <div class="outline-control">
+  <label for="outlineSlider">ความหนาขอบไดคัท</label>
+
+  <input
+    type="range"
+    id="outlineSlider"
+    min="0.10"
+    max="0.32"
+    step="0.01"
+    value="0.18"
+  >
+
+  <div class="outline-value">
+    <span>บาง</span>
+    <span id="outlineValue">0.18</span>
+    <span>หนา</span>
+  </div>
+</div>
+</div>
 
         <div class="field">
           <label>สีฐาน</label>
@@ -132,11 +219,6 @@
           </div>
         </div>
 
-        <div class="price-box">
-          <div class="price-label">ราคาโดยประมาณ</div>
-          <div class="price" id="price">฿90</div>
-        </div>
-
         <button class="order-button" id="orderButton">
           ยืนยันแบบนี้
         </button>
@@ -184,6 +266,9 @@
 
   </main>
 
+<!-- HarfBuzz: จัดตำแหน่งสระ/วรรณยุกต์ภาษาไทยตาม OpenType GPOS/GSUB -->
+<script src="https://unpkg.com/harfbuzzjs@0.8.0/hb.js"></script>
+<script src="https://unpkg.com/harfbuzzjs@0.8.0/hbjs.js"></script>
 <script src="script.js"></script>
 <script type="module" src="viewer.js"></script>
 

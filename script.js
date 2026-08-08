@@ -113,18 +113,5 @@ setupColorButtons(
 );
 
 
-document
-  .getElementById("orderButton")
-  .addEventListener(
-    "click",
-    function () {
-      alert(
-        "บันทึกแบบชื่อ " +
-        namePreview.textContent +
-        " แล้ว 🎉"
-      );
-    }
-  );
-
 
 updateName();
