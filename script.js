@@ -30,6 +30,7 @@ function updateName() {
   const calculatedPrice =
     90 + (extraLetters * 10);
 
+  if (price) {
   price.textContent =
     "฿" + calculatedPrice;
 }
