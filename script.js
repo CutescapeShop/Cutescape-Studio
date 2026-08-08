@@ -21,8 +21,10 @@ function updateName() {
     name = "KIRIN";
   }
 
-  namePreview.textContent =
-    name.toUpperCase();
+  if (namePreview) {
+    namePreview.textContent =
+      name.toUpperCase();
+  }
 
   const extraLetters =
     Math.max(0, name.length - 6);
@@ -31,8 +33,9 @@ function updateName() {
     90 + (extraLetters * 10);
 
   if (price) {
-  price.textContent =
-    "฿" + calculatedPrice;
+    price.textContent =
+      "฿" + calculatedPrice;
+  }
 }
 
 
