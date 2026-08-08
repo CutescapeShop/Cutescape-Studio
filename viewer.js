@@ -664,7 +664,7 @@ function createOutlineProduct(textValue) {
   const sampled = [];
 
   sourceShapes.forEach((shape) => {
-    const points = shape.getPoints(160);
+    const points = shape.getPoints(80);
     if (points.length >= 3) sampled.push(points);
   });
 
@@ -936,7 +936,7 @@ function createCapsuleProduct(
         bevelEnabled: true,
         bevelThickness: 0.06,
         bevelSize: 0.05,
-        bevelSegments: 4
+        bevelSegments: 10
       }
     );
 
@@ -977,6 +977,15 @@ function createCapsuleProduct(
 // =====================================
 // สร้างสินค้าใหม่
 // =====================================
+let rebuildTimer = null;
+
+function scheduleRebuild() {
+  clearTimeout(rebuildTimer);
+
+  rebuildTimer = setTimeout(() => {
+    rebuildProduct();
+  }, 250);
+}
 
 function rebuildProduct() {
   if (!loadedFont) {
@@ -1112,7 +1121,7 @@ function loadSelectedFont() {
 if (nameInput) {
   nameInput.addEventListener(
     "input",
-    rebuildProduct
+    scheduleRebuild
   );
 }
 
@@ -1138,7 +1147,7 @@ if (outlineSlider) {
           outlineSlider.value;
       }
 
-      rebuildProduct();
+      scheduleRebuild();
     }
   );
 }
