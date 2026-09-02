@@ -24,15 +24,26 @@
   <main class="page">
 
     <header class="header">
-      <h1>✨ Cutescape Studio ✨</h1>
+      <img class="header-logo" src="./assets/CUTESCAPE_Logo_Master.svg" alt="Cutescape Studio">
       <p>ออกแบบพวงกุญแจชื่อของคุณเอง</p>
     </header>
 
-    <section class="studio">
+    <div style="display:none; gap:8px; margin:0 auto 16px; max-width:420px;">
+      <button type="button" data-product-tab="name" style="flex:1;">พวงกุญแจชื่อ</button>
+      <button type="button" data-product-tab="clicker" style="flex:1;" hidden>Clicker จากรูป</button>
+    </div>
 
-      <aside class="panel">
+    <div id="nameKeychainPanel">
+      <section class="studio" data-product-section="name">
+
+        <aside class="panel">
 
         <h2>ออกแบบสินค้า</h2>
+
+        <div class="name-mode-tabs" id="nameModeTabsWrap" style="display:flex; gap:8px; margin-bottom:16px;">
+          <button type="button" data-name-mode="customer" style="flex:1;">Customer Mode</button>
+          <button type="button" data-name-mode="shop" style="flex:1;">Shop Mode</button>
+        </div>
 
         <div class="field">
           <label for="nameInput">ชื่อ</label>
@@ -47,66 +58,79 @@
         </div>
 
         <div class="field">
-          <label for="fontSelect">รูปแบบตัวอักษร</label>
+          <label for="fontSelectTrigger">เลือกฟอนต์</label>
 
           <select id="fontSelect">
-            <optgroup label="ฟอนต์พื้นฐาน">
-              <option value="Arial Black">หนา</option>
-              <option value="Arial Rounded MT Bold">กลมมน</option>
-              <option value="Comic Sans MS">น่ารัก</option>
-              <option value="Georgia">คลาสสิก</option>
-            </optgroup>
-
-            <optgroup label="ฟอนต์ไทยของร้าน">
-              <option value="18jindaEclair">18jindaEclair</option>
-              <option value="18jindaEclairBold" selected>18jindaEclairBold</option>
-              <option value="18jindaEclairThin">18jindaEclairThin</option>
-              <option value="33JindaKoko">33JindaKoko</option>
-              <option value="33JindaKokoBold">33JindaKokoBold</option>
-              <option value="33JindaKokoThin">33JindaKokoThin</option>
-              <option value="HappyThursday">HappyThursday</option>
-              <option value="HappyThursdayCute">HappyThursdayCute</option>
-              <option value="HappyThursdayThin">HappyThursdayThin</option>
-              <option value="JindaApollo">JindaApollo</option>
-              <option value="JindaApolloBold">JindaApolloBold</option>
-              <option value="JindaApolloSp">JindaApolloSp</option>
-              <option value="JindaApolloThin">JindaApolloThin</option>
-              <option value="JindaBiscuit">JindaBiscuit</option>
-              <option value="JindaBiscuitBold">JindaBiscuitBold</option>
-              <option value="JindaBiscuitPie">JindaBiscuitPie</option>
-              <option value="JindaBiscuitPieBold">JindaBiscuitPieBold</option>
-              <option value="JindaBiscuitPieThin">JindaBiscuitPieThin</option>
-              <option value="JindaBiscuitThin">JindaBiscuitThin</option>
-              <option value="JindaWhisky">JindaWhisky</option>
-              <option value="JindaWhiskyBold">JindaWhiskyBold</option>
-              <option value="JindaWhiskyPremium">JindaWhiskyPremium</option>
-              <option value="JindaWhiskyThin">JindaWhiskyThin</option>
-              <option value="JindGoody">JindGoody</option>
-              <option value="JindGoodyBold">JindGoodyBold</option>
-              <option value="JindGoodyThin">JindGoodyThin</option>
-              <option value="Lovebird">Lovebird</option>
-              <option value="magic love">magic love</option>
-              <option value="MiMarshmallow">MiMarshmallow</option>
-              <option value="MiMarshmallowBold">MiMarshmallowBold</option>
-              <option value="MiMarshmallowThin">MiMarshmallowThin</option>
-              <option value="MiPie">MiPie</option>
-              <option value="MiPieBold">MiPieBold</option>
-              <option value="MiPieThin">MiPieThin</option>
-              <option value="MN KAOPAT Italic">MN KAOPAT Italic</option>
-              <option value="MN KAOPAT">MN KAOPAT</option>
-              <option value="MN MOCHI Italic">MN MOCHI Italic</option>
-              <option value="MN MOCHI">MN MOCHI</option>
-              <option value="MN Mocktail Italic">MN Mocktail Italic</option>
-              <option value="MN Mocktail">MN Mocktail</option>
-              <option value="MN Saikrok Isan Italic">MN Saikrok Isan Italic</option>
-              <option value="MN Saikrok Isan">MN Saikrok Isan</option>
-              <option value="MN Tomyam Italic">MN Tomyam Italic</option>
-              <option value="MN Tomyam">MN Tomyam</option>
-              <option value="Moji">Moji</option>
-              <option value="Saturn">Saturn</option>
-              <option value="SaturnThin">SaturnThin</option>
-            </optgroup>
+            <option value="Arial Black">Arial Black</option>
+            <option value="Arial Rounded MT Bold">Arial Rounded MT Bold</option>
+            <option value="Comic Sans MS">Comic Sans MS</option>
+            <option value="Georgia">Georgia</option>
+            <option value="18jindaEclair">18jindaEclair</option>
+            <option value="18jindaEclairBold" selected>18jindaEclairBold</option>
+            <option value="18jindaEclairThin">18jindaEclairThin</option>
+            <option value="33JindaKoko">33JindaKoko</option>
+            <option value="33JindaKokoBold">33JindaKokoBold</option>
+            <option value="33JindaKokoThin">33JindaKokoThin</option>
+            <option value="HappyThursday">HappyThursday</option>
+            <option value="HappyThursdayCute">HappyThursdayCute</option>
+            <option value="HappyThursdayThin">HappyThursdayThin</option>
+            <option value="JindaApollo">JindaApollo</option>
+            <option value="JindaApolloBold">JindaApolloBold</option>
+            <option value="JindaApolloSp">JindaApolloSp</option>
+            <option value="JindaApolloThin">JindaApolloThin</option>
+            <option value="JindaBiscuit">JindaBiscuit</option>
+            <option value="JindaBiscuitBold">JindaBiscuitBold</option>
+            <option value="JindaBiscuitPie">JindaBiscuitPie</option>
+            <option value="JindaBiscuitPieBold">JindaBiscuitPieBold</option>
+            <option value="JindaBiscuitPieThin">JindaBiscuitPieThin</option>
+            <option value="JindaBiscuitThin">JindaBiscuitThin</option>
+            <option value="JindaWhisky">JindaWhisky</option>
+            <option value="JindaWhiskyBold">JindaWhiskyBold</option>
+            <option value="JindaWhiskyPremium">JindaWhiskyPremium</option>
+            <option value="JindaWhiskyThin">JindaWhiskyThin</option>
+            <option value="JindGoody">JindGoody</option>
+            <option value="JindGoodyBold">JindGoodyBold</option>
+            <option value="JindGoodyThin">JindGoodyThin</option>
+            <!-- Lovebird and "magic love" temporarily hidden — their TTF files
+                 fail browser font parsing (OTS error). Files left untouched
+                 in assets/fonts/; re-add these two <option> lines once fixed. -->
+            <option value="MiMarshmallow">MiMarshmallow</option>
+            <option value="MiMarshmallowBold">MiMarshmallowBold</option>
+            <option value="MiMarshmallowThin">MiMarshmallowThin</option>
+            <option value="MiPie">MiPie</option>
+            <option value="MiPieBold">MiPieBold</option>
+            <option value="MiPieThin">MiPieThin</option>
+            <option value="MN KAOPAT Italic">MN KAOPAT Italic</option>
+            <option value="MN KAOPAT">MN KAOPAT</option>
+            <option value="MN MOCHI Italic">MN MOCHI Italic</option>
+            <option value="MN MOCHI">MN MOCHI</option>
+            <option value="MN Mocktail Italic">MN Mocktail Italic</option>
+            <option value="MN Mocktail">MN Mocktail</option>
+            <option value="MN Saikrok Isan Italic">MN Saikrok Isan Italic</option>
+            <option value="MN Saikrok Isan">MN Saikrok Isan</option>
+            <option value="MN Tomyam Italic">MN Tomyam Italic</option>
+            <option value="MN Tomyam">MN Tomyam</option>
+            <option value="Moji">Moji</option>
+            <option value="Saturn">Saturn</option>
+            <option value="SaturnThin">SaturnThin</option>
           </select>
+        </div>
+
+        <div class="field">
+          <label for="nameSizeSlider">ขนาดตัวอักษร</label>
+          <input
+            type="range"
+            id="nameSizeSlider"
+            min="70"
+            max="120"
+            step="1"
+            value="100"
+          >
+          <div class="name-size-value">
+            <span>70%</span>
+            <span id="nameSizeValue">100%</span>
+            <span>120%</span>
+          </div>
         </div>
 
         <div class="field">
@@ -118,10 +142,39 @@
     </option>
 
     <option value="capsule">
-      ป้ายแคปซูล
+      แคปซูล
     </option>
-    <option value="sticker">
-     ไดคัท (เหมือนตัวเลือกแรก)
+
+    <option value="rounded-rectangle">
+      สี่เหลี่ยมมุมมน
+    </option>
+
+    <option value="oval">
+      วงรี
+    </option>
+
+    <option value="cloud">
+      ก้อนเมฆ
+    </option>
+
+    <option value="star">
+      ดาว
+    </option>
+
+    <option value="heart">
+      หัวใจ
+    </option>
+
+    <option value="flower">
+      ดอกไม้
+    </option>
+
+    <option value="clover">
+      โคลเวอร์
+    </option>
+
+    <option value="cat">
+      แมว
     </option>
   </select>
   <div class="outline-control">
@@ -157,9 +210,72 @@
 
             <button
               class="color-button"
-              data-color="#ff7eb6"
-              style="background:#ff7eb6"
-              title="ชมพู"
+              data-color="#ffffff"
+              style="background:#ffffff"
+              title="ขาว"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#9e9e9e"
+              style="background:#9e9e9e"
+              title="เทา"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ff4f9d"
+              style="background:#ff4f9d"
+              title="ชมพูเข้ม"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffc2e2"
+              style="background:#ffc2e2"
+              title="ชมพูอ่อน"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#e63946"
+              style="background:#e63946"
+              title="แดง"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ff9f43"
+              style="background:#ff9f43"
+              title="ส้ม"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffe066"
+              style="background:#ffe066"
+              title="เหลือง"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#fdf1c7"
+              style="background:#fdf1c7"
+              title="ครีม"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#8fe3c0"
+              style="background:#8fe3c0"
+              title="เขียวมิ้นต์"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#4caf50"
+              style="background:#4caf50"
+              title="เขียว"
             ></button>
 
             <button
@@ -171,6 +287,13 @@
 
             <button
               class="color-button"
+              data-color="#4361ee"
+              style="background:#4361ee"
+              title="น้ำเงิน"
+            ></button>
+
+            <button
+              class="color-button"
               data-color="#a889ff"
               style="background:#a889ff"
               title="ม่วง"
@@ -178,9 +301,23 @@
 
             <button
               class="color-button"
-              data-color="#fff3a3"
-              style="background:#fff3a3"
-              title="เหลือง"
+              data-color="#d9c6ff"
+              style="background:#d9c6ff"
+              title="ม่วงอ่อน"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffd8b8"
+              style="background:#ffd8b8"
+              title="พีช"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#a9784f"
+              style="background:#a9784f"
+              title="น้ำตาล"
             ></button>
           </div>
         </div>
@@ -205,16 +342,107 @@
 
             <button
               class="color-button"
-              data-color="#ffeb3b"
-              style="background:#ffeb3b"
+              data-color="#9e9e9e"
+              style="background:#9e9e9e"
+              title="เทา"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ff4f9d"
+              style="background:#ff4f9d"
+              title="ชมพูเข้ม"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffc2e2"
+              style="background:#ffc2e2"
+              title="ชมพูอ่อน"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#e63946"
+              style="background:#e63946"
+              title="แดง"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ff9f43"
+              style="background:#ff9f43"
+              title="ส้ม"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffe066"
+              style="background:#ffe066"
               title="เหลือง"
             ></button>
 
             <button
               class="color-button"
-              data-color="#ff70b7"
-              style="background:#ff70b7"
-              title="ชมพู"
+              data-color="#fdf1c7"
+              style="background:#fdf1c7"
+              title="ครีม"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#8fe3c0"
+              style="background:#8fe3c0"
+              title="เขียวมิ้นต์"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#4caf50"
+              style="background:#4caf50"
+              title="เขียว"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#78c8ff"
+              style="background:#78c8ff"
+              title="ฟ้า"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#4361ee"
+              style="background:#4361ee"
+              title="น้ำเงิน"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#a889ff"
+              style="background:#a889ff"
+              title="ม่วง"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#d9c6ff"
+              style="background:#d9c6ff"
+              title="ม่วงอ่อน"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#ffd8b8"
+              style="background:#ffd8b8"
+              title="พีช"
+            ></button>
+
+            <button
+              class="color-button"
+              data-color="#a9784f"
+              style="background:#a9784f"
+              title="น้ำตาล"
             ></button>
           </div>
         </div>
@@ -222,6 +450,30 @@
         <button class="order-button" id="orderButton">
           ยืนยันแบบนี้
         </button>
+
+        <button class="order-button secondary" id="sendDesignButton" type="button">
+          ส่งแบบให้ร้าน
+        </button>
+
+        <div class="design-id-result" id="designIdResult" hidden>
+          บันทึกแบบเรียบร้อย! รหัสแบบของคุณคือ
+          <strong id="designIdValue"></strong>
+        </div>
+
+        <div class="field load-design-field" id="loadDesignField">
+          <label for="loadDesignInput">โหลดแบบด้วยรหัส (สำหรับร้าน)</label>
+          <div style="display:flex; gap:8px;">
+            <input
+              id="loadDesignInput"
+              type="text"
+              placeholder="เช่น KC-XXXXXXXX"
+              autocomplete="off"
+              style="flex:1;"
+            >
+            <button type="button" id="loadDesignButton">Load Design</button>
+          </div>
+          <p class="clicker-debug-info" id="loadDesignStatus"></p>
+        </div>
 
       </aside>
 
@@ -260,17 +512,156 @@
           พิมพ์ชื่อหรือเลือกสี แล้วตัวอย่างจะเปลี่ยนทันที
         </div>
 
-      </section>
+        </section>
 
-    </section>
+      </section>
+    </div>
+
+    <!-- =====================================================
+         Clicker from Image — Phase 2 (custom-shaped body + MX stem
+         + image relief + 3D preview + STL export)
+         แยกเป็น product/module ใหม่ทั้งหมด ไม่ใช้ element/id/class
+         ใด ๆ ร่วมกับ Name Keychain ด้านบน
+         ===================================================== -->
+    <div id="clickerPanel" hidden>
+      <section class="studio clicker-studio" id="clickerStudio" data-product-section="clicker">
+
+      <aside class="panel">
+        <h2>🖼️ Clicker from Image</h2>
+        <p class="clicker-phase-note">
+          Phase 2 — TOP หลายสี (auto-detect จากภาพ) มี boss + female MX cross-socket
+          ด้านหลัง สำหรับคลิปเข้ากับ switch จริง — HOUSING แยกชิ้น เป็น shell กลวง
+          สำหรับใส่ switch (offset ออก 2.7mm จากขอบ TOP) Preview 3D และ Export STL
+          แยกไฟล์ (ยังไม่รองรับ 3MF ในเฟสนี้)
+        </p>
+
+        <div class="field">
+          <label for="clickerFileInput">อัปโหลดรูป (PNG / JPG / WebP)</label>
+          <input
+            id="clickerFileInput"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+          >
+        </div>
+
+        <div class="field">
+          <label for="clickerThresholdSlider">
+            Threshold (<span id="clickerThresholdValue">128</span>)
+          </label>
+          <input
+            id="clickerThresholdSlider"
+            type="range"
+            min="0"
+            max="255"
+            step="1"
+            value="128"
+          >
+        </div>
+
+        <div class="field">
+          <button
+            class="toggle-button"
+            id="clickerInvertButton"
+            type="button"
+          >Invert: ปิด</button>
+        </div>
+
+        <div class="field">
+          <label for="clickerSmoothingSlider">
+            ความเรียบของเส้น (<span id="clickerSmoothingValue">1</span>px)
+          </label>
+          <input
+            id="clickerSmoothingSlider"
+            type="range"
+            min="0"
+            max="6"
+            step="0.5"
+            value="1"
+          >
+        </div>
+
+        <div class="field">
+          <label for="clickerColorCountSlider">
+            จำนวนสี TOP (<span id="clickerColorCountValue">4</span>)
+          </label>
+          <input
+            id="clickerColorCountSlider"
+            type="range"
+            min="2"
+            max="6"
+            step="1"
+            value="4"
+          >
+        </div>
+
+        <div class="field">
+          <label>ข้อมูลดีบัก</label>
+          <pre class="clicker-debug-info" id="clickerDebugInfo">ยังไม่ได้อัปโหลดรูป</pre>
+        </div>
+
+        <hr>
+
+        <div class="field">
+          <label>สี HOUSING</label>
+          <div class="color-row" id="clickerBaseColors">
+            <button class="color-button" data-color="#111111" style="background:#111111" title="ดำ"></button>
+            <button class="color-button active" data-color="#f0f0f0" style="background:#f0f0f0" title="ขาว"></button>
+            <button class="color-button" data-color="#78c8ff" style="background:#78c8ff" title="ฟ้า"></button>
+            <button class="color-button" data-color="#a889ff" style="background:#a889ff" title="ม่วง"></button>
+            <button class="color-button" data-color="#ff7eb6" style="background:#ff7eb6" title="ชมพู"></button>
+          </div>
+        </div>
+
+        <button class="order-button" id="clickerExportButton" type="button">
+          Export STL (TOP + ACCENT + HOUSING)
+        </button>
+        <p class="clicker-debug-info" id="clickerExportStatus"></p>
+      </aside>
+
+      <section class="preview-panel">
+        <div class="preview-title">
+          <h2>ตัวอย่าง 3D</h2>
+        </div>
+        <div id="clickerViewer3D"></div>
+
+        <div class="preview-title">
+          <h2>ตัวอย่าง 2D</h2>
+        </div>
+
+        <p class="clicker-empty-state" id="clickerEmptyState">
+          อัปโหลดรูปเพื่อดูผลลัพธ์
+        </p>
+
+        <div class="clicker-canvas-row" id="clickerCanvasRow">
+          <div class="clicker-canvas-box">
+            <span>ต้นฉบับ</span>
+            <canvas id="clickerOriginalCanvas"></canvas>
+          </div>
+
+          <div class="clicker-canvas-box">
+            <span>Mask ก่อน Smoothing</span>
+            <canvas id="clickerMaskCanvas"></canvas>
+          </div>
+
+          <div class="clicker-canvas-box">
+            <span>ผลลัพธ์สุดท้าย (Silhouette)</span>
+            <canvas id="clickerFinalCanvas"></canvas>
+          </div>
+        </div>
+      </section>
+    </div>
 
   </main>
 
 <!-- HarfBuzz: จัดตำแหน่งสระ/วรรณยุกต์ภาษาไทยตาม OpenType GPOS/GSUB -->
 <script src="https://unpkg.com/harfbuzzjs@0.8.0/hb.js"></script>
 <script src="https://unpkg.com/harfbuzzjs@0.8.0/hbjs.js"></script>
+<script type="module" src="firebase-designs.js"></script>
 <script src="script.js"></script>
+<script src="font-select-ui.js"></script>
 <script type="module" src="viewer.js"></script>
+<script type="module" src="clicker/clicker-ui.js"></script>
+<script type="module" src="clicker/clicker-viewer.js?v=housing-floor-v4"></script>
 
 </body>
 </html>

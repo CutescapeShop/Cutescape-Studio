@@ -35,12 +35,6 @@ const nameInput =
 const fontSelect =
   document.getElementById("fontSelect");
 
-const nameSizeSlider =
-  document.getElementById("nameSizeSlider");
-
-const nameSizeValue =
-  document.getElementById("nameSizeValue");
-
 const baseStyleSelect =
   document.getElementById("baseStyleSelect");
 
@@ -329,13 +323,6 @@ const ttfLoader =
 // เราจึงให้ HarfBuzz จัด glyph + ตำแหน่งก่อน แล้วแปลง glyph path กลับเป็น THREE.Shape
 
 const svgLoader = new SVGLoader();
-let starSvgShapes = null;
-let heartSvgShapesPromise = null;
-let flowerSvgShapesPromise = null;
-let cloverSvgShapesPromise = null;
-let catSvgShapesPromise = null;
-const starSvgPathData = "m 103.7119,402.13502 c -5.472323,-2.48602 -10.133823,-8.09708 -11.967773,-14.40564 -1.52356,-5.24089 -1.48796,-5.50263 8.996953,-66.13508 9.339,-54.00591 10.36851,-61.11459 9.12555,-63.01158 -0.77055,-1.17602 -20.800523,-20.9959 -44.511033,-44.04418 -36.13507,-35.12581 -43.3952,-42.64476 -44.87258,-46.47225 -4.38013,-11.34775 0.38852,-23.09776 11.20888,-27.6188 2.20016,-0.91928 30.44865,-5.55485 63.88668,-10.48377 37.929863,-5.59103 60.395093,-9.31833 61.174853,-10.14976 C 157.43119,119.09128 169.79791,94.425 184.23503,65 199.96048,32.949179 211.73443,10.148056 213.60241,8.1278883 222.44533,-1.4354922 236.9127,-1.2046753 245.14683,8.6311573 246.92818,10.759021 260.0755,36.35 274.36309,65.5 c 14.28759,29.15 26.56398,53.59748 27.28086,54.32774 0.82678,0.84219 23.21414,4.55193 61.2196,10.1445 33.6114,4.94597 61.65328,9.54257 63.87291,10.46999 10.76217,4.49672 15.57514,16.34488 11.22147,27.62406 -1.47738,3.82749 -8.7375,11.34644 -44.87257,46.47225 -23.71051,23.04828 -43.74674,42.87772 -44.52495,44.06542 -1.26079,1.9242 -0.32145,8.5505 8.62257,60.82566 5.52063,32.26642 10.02762,60.78215 10.01554,63.3683 -0.0414,8.87333 -6.21625,17.47544 -14.50885,20.21225 -8.33055,2.74933 -9.69448,2.17912 -67.02263,-28.0197 -31.22094,-16.4463 -54.87997,-28.3238 -56.41871,-28.3238 -1.53661,0 -24.04382,11.28117 -53.56937,26.8503 -28.00565,14.76766 -53.07049,27.66766 -55.69965,28.66666 -6.0301,2.29126 -11.15049,2.27596 -16.26741,-0.0486 z M 240.75928,80.383712 c 16.27844,-7.559364 20.79542,-29.192409 9.01042,-43.153325 -11.5702,-13.70646 -34.90243,-11.428414 -44.12465,4.308118 -3.2648,5.570961 -4.39404,15.987404 -2.39259,22.070015 4.14718,12.603712 15.97992,20.115892 29.46802,18.708183 2.75,-0.287009 6.36746,-1.156854 8.0388,-1.932991 z";
-const cloudSvgPathData = "m 141.10236,325.67914 c -18.39519,-5.95413 -31.4623,-19.80369 -36.35211,-38.52883 -0.8298,-3.17766 -1.75569,-6.02451 -2.05753,-6.32635 -0.30184,-0.30184 -3.370651,0.72263 -6.819579,2.27661 -16.47881,7.42482 -30.559891,7.28255 -46.270779,-0.46752 -17.535486,-8.65013 -28.5,-26.30179 -28.5,-45.88187 0,-21.07471 10.908725,-37.94779 30.672919,-47.44334 8.827081,-4.24091 8.827081,-4.24091 21.327081,-4.31673 12.5,-0.0758 12.5,-0.0758 13.197809,-6.32685 2.372644,-21.25429 17.061599,-39.16992 37.107379,-45.25864 9.64147,-2.92851 24.18082,-2.26034 34.17707,1.57064 6.54876,2.50976 7.06097,2.56825 8.25,0.94215 0.69725,-0.95355 1.26774,-2.33261 1.26774,-3.06456 0,-0.73196 1.36841,-4.35845 3.04091,-8.05887 5.63615,-12.47001 18.63404,-23.38331 32.89059,-27.615612 6.71203,-1.99259 20.90247,-2.09648 27.15447,-0.19881 12.25271,3.719062 25.20508,13.107772 30.46484,22.082862 1.29719,2.21349 3.53659,7.16979 4.97646,11.01402 1.43986,3.84422 2.98402,7.36575 3.43147,7.82563 0.44744,0.45987 4.12727,-0.62545 8.17739,-2.41183 6.27731,-2.76871 8.84981,-3.31602 17.43449,-3.70923 16.58754,-0.75979 28.70161,4.03004 39.71235,15.70201 8.765,9.29136 13.93153,20.88058 14.97143,33.58291 0.2456,3 0.2456,3 11.7456,3.60817 16.16277,0.85475 25.35673,4.63737 35.59701,14.64548 9.32653,9.11507 14.86269,20.58325 16.03727,33.22123 1.29404,13.92333 -5.00858,30.14081 -15.81587,40.69635 -11.02443,10.76763 -24.31454,15.80628 -40.04288,15.18138 -8.87483,-0.35261 -8.87483,-0.35261 -11.47645,6.14739 -5.30361,13.2508 -13.64731,21.94985 -27.0997,28.25385 -7.81449,3.66199 -9.66259,4.12094 -18.26173,4.53502 -14.49916,0.69818 -24.31936,-2.68224 -36.79036,-12.6644 -7.09318,-5.67759 -7.37854,-5.66926 -13.14729,0.38399 -6.93866,7.28086 -20.70793,12.49884 -32.9315,12.47967 -9.01279,-0.0141 -16.3423,-1.81273 -24.72398,-6.06704 -6.1706,-3.13203 -6.1706,-3.13203 -12.5529,0.01 -3.51027,1.72809 -8.8369,3.79522 -11.83697,4.5936 -7.45892,1.98499 -20.14768,1.79083 -26.95465,-0.41245 z M 74.67509,263.08108 c 4.490133,-1.847 10.117846,-7.13001 13.202839,-12.39415 2.320804,-3.96016 2.70037,-5.72802 2.708027,-12.61285 0.01023,-9.20241 -1.739306,-13.76286 -7.483594,-19.50715 -5.723767,-5.72376 -10.299185,-7.4776 -19.538902,-7.48957 -7.359573,-0.01 -8.505484,0.27235 -13.560224,3.33584 -17.318547,10.49614 -18.034007,34.70984 -1.364479,46.17877 7.102198,4.88644 17.736737,5.90312 26.036333,2.48911 z";
 let harfBuzzApi = null;
 let harfBuzzModulePromise = null;
 let harfBuzzBlob = null;
@@ -462,150 +449,6 @@ function glyphSvgPathToShapes(pathData, scale, dx, dy) {
   return result;
 }
 
-function loadStarSvgShape() {
-  if (!starSvgShapes) {
-    const svgText = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 424 405"><path d="${starSvgPathData}"/></svg>`;
-    const parsed = svgLoader.parse(svgText);
-    const sourceShapes = [];
-    parsed.paths.forEach((path) => {
-      SVGLoader.createShapes(path).forEach((shape) => sourceShapes.push(shape));
-    });
-
-    const points = sourceShapes.flatMap((shape) => shape.getPoints(192));
-        const minX = Math.min(...points.map((point) => point.x));
-        const maxX = Math.max(...points.map((point) => point.x));
-        const minY = Math.min(...points.map((point) => point.y));
-        const maxY = Math.max(...points.map((point) => point.y));
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-        const scale = 1 / Math.max(maxX - minX, maxY - minY);
-
-        starSvgShapes = sourceShapes.map((shape) => {
-          const result = new THREE.Shape();
-          result.setFromPoints(shape.getPoints(192).map((point) => new THREE.Vector2(
-            (point.x - centerX) * scale,
-            -(point.y - centerY) * scale
-          )));
-
-          shape.holes.forEach((holePath) => {
-            const hole = new THREE.Path();
-            hole.setFromPoints(holePath.getPoints(96).map((point) => new THREE.Vector2(
-              (point.x - centerX) * scale,
-              -(point.y - centerY) * scale
-            )));
-            result.holes.push(hole);
-          });
-
-          return result;
-        });
-  }
-
-  return starSvgShapes;
-}
-
-function loadHeartSvgShape() {
-  if (!heartSvgShapesPromise) {
-    heartSvgShapesPromise = new Promise((resolve, reject) => {
-      svgLoader.load(
-        "./assets/heart.svg",
-        (data) => {
-          const shapes = [];
-          data.paths.forEach((path) => {
-            SVGLoader.createShapes(path).forEach((shape) => shapes.push(shape));
-          });
-          resolve(shapes);
-        },
-        undefined,
-        reject
-      );
-    });
-  }
-
-  return heartSvgShapesPromise;
-}
-
-function loadFlowerSvgShape() {
-  if (!flowerSvgShapesPromise) {
-    flowerSvgShapesPromise = new Promise((resolve, reject) => {
-      svgLoader.load(
-        "./assets/flower.svg",
-        (data) => {
-          const shapes = [];
-          data.paths.forEach((path) => {
-            SVGLoader.createShapes(path).forEach((shape) => shapes.push(shape));
-          });
-          resolve(shapes);
-        },
-        undefined,
-        reject
-      );
-    });
-  }
-
-  return flowerSvgShapesPromise;
-}
-
-function loadCloverSvgShape() {
-  if (!cloverSvgShapesPromise) {
-    cloverSvgShapesPromise = new Promise((resolve, reject) => {
-      svgLoader.load(
-        "./assets/clover.svg",
-        (data) => {
-          const shapes = [];
-          data.paths.forEach((path) => {
-            SVGLoader.createShapes(path).forEach((shape) => shapes.push(shape));
-          });
-          resolve(shapes);
-        },
-        undefined,
-        reject
-      );
-    });
-  }
-
-  return cloverSvgShapesPromise;
-}
-
-function loadCatSvgShape() {
-  if (!catSvgShapesPromise) {
-    catSvgShapesPromise = new Promise((resolve, reject) => {
-      svgLoader.load(
-        "./assets/cat.svg",
-        (data) => {
-          const shapes = [];
-          data.paths.forEach((path) => {
-            SVGLoader.createShapes(path).forEach((shape) => shapes.push(shape));
-          });
-          resolve(shapes);
-        },
-        undefined,
-        reject
-      );
-    });
-  }
-
-  return catSvgShapesPromise;
-}
-
-function scaleShapeWithHoles(shape, scale) {
-  const scaledShape = new THREE.Shape();
-  scaledShape.setFromPoints(shape.getPoints(192).map((point) => new THREE.Vector2(
-    point.x * scale,
-    point.y * scale
-  )));
-
-  shape.holes.forEach((holePath) => {
-    const scaledHole = new THREE.Path();
-    scaledHole.setFromPoints(holePath.getPoints(96).map((point) => new THREE.Vector2(
-      point.x * scale,
-      point.y * scale
-    )));
-    scaledShape.holes.push(scaledHole);
-  });
-
-  return scaledShape;
-}
-
 function generateHarfBuzzShapes(textValue, size = 1) {
   if (!harfBuzzApi || !harfBuzzFont) return null;
 
@@ -729,14 +572,6 @@ function fitTextGeometry(
     width,
     height
   };
-}
-
-function applyNameTextScale(geometry) {
-  const scale = nameSizeSlider
-    ? parseFloat(nameSizeSlider.value) / 100
-    : 1;
-
-  geometry.scale(scale, scale, scale);
 }
 
 
@@ -931,7 +766,6 @@ const baseShapes = unitedPaths
   frontGeometry.translate(-centerX * scale, -centerY * scale, 0);
 
   const frontTextMesh = new THREE.Mesh(frontGeometry, textMaterial);
-  applyNameTextScale(frontGeometry);
   frontTextMesh.position.z = 0.37;
   productGroup.add(frontTextMesh);
 
@@ -1001,7 +835,6 @@ function createRoundedRectangleProduct(textValue) {
   productGroup.add(baseMesh);
 
   const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
   textMesh.position.x = 0.2;
   textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
   productGroup.add(textMesh);
@@ -1061,97 +894,11 @@ function createOvalProduct(textValue) {
   productGroup.add(baseMesh);
 
   const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
   textMesh.position.x = 0.2;
   textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
   productGroup.add(textMesh);
 
   return baseWidth;
-}
-
-function createSvgCloudProduct(textValue) {
-  const sizingTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const sizingText = fitTextGeometry(sizingTextGeometry, 1.12, 8.2);
-  const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const fittedText = fitTextGeometry(frontTextGeometry, 1.02, 7.8);
-  const parsed = svgLoader.parse(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 424 405"><path d="${cloudSvgPathData}"/></svg>`
-  );
-  const sourceShapes = [];
-
-  parsed.paths.forEach((path) => {
-    SVGLoader.createShapes(path).forEach((shape) => sourceShapes.push(shape));
-  });
-
-  const sourceShape = sourceShapes[0];
-  const sourcePoints = sourceShape.getPoints(256);
-  const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
-  const sourceMaxX = Math.max(...sourcePoints.map((point) => point.x));
-  const sourceMinY = Math.min(...sourcePoints.map((point) => point.y));
-  const sourceMaxY = Math.max(...sourcePoints.map((point) => point.y));
-  const sourceCenterX = (sourceMinX + sourceMaxX) / 2;
-  const sourceCenterY = (sourceMinY + sourceMaxY) / 2;
-  const sourceWidth = sourceMaxX - sourceMinX;
-  const sourceHeight = sourceMaxY - sourceMinY;
-  const targetScale = Math.max(
-    2.7 / sourceHeight,
-    (sizingText.width + 2.7) / sourceWidth
-  );
-  const shape = new THREE.Shape();
-  shape.setFromPoints(sourcePoints.map((point) => new THREE.Vector2(
-    (point.x - sourceCenterX) * targetScale,
-    -(point.y - sourceCenterY) * targetScale
-  )));
-
-  sourceShape.holes.forEach((holePath) => {
-    const hole = new THREE.Path();
-    hole.setFromPoints(holePath.getPoints(128).map((point) => new THREE.Vector2(
-      (point.x - sourceCenterX) * targetScale,
-      -(point.y - sourceCenterY) * targetScale
-    )));
-    shape.holes.push(hole);
-  });
-
-  const cloudPoints = shape.getPoints(256);
-  const cloudMinX = Math.min(...cloudPoints.map((point) => point.x));
-  const cloudMaxX = Math.max(...cloudPoints.map((point) => point.x));
-  const cloudMinY = Math.min(...cloudPoints.map((point) => point.y));
-  const cloudMaxY = Math.max(...cloudPoints.map((point) => point.y));
-  const holePoints = shape.holes[0]
-    ? shape.holes[0].getPoints(128)
-    : [];
-  const holeMaxX = holePoints.length
-    ? Math.max(...holePoints.map((point) => point.x))
-    : cloudMinX;
-  const usableCenterX = (holeMaxX + cloudMaxX) / 2;
-  const usableCenterY = (cloudMinY + cloudMaxY) / 2;
-
-  const baseGeometry = new THREE.ExtrudeGeometry(shape, {
-    depth: baseDepth,
-    curveSegments: 64,
-    bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.05,
-    bevelSegments: 10
-  });
-
-  baseGeometry.center();
-
-  const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
-  productGroup.add(baseMesh);
-
-  const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
-  fittedText.geometry.computeBoundingBox();
-  const textBounds = fittedText.geometry.boundingBox;
-  const textCenterX = (textBounds.min.x + textBounds.max.x) / 2;
-  const textCenterY = (textBounds.min.y + textBounds.max.y) / 2;
-  textMesh.position.x = usableCenterX - textCenterX;
-  textMesh.position.y = usableCenterY - textCenterY - 0.26;
-  textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
-  productGroup.add(textMesh);
-
-  return sourceWidth * targetScale;
 }
 
 function createCloudProduct(textValue) {
@@ -1268,12 +1015,42 @@ function createCloudProduct(textValue) {
 }
 
 function createStarProduct(textValue) {
-  const sizingTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const sizingText = fitTextGeometry(sizingTextGeometry, 1.12, 8.2);
   const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const fittedText = fitTextGeometry(frontTextGeometry, 0.82, 4.8);
-  const svgShapes = loadStarSvgShape();
-  const shape = scaleShapeWithHoles(svgShapes[0], sizingText.width * 1.1);
+  const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
+  const outerRadius = Math.max(2.45, fittedText.width * 0.72);
+  const innerRadius = outerRadius * 0.62;
+  const holeCenterY = outerRadius * 0.62;
+  const holeRadius = baseThroughHoleDiameter / 2;
+  const starControlPoints = [];
+
+  for (let index = 0; index < 10; index += 1) {
+    const angle = Math.PI / 2 + (index * Math.PI) / 5;
+    const radius = index % 2 === 0 ? outerRadius : innerRadius;
+    starControlPoints.push(new THREE.Vector3(
+      Math.cos(angle) * radius,
+      Math.sin(angle) * radius,
+      0
+    ));
+  }
+
+  const starCurve = new THREE.CatmullRomCurve3(
+    starControlPoints,
+    true,
+    "centripetal",
+    0.5
+  );
+  const shape = new THREE.Shape();
+  shape.setFromPoints(starCurve.getPoints(160));
+  const holePath = new THREE.Path();
+  holePath.absarc(
+    0,
+    holeCenterY,
+    holeRadius,
+    0,
+    Math.PI * 2,
+    true
+  );
+  shape.holes.push(holePath);
 
   const baseGeometry = new THREE.ExtrudeGeometry(shape, {
     depth: baseDepth,
@@ -1290,223 +1067,10 @@ function createStarProduct(textValue) {
   productGroup.add(baseMesh);
 
   const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
   textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
   productGroup.add(textMesh);
 
-  return sizingText.width * 2.2;
-}
-
-async function createHeartProduct(textValue) {
-  const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
-  const sourceShapes = await loadHeartSvgShape();
-  const sourceShape = sourceShapes[0];
-  const sourcePoints = sourceShape.getPoints(256);
-  const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
-  const sourceMaxX = Math.max(...sourcePoints.map((point) => point.x));
-  const sourceMinY = Math.min(...sourcePoints.map((point) => point.y));
-  const sourceMaxY = Math.max(...sourcePoints.map((point) => point.y));
-  const sourceCenterX = (sourceMinX + sourceMaxX) / 2;
-  const sourceCenterY = (sourceMinY + sourceMaxY) / 2;
-  const sourceWidth = sourceMaxX - sourceMinX;
-  const sourceHeight = sourceMaxY - sourceMinY;
-  const targetScale = Math.max(
-    (fittedText.width + 1.8) / sourceWidth,
-    2.7 / sourceHeight
-  );
-  const shape = new THREE.Shape();
-  shape.setFromPoints(sourcePoints.map((point) => new THREE.Vector2(
-    (point.x - sourceCenterX) * targetScale,
-    -(point.y - sourceCenterY) * targetScale
-  )));
-
-  sourceShape.holes.forEach((holePath) => {
-    const hole = new THREE.Path();
-    hole.setFromPoints(holePath.getPoints(128).map((point) => new THREE.Vector2(
-      (point.x - sourceCenterX) * targetScale,
-      -(point.y - sourceCenterY) * targetScale
-    )));
-    shape.holes.push(hole);
-  });
-
-  const baseGeometry = new THREE.ExtrudeGeometry(shape, {
-    depth: baseDepth,
-    curveSegments: 64,
-    bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.05,
-    bevelSegments: 10
-  });
-
-  baseGeometry.center();
-  productGroup.add(new THREE.Mesh(baseGeometry, baseMaterial));
-
-  const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
-  textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
-  productGroup.add(textMesh);
-
-  return sourceWidth * targetScale;
-}
-
-async function createFlowerProduct(textValue) {
-  const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
-  const sourceShapes = await loadFlowerSvgShape();
-  const sourceShape = sourceShapes[0];
-  const sourcePoints = sourceShape.getPoints(256);
-  const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
-  const sourceMaxX = Math.max(...sourcePoints.map((point) => point.x));
-  const sourceMinY = Math.min(...sourcePoints.map((point) => point.y));
-  const sourceMaxY = Math.max(...sourcePoints.map((point) => point.y));
-  const sourceCenterX = (sourceMinX + sourceMaxX) / 2;
-  const sourceCenterY = (sourceMinY + sourceMaxY) / 2;
-  const sourceWidth = sourceMaxX - sourceMinX;
-  const sourceHeight = sourceMaxY - sourceMinY;
-  const targetScale = Math.max(
-    (fittedText.width + 1.8) / sourceWidth,
-    2.7 / sourceHeight
-  );
-  const shape = new THREE.Shape();
-  shape.setFromPoints(sourcePoints.map((point) => new THREE.Vector2(
-    (point.x - sourceCenterX) * targetScale,
-    -(point.y - sourceCenterY) * targetScale
-  )));
-
-  sourceShape.holes.forEach((holePath) => {
-    const hole = new THREE.Path();
-    hole.setFromPoints(holePath.getPoints(128).map((point) => new THREE.Vector2(
-      (point.x - sourceCenterX) * targetScale,
-      -(point.y - sourceCenterY) * targetScale
-    )));
-    shape.holes.push(hole);
-  });
-
-  const baseGeometry = new THREE.ExtrudeGeometry(shape, {
-    depth: baseDepth,
-    curveSegments: 64,
-    bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.05,
-    bevelSegments: 10
-  });
-
-  baseGeometry.center();
-  productGroup.add(new THREE.Mesh(baseGeometry, baseMaterial));
-
-  const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
-  textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
-  productGroup.add(textMesh);
-
-  return sourceWidth * targetScale;
-}
-
-async function createCloverProduct(textValue) {
-  const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
-  const sourceShapes = await loadCloverSvgShape();
-  const sourceShape = sourceShapes[0];
-  const sourcePoints = sourceShape.getPoints(256);
-  const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
-  const sourceMaxX = Math.max(...sourcePoints.map((point) => point.x));
-  const sourceMinY = Math.min(...sourcePoints.map((point) => point.y));
-  const sourceMaxY = Math.max(...sourcePoints.map((point) => point.y));
-  const sourceCenterX = (sourceMinX + sourceMaxX) / 2;
-  const sourceCenterY = (sourceMinY + sourceMaxY) / 2;
-  const sourceWidth = sourceMaxX - sourceMinX;
-  const sourceHeight = sourceMaxY - sourceMinY;
-  const targetScale = Math.max(
-    (fittedText.width + 1.8) / sourceWidth,
-    2.7 / sourceHeight
-  );
-  const shape = new THREE.Shape();
-  shape.setFromPoints(sourcePoints.map((point) => new THREE.Vector2(
-    (point.x - sourceCenterX) * targetScale,
-    -(point.y - sourceCenterY) * targetScale
-  )));
-
-  sourceShape.holes.forEach((holePath) => {
-    const hole = new THREE.Path();
-    hole.setFromPoints(holePath.getPoints(128).map((point) => new THREE.Vector2(
-      (point.x - sourceCenterX) * targetScale,
-      -(point.y - sourceCenterY) * targetScale
-    )));
-    shape.holes.push(hole);
-  });
-
-  const baseGeometry = new THREE.ExtrudeGeometry(shape, {
-    depth: baseDepth,
-    curveSegments: 64,
-    bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.05,
-    bevelSegments: 10
-  });
-
-  baseGeometry.center();
-  productGroup.add(new THREE.Mesh(baseGeometry, baseMaterial));
-
-  const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
-  textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
-  productGroup.add(textMesh);
-
-  return sourceWidth * targetScale;
-}
-
-async function createCatProduct(textValue) {
-  const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
-  const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
-  const sourceShapes = await loadCatSvgShape();
-  const sourceShape = sourceShapes[0];
-  const sourcePoints = sourceShape.getPoints(256);
-  const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
-  const sourceMaxX = Math.max(...sourcePoints.map((point) => point.x));
-  const sourceMinY = Math.min(...sourcePoints.map((point) => point.y));
-  const sourceMaxY = Math.max(...sourcePoints.map((point) => point.y));
-  const sourceCenterX = (sourceMinX + sourceMaxX) / 2;
-  const sourceCenterY = (sourceMinY + sourceMaxY) / 2;
-  const sourceWidth = sourceMaxX - sourceMinX;
-  const sourceHeight = sourceMaxY - sourceMinY;
-  const targetScale = Math.max(
-    (fittedText.width + 1.8) / sourceWidth,
-    2.7 / sourceHeight
-  );
-  const shape = new THREE.Shape();
-  shape.setFromPoints(sourcePoints.map((point) => new THREE.Vector2(
-    (point.x - sourceCenterX) * targetScale,
-    -(point.y - sourceCenterY) * targetScale
-  )));
-
-  sourceShape.holes.forEach((holePath) => {
-    const hole = new THREE.Path();
-    hole.setFromPoints(holePath.getPoints(128).map((point) => new THREE.Vector2(
-      (point.x - sourceCenterX) * targetScale,
-      -(point.y - sourceCenterY) * targetScale
-    )));
-    shape.holes.push(hole);
-  });
-
-  const baseGeometry = new THREE.ExtrudeGeometry(shape, {
-    depth: baseDepth,
-    curveSegments: 64,
-    bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.05,
-    bevelSegments: 10
-  });
-
-  baseGeometry.center();
-  productGroup.add(new THREE.Mesh(baseGeometry, baseMaterial));
-
-  const textMesh = new THREE.Mesh(fittedText.geometry, textMaterial);
-  applyNameTextScale(fittedText.geometry);
-  textMesh.position.z = baseDepth / 2 + textDepth / 2 + 0.035;
-  productGroup.add(textMesh);
-
-  return sourceWidth * targetScale;
+  return outerRadius * 2;
 }
 
 // =====================================
@@ -1633,8 +1197,6 @@ function createCapsuleProduct(
       textMaterial
     );
 
-  applyNameTextScale(fittedText.geometry);
-
   textMesh.position.x = 0.6;
 
   textMesh.position.z =
@@ -1663,7 +1225,7 @@ function scheduleRebuild() {
   }, 250);
 }
 
-async function rebuildProduct() {
+function rebuildProduct() {
   if (!loadedFont) {
     return;
   }
@@ -1703,27 +1265,11 @@ async function rebuildProduct() {
     textValue
   );
 } else if (selectedStyle === "cloud") {
-  productWidth = createSvgCloudProduct(
+  productWidth = createCloudProduct(
     textValue
   );
 } else if (selectedStyle === "star") {
-  productWidth = await createStarProduct(
-    textValue
-  );
-} else if (selectedStyle === "heart") {
-  productWidth = await createHeartProduct(
-    textValue
-  );
-} else if (selectedStyle === "flower") {
-  productWidth = await createFlowerProduct(
-    textValue
-  );
-} else if (selectedStyle === "clover") {
-  productWidth = await createCloverProduct(
-    textValue
-  );
-} else if (selectedStyle === "cat") {
-  productWidth = await createCatProduct(
+  productWidth = createStarProduct(
     textValue
   );
 } else {
@@ -1843,20 +1389,6 @@ if (baseStyleSelect) {
     rebuildProduct
   );
 }
-if (nameSizeSlider) {
-  nameSizeSlider.addEventListener(
-    "input",
-    function () {
-      if (nameSizeValue) {
-        nameSizeValue.textContent =
-          nameSizeSlider.value + "%";
-      }
-
-      scheduleRebuild();
-    }
-  );
-}
-
 if (outlineSlider) {
   outlineSlider.addEventListener(
     "input",

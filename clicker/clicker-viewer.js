@@ -1,0 +1,548 @@
+// =====================================================================
+// clicker/clicker-viewer.js
+//
+// "Clicker from Image" — Phase 2: 3D preview + STL export.
+//
+// Entirely separate THREE.js scene from viewer.js's Name Keychain
+// scene: own <canvas> container, own camera/renderer/lights/controls/
+// render loop, own materials. Does not import, reference, or modify
+// viewer.js / script.js / any Name Keychain DOM element.
+//
+// Gets the Phase-1 pipeline result (the outer silhouette `loops` AND
+// the multi-color `colorRegions`) via a small optional hook,
+// window.onClickerPipelineResult, which clicker-ui.js calls after
+// every re-run of its pipeline — the same
+// expose-on-window-for-cross-module-wiring pattern viewer.js already
+// uses (window.set3DBaseColor / window.set3DTextColor for script.js).
+//
+// -- Real-switch-housing revision note --
+// The old flat offset "BASE" backing plate + printed cross-rib stem
+// are GONE. Two independently-printed objects now exist:
+//   - TOP: TOP_BASE (dominant color, TOP ARTWORK — unchanged) +
+//     ACCENT regions (auto-detected colors, unchanged) + a NEW solid
+//     boss with a female MX cross-socket on its back face (uses
+//     TOP_BASE's own dominant-color material — it's part of the same
+//     printed object).
+//   - HOUSING: a NEW hollow shell sized to hold a real MX-compatible
+//     switch. Uses the color picker that used to be labeled "BASE"
+//     (#clickerBaseColors) — same UI, same wiring, just a different
+//     printed object underneath it now.
+// TOP and HOUSING are exported as separate STL files/groups; a real
+// switch (not modeled by us) sits between them when assembled.
+//
+// Coordinate convention unchanged from the earlier orientation fix:
+// X/Y is the image plane, Z is thickness. TOP_BASE/ACCENT/socket and
+// HOUSING's outer boundary all share the SAME autoFit + scaleMultiplier
+// transform — HOUSING's switch cutouts and the socket boss do NOT
+// scale with it (they must always match a real, fixed-size switch —
+// see the scale-vs-switch-size caveat in the delivery notes).
+// =====================================================================
+
+import * as THREE from "three";
+
+import { OrbitControls } from
+  "https://unpkg.com/three@0.167.1/examples/jsm/controls/OrbitControls.js";
+
+import { STLExporter } from
+  "https://unpkg.com/three@0.167.1/examples/jsm/exporters/STLExporter.js";
+
+import { CLICKER_PROFILE } from "./stem-profile.js?v=housing-floor-v4";
+import { computeAutoFitTransform } from "./geometry-math.js";
+import {
+  createTopBaseGeometries,
+  createTopTransitionGeometries,
+  createTopRearShellGeometries,
+  createTopPedestalGeometry,
+} from "./keycap-geometry.js";
+import { createAccentRegionGeometries } from "./image-geometry.js";
+import { createHousingGeometries } from "./housing-geometry.js?v=housing-floor-v4";
+
+
+// ---------------- DOM references ----------------
+
+const viewerEl = document.getElementById("clickerViewer3D");
+
+const exportButton = document.getElementById("clickerExportButton");
+const exportStatus = document.getElementById("clickerExportStatus");
+
+const housingColorsContainer = document.getElementById("clickerBaseColors");
+
+const FIXED_CLICKER_SCALE_MULTIPLIER = 1;
+
+// If the Phase-2 3D markup isn't present, stay inert — mirrors the
+// guard clicker-ui.js already uses for Phase-1 markup.
+if (viewerEl && exportButton) {
+  init();
+}
+
+function init() {
+  // ---------------- Scene setup (independent from viewer.js) ----------------
+
+  viewerEl.style.width = "100%";
+  viewerEl.style.height = "360px";
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color("#f7f7f7");
+
+  const camera = new THREE.PerspectiveCamera(
+    42,
+    viewerEl.clientWidth / viewerEl.clientHeight,
+    0.1,
+    1000
+  );
+  // Framed wider/further back than before — HOUSING is now up to
+  // ~17mm tall on its own (vs. the old flat 6mm backing plate), so
+  // the whole preview spans a notably taller Z range.
+  camera.position.set(0, 34, 72);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(viewerEl.clientWidth, viewerEl.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  viewerEl.appendChild(renderer.domElement);
+
+  const productGroup = new THREE.Group();
+  scene.add(productGroup);
+
+  // Auto-detected dominant color from the image — NOT user-facing.
+  // Also used for the socket boss (it's part of the same printed TOP
+  // object as TOP_BASE).
+  const topBaseMaterial = new THREE.MeshStandardMaterial({
+    color: "#cccccc",
+    roughness: 0.35,
+    metalness: 0.02,
+  });
+
+  // User-controlled (via #clickerBaseColors, same UI as before) —
+  // now colors the HOUSING instead of the old flat BASE plate.
+  const housingMaterial = new THREE.MeshStandardMaterial({
+    color: "#f0f0f0",
+    roughness: 0.4,
+    metalness: 0.02,
+  });
+
+  const mainLight = new THREE.DirectionalLight(0xffffff, 2.6);
+  mainLight.position.set(20, 35, 55);
+  scene.add(mainLight);
+
+  const fillLight = new THREE.DirectionalLight(0xffffff, 1.1);
+  fillLight.position.set(-20, 15, 35);
+  scene.add(fillLight);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 1.35);
+  scene.add(ambientLight);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.target.set(0, 0, 0);
+  controls.minDistance = 10;
+  controls.maxDistance = 160;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener("resize", () => {
+    const width = viewerEl.clientWidth;
+    const height = viewerEl.clientHeight;
+    if (width === 0 || height === 0) return;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  });
+
+
+  // ---------------- Groups ----------------
+
+  const topGroup = new THREE.Group();     // TOP_BASE + socket boss (dominant color)
+  const accentGroup = new THREE.Group();  // ACCENT regions (per-color)
+  const housingGroup = new THREE.Group(); // HOUSING (user-picked color)
+  productGroup.add(topGroup);
+  productGroup.add(accentGroup);
+  productGroup.add(housingGroup);
+
+  // PREVIEW-ONLY exploded view. The requested gap is measured between
+  // the nominal TOP and HOUSING edges, not between their centers.
+  // Export explicitly removes these root-group transforms below.
+  const PREVIEW_PIECE_GAP_MM = 12.0;
+
+  function disposeGroupChildren(group) {
+    group.children.forEach((child) => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
+        else if (child.material !== topBaseMaterial && child.material !== housingMaterial) {
+          // Only dispose materials WE created dynamically per-rebuild
+          // (accent materials). The two reused materials above must
+          // never be disposed here.
+          child.material.dispose();
+        }
+      }
+    });
+    group.clear();
+  }
+
+
+  // ---------------- State + rebuild ----------------
+
+  const state = {
+    outerLoops: null,
+    colorRegions: null, // { dominantColorHex, accentRegions: [{colorHex, loops}] }
+    silhouetteKey: null,
+    colorKey: null,
+  };
+
+  // The shared transform TOP/ACCENT/HOUSING's outer boundary all use —
+  // computed once from the outer silhouette whenever it (or the scale
+  // slider) changes.
+  let currentAutoFit = null;
+  let topGeometryWarning = null;
+  let topGeometryDiagnostics = null;
+  let lastViewerTimings = null;
+
+  function updatePreviewLayout() {
+    const topPreviewWidthMM = currentAutoFit
+      ? currentAutoFit.rawWidthPx * currentAutoFit.scale * FIXED_CLICKER_SCALE_MULTIPLIER
+      : CLICKER_PROFILE.body.targetSize;
+    const housingPreviewWidthMM = topPreviewWidthMM + CLICKER_PROFILE.housing.offsetMM * 2;
+    const previewCenterOffsetMM =
+      (topPreviewWidthMM / 2 + PREVIEW_PIECE_GAP_MM + housingPreviewWidthMM / 2) / 2;
+    topGroup.position.x = -previewCenterOffsetMM;
+    accentGroup.position.x = -previewCenterOffsetMM;
+    housingGroup.position.x = previewCenterOffsetMM;
+    console.info("Clicker preview layout", JSON.stringify({
+      previewOnly: true,
+      gapMM: PREVIEW_PIECE_GAP_MM,
+      topX: topGroup.position.x,
+      housingX: housingGroup.position.x,
+    }));
+  }
+
+  function recomputeAutoFit() {
+    if (!state.outerLoops || state.outerLoops.length === 0) {
+      currentAutoFit = null;
+      updatePreviewLayout();
+      return;
+    }
+    currentAutoFit = computeAutoFitTransform(
+      state.outerLoops,
+      CLICKER_PROFILE.body.targetSize,
+      CLICKER_PROFILE.body.targetSize
+    );
+    updatePreviewLayout();
+  }
+
+  function rebuildTopBaseAndSocket() {
+    const rebuildStartedAt = performance.now();
+    const timings = {
+      artworkExtrusionMs: 0,
+      backingExtrusionMs: 0,
+      insetOffsetMs: 0,
+      cavityCleanFilterMs: 0,
+      shellExtrusionMs: 0,
+      pedestalExtrusionMs: 0,
+      totalMs: 0,
+    };
+    disposeGroupChildren(topGroup);
+    topGeometryWarning = null;
+    topGeometryDiagnostics = null;
+    if (!currentAutoFit || !state.outerLoops || state.outerLoops.length === 0) return timings;
+
+    // TOP ARTWORK — unchanged call, unchanged position/scale.
+    const artworkStartedAt = performance.now();
+    const topBaseGeometries = createTopBaseGeometries(
+      state.outerLoops,
+      currentAutoFit,
+      FIXED_CLICKER_SCALE_MULTIPLIER,
+      0,
+      CLICKER_PROFILE.topBase.thicknessMM
+    );
+    for (const geom of topBaseGeometries) {
+      topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
+    }
+    timings.artworkExtrusionMs = performance.now() - artworkStartedAt;
+
+    // Simple solid backing behind the artwork. It follows only the
+    // full outer silhouette; there is no procedural inner wall/shell.
+    const backingStartedAt = performance.now();
+    const transitionGeometries = createTopTransitionGeometries(
+      state.outerLoops,
+      currentAutoFit,
+      FIXED_CLICKER_SCALE_MULTIPLIER,
+      CLICKER_PROFILE.topShell.transitionThicknessMM
+    );
+    for (const geom of transitionGeometries) {
+      topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
+    }
+    timings.backingExtrusionMs = performance.now() - backingStartedAt;
+
+    // Rear shell uses every substantial inset loop. Cavity topology
+    // never controls whether the shell itself is returned.
+    const shellResult = createTopRearShellGeometries(
+      state.outerLoops,
+      currentAutoFit,
+      FIXED_CLICKER_SCALE_MULTIPLIER,
+      CLICKER_PROFILE.topShell.bodyDepthMM,
+      CLICKER_PROFILE.topShell.transitionThicknessMM,
+      { minimumWallMM: CLICKER_PROFILE.topShell.minimumWallMM }
+    );
+    for (const geom of shellResult.geometries) {
+      topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
+    }
+    timings.insetOffsetMs = shellResult.diagnostics?.insetOffsetMs || 0;
+    timings.cavityCleanFilterMs = shellResult.diagnostics?.cavityCleanFilterMs || 0;
+    timings.shellExtrusionMs = shellResult.diagnostics?.shellExtrusionMs || 0;
+
+    // MX pedestal is independent from inset success/topology.
+    const pedestalStartedAt = performance.now();
+    const pedestalResult = createTopPedestalGeometry(
+      shellResult.outerMMLoops,
+      shellResult.cavityLoops,
+      CLICKER_PROFILE.topSocket,
+      CLICKER_PROFILE.topShell.bodyDepthMM,
+      CLICKER_PROFILE.topShell.transitionThicknessMM,
+      CLICKER_PROFILE.topShell.bossKeepOutMM
+    );
+    if (pedestalResult.geometry) {
+      topGroup.add(new THREE.Mesh(pedestalResult.geometry, topBaseMaterial));
+    }
+    timings.pedestalExtrusionMs = performance.now() - pedestalStartedAt;
+
+    const warnings = [...shellResult.warnings];
+    if (pedestalResult.warning) warnings.push(pedestalResult.warning);
+    topGeometryWarning = warnings.length > 0 ? warnings.join("; ") : null;
+    topGeometryDiagnostics = {
+      ...shellResult.diagnostics,
+      pedestalLocation: pedestalResult.location
+        ? { x: pedestalResult.location.x, y: pedestalResult.location.y, insideCavity: pedestalResult.location.insideCavity }
+        : null,
+    };
+    console.info("TOP geometry diagnostics", JSON.stringify(topGeometryDiagnostics));
+    if (topGeometryWarning) console.warn("TOP geometry warning", topGeometryWarning);
+    if (exportStatus) {
+      const d = topGeometryDiagnostics;
+      const p = d.pedestalLocation;
+      exportStatus.textContent = topGeometryWarning ||
+        `TOP geometry: inset ${d.rawInsetLoops} raw / ${d.validInsetLoops} valid / ${d.cavityLoopsUsed} cavity; ` +
+        `MX (${p.x.toFixed(2)}, ${p.y.toFixed(2)}) mm`;
+    }
+    timings.totalMs = performance.now() - rebuildStartedAt;
+    return timings;
+  }
+
+  function rebuildAccent() {
+    const startedAt = performance.now();
+    disposeGroupChildren(accentGroup);
+    if (!currentAutoFit || !state.colorRegions || state.colorRegions.accentRegions.length === 0) {
+      return performance.now() - startedAt;
+    }
+
+    const accentByColor = createAccentRegionGeometries(
+      state.colorRegions.accentRegions,
+      currentAutoFit,
+      FIXED_CLICKER_SCALE_MULTIPLIER,
+      CLICKER_PROFILE.topBase.thicknessMM,
+      CLICKER_PROFILE.accent.thicknessMM
+    );
+
+    for (const { colorHex, geometries } of accentByColor) {
+      const material = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        roughness: 0.35,
+        metalness: 0.02,
+      });
+      for (const geom of geometries) {
+        accentGroup.add(new THREE.Mesh(geom, material));
+      }
+    }
+    return performance.now() - startedAt;
+  }
+
+  function rebuildHousing() {
+    const startedAt = performance.now();
+    disposeGroupChildren(housingGroup);
+    if (!currentAutoFit || !state.outerLoops || state.outerLoops.length === 0) {
+      return { totalMs: performance.now() - startedAt };
+    }
+
+    const housingStageTimings = {};
+    const housingGeometries = createHousingGeometries(
+      state.outerLoops,
+      currentAutoFit,
+      FIXED_CLICKER_SCALE_MULTIPLIER,
+      CLICKER_PROFILE.housing,
+      housingStageTimings,
+      topGeometryDiagnostics?.pedestalLocation || null
+    );
+    for (const geom of housingGeometries) {
+      housingGroup.add(new THREE.Mesh(geom, housingMaterial));
+    }
+    return {
+      totalMs: performance.now() - startedAt,
+      ...housingStageTimings,
+    };
+  }
+
+  function rebuildAll() {
+    const startedAt = performance.now();
+    recomputeAutoFit();
+    const top = rebuildTopBaseAndSocket();
+    const accentExtrusionMs = rebuildAccent();
+    const housing = rebuildHousing();
+    lastViewerTimings = {
+      ...top,
+      accentExtrusionMs,
+      housingExtrusionMs: housing.totalMs,
+      housingStages: housing,
+      totalRebuildMs: performance.now() - startedAt,
+    };
+    window.__clickerPerformance = {
+      ...(window.__clickerPerformance || {}),
+      viewer: lastViewerTimings,
+    };
+    console.info("Clicker 3D timing", JSON.stringify(lastViewerTimings));
+  }
+
+  function rebuildColorsOnly() {
+    const startedAt = performance.now();
+    const accentExtrusionMs = rebuildAccent();
+    lastViewerTimings = {
+      rebuildMode: "color-only",
+      accentExtrusionMs,
+      totalRebuildMs: performance.now() - startedAt,
+    };
+    window.__clickerPerformance = {
+      ...(window.__clickerPerformance || {}),
+      viewer: lastViewerTimings,
+    };
+    console.info("Clicker 3D timing", JSON.stringify(lastViewerTimings));
+  }
+
+  // Hook Phase-1 (clicker-ui.js) calls into after every pipeline run.
+  // Additive-only wiring — clicker-ui.js's own Phase-1 2D preview
+  // behavior is unchanged whether or not this hook exists.
+  window.onClickerPipelineResult = function (result) {
+    const nextLoops = result && result.loops ? result.loops : null;
+    const nextColors = result && result.colorRegions ? result.colorRegions : null;
+    const nextSilhouetteKey = result?.silhouetteKey || Symbol("uncached-silhouette");
+    const nextColorKey = result?.colorKey || Symbol("uncached-colors");
+    const silhouetteChanged = nextSilhouetteKey !== state.silhouetteKey;
+    const colorChanged = nextColorKey !== state.colorKey;
+
+    state.outerLoops = nextLoops;
+    state.colorRegions = nextColors;
+    state.silhouetteKey = nextSilhouetteKey;
+    state.colorKey = nextColorKey;
+
+    if (silhouetteChanged) rebuildAll();
+    else if (colorChanged) rebuildColorsOnly();
+  };
+
+
+  // Fixed-size generation mode: use the standard Clicker size for
+  // TOP, cavity, pedestal/socket, and HOUSING every time.
+
+  // ---------------- Controls: HOUSING color (same #clickerBaseColors UI as before) ----------------
+
+  if (housingColorsContainer && typeof window.setupColorButtons === "function") {
+    window.setupColorButtons("clickerBaseColors", function (color) {
+      housingMaterial.color.set(color);
+    });
+  }
+
+
+  // ---------------- Export: CLICKER_TOP_BASE.stl + CLICKER_ACCENT_N.stl + CLICKER_HOUSING.stl ----------------
+
+  exportButton.addEventListener("click", function () {
+    if (!state.outerLoops || state.outerLoops.length === 0) {
+      if (exportStatus) exportStatus.textContent = "กรุณาอัปโหลดรูปก่อน export";
+      return;
+    }
+
+    const exporter = new STLExporter();
+    productGroup.updateMatrixWorld(true);
+
+    const topExportGroup = new THREE.Group();
+    const housingExportGroup = new THREE.Group();
+    const accentExportGroupsByColor = new Map(); // colorHex -> THREE.Group
+
+    function traverseExportRoot(root, kind) {
+      root.updateMatrixWorld(true);
+      const rootInverse = root.matrixWorld.clone().invert();
+
+      root.traverse(function (object) {
+        if (!object.isMesh) return;
+
+        // Keep child-local modeling transforms, but cancel the logical
+        // root transform used only for the exploded preview. This makes
+        // STL coordinates identical whether preview separation is on or off.
+        const exportMatrix = new THREE.Matrix4().multiplyMatrices(
+          rootInverse,
+          object.matrixWorld
+        );
+        const clonedGeometry = object.geometry.clone();
+        clonedGeometry.applyMatrix4(exportMatrix);
+        const clone = new THREE.Mesh(clonedGeometry, object.material);
+
+        if (kind === "top") {
+          topExportGroup.add(clone);
+        } else if (kind === "housing") {
+          housingExportGroup.add(clone);
+        } else {
+          const hex = "#" + object.material.color.getHexString();
+          if (!accentExportGroupsByColor.has(hex)) {
+            accentExportGroupsByColor.set(hex, new THREE.Group());
+          }
+          accentExportGroupsByColor.get(hex).add(clone);
+        }
+      });
+    }
+
+    traverseExportRoot(topGroup, "top");
+    traverseExportRoot(accentGroup, "accent");
+    traverseExportRoot(housingGroup, "housing");
+
+    function downloadSTL(group, filename) {
+      const data = exporter.parse(group, { binary: true });
+      const blob = new Blob([data], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    const STEP_MS = 250; // stagger downloads so the browser doesn't block simultaneous ones
+    let delay = 0;
+
+    setTimeout(() => downloadSTL(topExportGroup, "CLICKER_TOP_BASE.stl"), delay);
+    delay += STEP_MS;
+
+    let accentIndex = 1;
+    for (const [, group] of accentExportGroupsByColor) {
+      const filename = `CLICKER_ACCENT_${accentIndex}.stl`;
+      const thisDelay = delay;
+      setTimeout(() => downloadSTL(group, filename), thisDelay);
+      delay += STEP_MS;
+      accentIndex++;
+    }
+
+    setTimeout(() => downloadSTL(housingExportGroup, "CLICKER_HOUSING.stl"), delay);
+
+    if (exportStatus) {
+      const colorList = Array.from(accentExportGroupsByColor.keys()).join(", ");
+      const accentNote = accentExportGroupsByColor.size > 0
+        ? ` + ${accentExportGroupsByColor.size} ACCENT (${colorList})`
+        : "";
+      exportStatus.textContent = `Export แล้ว: CLICKER_TOP_BASE.stl${accentNote} + CLICKER_HOUSING.stl`;
+    }
+  });
+}

@@ -1,3 +1,307 @@
+    @font-face {
+      font-family: "18jindaEclairBold";
+      src: url("./assets/fonts/18jindaEclairBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaBiscuitPieBold";
+      src: url("./assets/fonts/JindaBiscuitPieBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    /* =========================================
+       Font-select preview faces — reuse of the
+       existing files in assets/fonts/ only, same
+       paths as viewer.js's fontFiles map.
+       ========================================= */
+
+    @font-face {
+      font-family: "18jindaEclair";
+      src: url("./assets/fonts/18jindaEclair.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "18jindaEclairThin";
+      src: url("./assets/fonts/18jindaEclairThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "33JindaKoko";
+      src: url("./assets/fonts/33JindaKoko.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "33JindaKokoBold";
+      src: url("./assets/fonts/33JindaKokoBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "33JindaKokoThin";
+      src: url("./assets/fonts/33JindaKokoThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "HappyThursday";
+      src: url("./assets/fonts/HappyThursday.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "HappyThursdayCute";
+      src: url("./assets/fonts/HappyThursdayCute.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "HappyThursdayThin";
+      src: url("./assets/fonts/HappyThursdayThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaApollo";
+      src: url("./assets/fonts/JindaApollo.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaApolloBold";
+      src: url("./assets/fonts/JindaApolloBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaApolloSp";
+      src: url("./assets/fonts/JindaApolloSp.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaApolloThin";
+      src: url("./assets/fonts/JindaApolloThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaBiscuit";
+      src: url("./assets/fonts/JindaBiscuit.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaBiscuitBold";
+      src: url("./assets/fonts/JindaBiscuitBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaBiscuitPie";
+      src: url("./assets/fonts/JindaBiscuitPie.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaBiscuitPieThin";
+      src: url("./assets/fonts/JindaBiscuitPieThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaBiscuitThin";
+      src: url("./assets/fonts/JindaBiscuitThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaWhisky";
+      src: url("./assets/fonts/JindaWhisky.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaWhiskyBold";
+      src: url("./assets/fonts/JindaWhiskyBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaWhiskyPremium";
+      src: url("./assets/fonts/JindaWhiskyPremium.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindaWhiskyThin";
+      src: url("./assets/fonts/JindaWhiskyThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindGoody";
+      src: url("./assets/fonts/JindGoody.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindGoodyBold";
+      src: url("./assets/fonts/JindGoodyBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "JindGoodyThin";
+      src: url("./assets/fonts/JindGoodyThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Lovebird";
+      src: url("./assets/fonts/Lovebird.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "magic love";
+      src: url("./assets/fonts/magic love.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MiMarshmallow";
+      src: url("./assets/fonts/MiMarshmallow.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MiMarshmallowBold";
+      src: url("./assets/fonts/MiMarshmallowBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MiMarshmallowThin";
+      src: url("./assets/fonts/MiMarshmallowThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MiPie";
+      src: url("./assets/fonts/MiPie.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MiPieBold";
+      src: url("./assets/fonts/MiPieBold.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MiPieThin";
+      src: url("./assets/fonts/MiPieThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN KAOPAT Italic";
+      src: url("./assets/fonts/MN KAOPAT Italic.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN KAOPAT";
+      src: url("./assets/fonts/MN KAOPAT.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN MOCHI Italic";
+      src: url("./assets/fonts/MN MOCHI Italic.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN MOCHI";
+      src: url("./assets/fonts/MN MOCHI.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN Mocktail Italic";
+      src: url("./assets/fonts/MN Mocktail Italic.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN Mocktail";
+      src: url("./assets/fonts/MN Mocktail.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN Saikrok Isan Italic";
+      src: url("./assets/fonts/MN Saikrok Isan Italic.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN Saikrok Isan";
+      src: url("./assets/fonts/MN Saikrok Isan.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN Tomyam Italic";
+      src: url("./assets/fonts/MN Tomyam Italic.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "MN Tomyam";
+      src: url("./assets/fonts/MN Tomyam.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Moji";
+      src: url("./assets/fonts/Moji.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Saturn";
+      src: url("./assets/fonts/Saturn.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "SaturnThin";
+      src: url("./assets/fonts/SaturnThin.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    :root {
+      --cream: #fdf6e6;
+      --cream-deep: #f5e8c8;
+      --sage: #cddcbd;
+      --sage-strong: #9bb886;
+      --sage-deep: #55703f;
+      --yellow: #f2dd9e;
+      --yellow-deep: #b6883a;
+      --blue-muted: #9cbccb;
+      --ink: #3a2f28;
+      --ink-soft: #7a6b5e;
+
+      --font-display: "18jindaEclairBold", Arial, sans-serif;
+      --font-accent: "JindaBiscuitPieBold", Arial, sans-serif;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -7,10 +311,9 @@
       min-height: 100vh;
       font-family: Arial, sans-serif;
       background:
-        radial-gradient(circle at top left, #ffe6f4, transparent 35%),
-        radial-gradient(circle at bottom right, #dff7ff, transparent 40%),
-        #fffafc;
-      color: #222;
+        url("./assets/cutescape-bg.png") center top / cover no-repeat fixed,
+        var(--cream);
+      color: var(--ink);
     }
 
     .page {
@@ -24,15 +327,19 @@
       margin-bottom: 28px;
     }
 
-    .header h1 {
-      margin: 0;
-      font-size: 42px;
+    .header-logo {
+      display: block;
+      margin: 0 auto;
+      width: min(420px, 80%);
+      height: auto;
     }
 
     .header p {
-      margin: 8px 0 0;
-      color: #666;
-      font-size: 17px;
+      margin: 10px 0 0;
+      font-family: var(--font-accent);
+      color: var(--sage-deep);
+      font-size: 21px;
+      text-shadow: 1px 1px 0 var(--cream);
     }
 
     .studio {
@@ -43,47 +350,177 @@
 
     .panel,
     .preview-panel {
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid #eee;
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.08);
+      position: relative;
+      background: rgba(255, 255, 255, 0.97);
+      border-radius: 26px;
+      box-shadow:
+        0 10px 0 rgba(155, 184, 134, 0.25),
+        0 24px 46px rgba(58, 47, 40, 0.12);
     }
 
     .panel {
+      border: 3px solid var(--sage-strong);
       padding: 26px;
+    }
+
+    .preview-panel {
+      border: 3px solid var(--sage-strong);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 30px;
+      width: 84px;
+      height: 24px;
+      background: var(--yellow);
+      opacity: 0.9;
+      transform: rotate(-4deg);
+      border-radius: 4px;
+      box-shadow: 0 3px 5px rgba(58, 47, 40, 0.18);
+      pointer-events: none;
+    }
+
+    .preview-panel::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      right: 34px;
+      width: 84px;
+      height: 24px;
+      background: var(--blue-muted);
+      opacity: 0.9;
+      transform: rotate(3deg);
+      border-radius: 4px;
+      box-shadow: 0 3px 5px rgba(58, 47, 40, 0.18);
+      pointer-events: none;
     }
 
     .panel h2 {
       margin-top: 0;
       margin-bottom: 22px;
+      font-family: var(--font-display);
       font-size: 24px;
+      color: var(--ink);
     }
 
     .field {
-      margin-bottom: 22px;
+      margin-bottom: 28px;
     }
 
     .field label {
       display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
+      margin-bottom: 5px;
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 0.3px;
+      color: var(--sage-deep);
     }
 
     input[type="text"],
     select {
       width: 100%;
-      height: 52px;
-      border: 2px solid #e7e7e7;
-      border-radius: 14px;
+      height: 50px;
+      border: 1.5px solid var(--sage);
+      border-radius: 12px;
       padding: 0 16px;
       font-size: 20px;
       outline: none;
       background: white;
+      color: var(--ink);
+      font-family: Arial, sans-serif;
     }
 
     input[type="text"]:focus,
     select:focus {
-      border-color: #ff69ae;
+      border-color: var(--sage-strong);
+    }
+
+    #baseStyleSelect {
+      font-family: var(--font-display);
+    }
+
+    .font-select-wrap {
+      position: relative;
+    }
+
+    .font-select-trigger {
+      width: 100%;
+      height: 50px;
+      border: 1.5px solid var(--sage);
+      border-radius: 12px;
+      padding: 0 16px;
+      background: white;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .font-select-trigger span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 18px;
+    }
+
+    .font-select-trigger:focus,
+    .font-select-trigger[aria-expanded="true"] {
+      outline: none;
+      border-color: var(--sage-strong);
+    }
+
+    .font-select-caret {
+      flex-shrink: 0;
+      color: var(--sage-deep);
+    }
+
+    .font-select-panel {
+      position: absolute;
+      z-index: 20;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      overflow-y: auto;
+      background: white;
+      border: 1.5px solid var(--sage);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(58, 47, 40, 0.18);
+      padding: 6px;
+    }
+
+    .font-select-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: none;
+      background: none;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 18px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .font-select-option-preview {
+      color: #9a9a9a;
+    }
+
+    .font-select-option:hover {
+      background: var(--cream-deep);
+    }
+
+    .font-select-option.active {
+      background: var(--sage);
+      color: var(--sage-deep);
     }
 
     .color-row {
@@ -97,27 +534,29 @@
       height: 46px;
       border-radius: 50%;
       border: 4px solid white;
-      box-shadow: 0 0 0 2px #ddd;
+      box-shadow: 0 0 0 2px var(--cream-deep);
       cursor: pointer;
     }
 
     .color-button.active {
       box-shadow:
-        0 0 0 3px #222,
-        0 5px 14px rgba(0, 0, 0, 0.2);
-      transform: scale(1.06);
+        0 0 0 3px #fff,
+        0 0 0 6px var(--sage-strong),
+        0 6px 14px rgba(58, 47, 40, 0.22);
+      transform: scale(1.08);
     }
 
     .price-box {
       margin-top: 28px;
-      background: #fff1f7;
+      background: var(--yellow);
+      border: 3px solid var(--yellow-deep);
       border-radius: 18px;
       padding: 18px;
       text-align: center;
     }
 
     .price-label {
-      color: #777;
+      color: var(--ink-soft);
       font-size: 15px;
     }
 
@@ -125,23 +564,59 @@
       margin-top: 4px;
       font-size: 38px;
       font-weight: bold;
+      color: var(--ink);
     }
 
     .order-button {
       width: 100%;
       height: 56px;
       margin-top: 14px;
-      border: 0;
-      border-radius: 16px;
-      background: #111;
+      border: 3px solid var(--ink);
+      border-radius: 18px;
+      background: var(--sage-strong);
       color: white;
-      font-size: 19px;
-      font-weight: bold;
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 0.5px;
       cursor: pointer;
+      box-shadow: 0 5px 0 var(--sage-deep);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
     }
 
     .order-button:hover {
       transform: translateY(-2px);
+    }
+
+    .order-button:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 var(--sage-deep);
+    }
+
+    .order-button.secondary {
+      background: white;
+      color: var(--ink);
+      border: 3px solid var(--ink);
+      box-shadow: 0 5px 0 rgba(58, 47, 40, 0.22);
+    }
+
+    .design-id-result {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--yellow);
+      border: 3px solid var(--yellow-deep);
+      font-size: 14px;
+      text-align: center;
+      color: var(--ink);
+    }
+
+    .design-id-result strong {
+      display: block;
+      margin-top: 4px;
+      font-weight: bold;
+      font-size: 19px;
+      letter-spacing: 1.5px;
+      color: var(--ink);
     }
 
     .preview-panel {
@@ -159,29 +634,49 @@
 
     .preview-title h2 {
       margin: 0;
+      font-family: var(--font-display);
+      font-size: 24px;
+      color: var(--ink);
     }
 
     .live-badge {
-      background: #e8fff0;
-      color: #168744;
+      background: var(--sage);
+      color: var(--sage-deep);
+      font-weight: bold;
       padding: 7px 12px;
       border-radius: 999px;
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 13px;
     }
 
     .preview-stage {
+      position: relative;
       flex: 1;
       margin-top: 20px;
-      border-radius: 20px;
+      border-radius: 22px;
+      border: 4px solid var(--cream-deep);
       background:
-        linear-gradient(135deg, #f5f5f5, #ffffff);
+        linear-gradient(135deg, #fffaf0, #ffffff);
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
       perspective: 900px;
       min-height: 430px;
+    }
+
+    .preview-stage::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      left: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--blue-muted);
+      box-shadow:
+        18px 0 0 var(--yellow-deep),
+        36px 0 0 var(--sage-strong);
+      pointer-events: none;
     }
 
     .keychain-wrap {
@@ -253,8 +748,34 @@
 
     .hint {
       text-align: center;
-      color: #777;
+      color: var(--ink-soft);
       margin-top: 15px;
+    }
+
+    [data-product-tab],
+    [data-name-mode] {
+      font-family: var(--font-display);
+      font-size: 15px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      padding: 10px 8px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(58, 47, 40, 0.2);
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    [data-product-tab]:hover,
+    [data-name-mode]:hover {
+      transform: translateY(-1px);
+    }
+
+    [data-product-tab][style*="700"],
+    [data-name-mode][style*="700"] {
+      background: var(--sage);
+      box-shadow: 0 2px 0 rgba(58, 47, 40, 0.28);
+      transform: translateY(2px);
     }
 
     @media (max-width: 850px) {
@@ -273,4 +794,226 @@
       .keychain {
         transform: scale(0.85);
       }
+    }
+
+    @media (max-width: 480px) {
+      .header-logo {
+        width: min(260px, 70%);
+      }
+
+      .page {
+        padding-top: 20px;
+      }
+
+      .header {
+        margin-bottom: 20px;
+      }
+
+      .studio {
+        gap: 18px;
+      }
+
+      .panel,
+      .preview-panel {
+        border-radius: 20px;
+      }
+
+      .panel {
+        padding: 18px;
+      }
+
+      .preview-panel {
+        padding: 18px;
+      }
+
+      .panel::before {
+        top: -8px;
+        left: 20px;
+        width: 60px;
+        height: 16px;
+      }
+
+      .preview-panel::before {
+        top: -8px;
+        right: 22px;
+        width: 60px;
+        height: 16px;
+      }
+
+      .field {
+        margin-bottom: 20px;
+      }
+
+      .color-row {
+        gap: 8px;
+      }
+
+      .color-button {
+        width: 42px;
+        height: 42px;
+      }
+
+      .font-select-panel {
+        max-height: 260px;
+      }
+
+      .preview-stage {
+        min-height: 340px;
+      }
+    }
+
+    /* =========================================
+       Clicker from Image — Phase 1 (additive only)
+       ========================================= */
+
+    .clicker-studio {
+      margin-top: 40px;
+    }
+
+    .clicker-phase-note {
+      margin: -10px 0 22px;
+      color: var(--ink-soft);
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      border: 2px dashed var(--sage-strong);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 15px;
+      background: white;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--sage-strong);
+    }
+
+    .name-size-value {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .name-size-value span:first-child,
+    .name-size-value span:last-child {
+      font-family: var(--font-display);
+    }
+
+    .name-size-value span:first-child {
+      text-align: left;
+    }
+
+    .name-size-value span:nth-child(2) {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .name-size-value span:last-child {
+      text-align: right;
+    }
+
+    .outline-value {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+
+    .outline-value span:first-child,
+    .outline-value span:last-child {
+      font-family: var(--font-display);
+    }
+
+    .outline-value span:first-child {
+      text-align: left;
+    }
+
+    .outline-value span:nth-child(2) {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .outline-value span:last-child {
+      text-align: right;
+    }
+
+    .toggle-button {
+      width: 100%;
+      height: 48px;
+      border: 2px solid var(--sage-strong);
+      border-radius: 14px;
+      background: white;
+      font-family: var(--font-display);
+      font-size: 15px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .toggle-button.active {
+      border-color: var(--sage-strong);
+      background: var(--sage);
+      color: var(--sage-deep);
+    }
+
+    .clicker-debug-info {
+      white-space: pre-wrap;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      background: var(--cream-deep);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin: 0;
+      line-height: 1.5;
+      color: var(--ink-soft);
+    }
+
+    .clicker-empty-state {
+      text-align: center;
+      color: var(--ink-soft);
+      margin-top: 60px;
+    }
+
+    .clicker-canvas-row {
+      display: none;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .clicker-canvas-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .clicker-canvas-box span {
+      font-size: 13px;
+      color: var(--ink-soft);
+      font-weight: bold;
+    }
+
+    .clicker-canvas-box canvas {
+      max-width: 260px;
+      max-height: 260px;
+      width: auto;
+      height: auto;
+      border: 1px solid #e2e2e2;
+      border-radius: 12px;
+      background: #fff;
+      image-rendering: pixelated;
     }

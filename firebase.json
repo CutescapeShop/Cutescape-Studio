@@ -1,0 +1,18 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "**/.*",
+      "**/node_modules/**",
+      "package.json",
+      "package-lock.json",
+      "keychain-generator.scad",
+      "skills-lock.json",
+      ".agents/**",
+      "tools/**",
+      "models/**"
+    ]
+  }
+}
