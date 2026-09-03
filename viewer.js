@@ -149,9 +149,10 @@ const textMaterial =
 const baseDepth = 0.52;
 const textDepth = 0.18;
 
-const ringOuterWidth = 0.88;
-const ringOuterHeight = 0.68;
-const ringHoleDiameter = 0.42;
+// ลดขนาดวงแหวนลง ~15% จากต้นฉบับ (0.88 / 0.68 / 0.42) โดยคงสัดส่วนผนัง/รูเดิมไว้
+const ringOuterWidth = 0.748;
+const ringOuterHeight = 0.578;
+const ringHoleDiameter = 0.357;
 const baseThroughHoleDiameter = 0.62;
 
 let loadedFont = null;
@@ -746,7 +747,8 @@ function applyNameTextScale(geometry) {
 
 function createRingMesh(
   xPosition,
-  zPosition = 0
+  zPosition = 0,
+  yPosition = 0
 ) {
   const ringShape =
     new THREE.Shape();
@@ -773,8 +775,13 @@ function createRingMesh(
   true
 );
 
+  // ExtrudeGeometry ใช้ curveSegments เดียวกันกับขอบวงแหวนด้านนอก (ต่ำเกินไปสำหรับรูวงกลม
+  // ทำให้ดูเป็นเหลี่ยม) จึงสุ่มจุดรอบวงกลมของรูด้วยความละเอียดสูงแยกต่างหาก โดยไม่แตะขนาด/ตำแหน่ง/ขอบนอก
+  const smoothHolePath = new THREE.Path();
+  smoothHolePath.setFromPoints(holePath.getPoints(128));
+
   ringShape.holes.push(
-    holePath
+    smoothHolePath
   );
 
 const ringGeometry = new THREE.ExtrudeGeometry(ringShape, {
@@ -810,7 +817,7 @@ ringGeometry.translate(
 
   ringMesh.position.set(
     xPosition,
-    0,
+    yPosition,
     zPosition
   );
 
@@ -866,10 +873,11 @@ function createOutlineProduct(textValue) {
   );
 
   // ขยายแต่ละส่วนของตัวอักษรให้เป็นขอบมน แล้ว union ให้กลายเป็น silhouette รวม
-  const offsetter = new ClipperLib.ClipperOffset(2, 0.006 * CLIPPER_SCALE);
+  // arcTolerance ต่ำ = Clipper ใส่จุดตามส่วนโค้งมากขึ้น = โค้งมนเนียนขึ้น (ไม่กระทบระยะ offset)
+  const offsetter = new ClipperLib.ClipperOffset(2, 0.0006 * CLIPPER_SCALE);
   offsetter.AddPaths(
     paths,
-    ClipperLib.JoinType.jtMiter,
+    ClipperLib.JoinType.jtRound,
     ClipperLib.EndType.etClosedPolygon
   );
 
@@ -941,7 +949,10 @@ const baseShapes = unitedPaths
   const leftEdge = baseBox.min.x;
   const ringOverlap = 0.16;
   const ringX = leftEdge - ringOuterWidth / 2 + ringOverlap;
-  const ringMesh = createRingMesh(ringX, 0);
+  // ตำแหน่งแนวตั้งของห่วง: ~37.5% จากขอบบนของ silhouette (โซนบนซ้ายแบบพวงกุญแจทั่วไป)
+  const ringVerticalFraction = 0.375;
+  const ringY = baseBox.max.y - ringVerticalFraction * finalBaseHeight;
+  const ringMesh = createRingMesh(ringX, 0, ringY);
   productGroup.add(ringMesh);
 
   return finalBaseWidth + (ringOuterWidth - ringOverlap);
