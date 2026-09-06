@@ -314,7 +314,28 @@ const fontFiles = {
     "./assets/fonts/Saturn.ttf",
 
   "SaturnThin":
-    "./assets/fonts/SaturnThin.ttf"
+    "./assets/fonts/SaturnThin.ttf",
+
+  "Anton":
+    "./assets/fonts/Anton.ttf",
+
+  "Berkshire Swash":
+    "./assets/fonts/Berkshire Swash.ttf",
+
+  "Bowlby One SC":
+    "./assets/fonts/Bowlby One SC.ttf",
+
+  "Chewy":
+    "./assets/fonts/Chewy.ttf",
+
+  "Cookie":
+    "./assets/fonts/Cookie.ttf",
+
+  "Pirata One":
+    "./assets/fonts/Pirata One.ttf",
+
+  "Press Start 2P":
+    "./assets/fonts/Press Start 2P.ttf"
 };
 
 const fontLoader =
@@ -1684,10 +1705,10 @@ async function rebuildProduct() {
   let textValue =
     nameInput
       ? nameInput.value.trim()
-      : "KIRIN";
+      : "Cutescape";
 
   if (textValue === "") {
-    textValue = "KIRIN";
+    textValue = "Cutescape";
   }
 
   const selectedStyle =

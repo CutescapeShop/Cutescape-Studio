@@ -286,6 +286,48 @@
       font-display: swap;
     }
 
+    @font-face {
+      font-family: "Anton";
+      src: url("./assets/fonts/Anton.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Berkshire Swash";
+      src: url("./assets/fonts/Berkshire Swash.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Bowlby One SC";
+      src: url("./assets/fonts/Bowlby One SC.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Chewy";
+      src: url("./assets/fonts/Chewy.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Cookie";
+      src: url("./assets/fonts/Cookie.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Pirata One";
+      src: url("./assets/fonts/Pirata One.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Press Start 2P";
+      src: url("./assets/fonts/Press Start 2P.ttf") format("truetype");
+      font-display: swap;
+    }
+
     :root {
       --cream: #fdf6e6;
       --cream-deep: #f5e8c8;
