@@ -328,6 +328,42 @@
       font-display: swap;
     }
 
+    @font-face {
+      font-family: "Cherry Bomb One";
+      src: url("./assets/fonts/Cherry Bomb One.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Chango";
+      src: url("./assets/fonts/Chango.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Srisakdi";
+      src: url("./assets/fonts/Srisakdi.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Thasadith";
+      src: url("./assets/fonts/Thasadith.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Niconne";
+      src: url("./assets/fonts/Niconne.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "New Rocker";
+      src: url("./assets/fonts/New Rocker.ttf") format("truetype");
+      font-display: swap;
+    }
+
     :root {
       --cream: #fdf6e6;
       --cream-deep: #f5e8c8;

@@ -335,7 +335,25 @@ const fontFiles = {
     "./assets/fonts/Pirata One.ttf",
 
   "Press Start 2P":
-    "./assets/fonts/Press Start 2P.ttf"
+    "./assets/fonts/Press Start 2P.ttf",
+
+  "Cherry Bomb One":
+    "./assets/fonts/Cherry Bomb One.ttf",
+
+  "Chango":
+    "./assets/fonts/Chango.ttf",
+
+  "Srisakdi":
+    "./assets/fonts/Srisakdi.ttf",
+
+  "Thasadith":
+    "./assets/fonts/Thasadith.ttf",
+
+  "Niconne":
+    "./assets/fonts/Niconne.ttf",
+
+  "New Rocker":
+    "./assets/fonts/New Rocker.ttf"
 };
 
 const fontLoader =
@@ -974,7 +992,15 @@ const baseShapes = unitedPaths
   // จึงไม่ต้องมีก้านยาว/คอเหลี่ยมซึ่งเป็นจุดหักง่าย
   const leftEdge = baseBox.min.x;
   const ringOverlap = 0.16;
-  const ringX = leftEdge - ringOuterWidth / 2 + ringOverlap;
+  // เฉพาะฟอนต์ Srisakdi + ข้อความไทย: baseBox.min.x มาจากจุดต่ำสุดของตัวอักษร ไม่ใช่ขอบซ้าย
+  // จริงที่ระดับความสูงของห่วง (เส้นโค้งตัวอักษรไทยเบี่ยงมาก) ทำให้ห่วงดูลอยห่างจากตัวอักษร
+  // จึงชดเชยด้วยค่าคงที่เล็กน้อยเฉพาะกรณีนี้เท่านั้น ไม่แตะตำแหน่ง/สูตรของฟอนต์หรือสคริปต์อื่น
+  const isSrisakdiThai =
+    !!fontSelect &&
+    fontSelect.value === "Srisakdi" &&
+    isThaiText(textValue);
+  const srisakdiThaiRingXOffset = isSrisakdiThai ? 0.2 : 0;
+  const ringX = leftEdge - ringOuterWidth / 2 + ringOverlap + srisakdiThaiRingXOffset;
   // ตำแหน่งแนวตั้งของห่วง: ~37.5% จากขอบบนของ silhouette (โซนบนซ้ายแบบพวงกุญแจทั่วไป)
   const ringVerticalFraction = 0.375;
   const ringY = baseBox.max.y - ringVerticalFraction * finalBaseHeight;
