@@ -771,10 +771,10 @@ function createRingMesh(
   zPosition = 0,
   yPosition = 0
 ) {
-  const ringShape =
-    new THREE.Shape();
+  const ringOuterPath =
+    new THREE.Path();
 
-  ringShape.absellipse(
+  ringOuterPath.absellipse(
   0,
   0,
   ringOuterWidth / 2,
@@ -783,6 +783,11 @@ function createRingMesh(
   Math.PI * 2,
   false
 );
+
+  // เดียวกับรูด้านใน: curveSegments (12) ต่ำเกินไปสำหรับขอบวงแหวนด้านนอกเป็นวงรี
+  // ทำให้ดูเป็นเหลี่ยม จึงสุ่มจุดรอบขอบด้วยความละเอียดสูงแยกต่างหาก โดยไม่แตะขนาด/ตำแหน่ง
+  const ringShape = new THREE.Shape();
+  ringShape.setFromPoints(ringOuterPath.getPoints(128));
 
   const holePath =
     new THREE.Path();
@@ -1981,7 +1986,7 @@ const controls =
 controls.enableDamping = true;
 controls.enablePan = false;
 
-controls.minDistance = 4;
+controls.minDistance = 1.5;
 controls.maxDistance = 20;
 
 productGroup.rotation.x =
