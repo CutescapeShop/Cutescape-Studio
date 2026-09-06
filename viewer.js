@@ -1984,7 +1984,7 @@ const controls =
   );
 
 controls.enableDamping = true;
-controls.enablePan = false;
+controls.enablePan = true;
 
 controls.minDistance = 1.5;
 controls.maxDistance = 20;
