@@ -24,13 +24,18 @@
   <main class="page">
 
     <header class="header">
+      <div class="lang-toggle" id="langToggle">
+        <button type="button" class="lang-toggle-btn" data-lang-option="th">TH</button>
+        <span class="lang-toggle-sep">|</span>
+        <button type="button" class="lang-toggle-btn" data-lang-option="en">EN</button>
+      </div>
       <img class="header-logo" src="./assets/CUTESCAPE_Logo_Master.svg" alt="Cutescape Studio">
-      <p>ออกแบบพวงกุญแจชื่อของคุณเอง</p>
+      <p data-i18n="header.tagline">ออกแบบพวงกุญแจชื่อของคุณเอง</p>
     </header>
 
     <div style="display:none; gap:8px; margin:0 auto 16px; max-width:420px;">
-      <button type="button" data-product-tab="name" style="flex:1;">พวงกุญแจชื่อ</button>
-      <button type="button" data-product-tab="clicker" style="flex:1;" hidden>Clicker จากรูป</button>
+      <button type="button" data-product-tab="name" style="flex:1;" data-i18n="tab.nameKeychain">พวงกุญแจชื่อ</button>
+      <button type="button" data-product-tab="clicker" style="flex:1;" hidden data-i18n="tab.clicker">Clicker จากรูป</button>
     </div>
 
     <div id="nameKeychainPanel">
@@ -38,7 +43,7 @@
 
         <aside class="panel">
 
-        <h2>ออกแบบสินค้า</h2>
+        <h2 data-i18n="panel.title">ออกแบบสินค้า</h2>
 
         <div class="name-mode-tabs" id="nameModeTabsWrap" style="display:flex; gap:8px; margin-bottom:16px;">
           <button type="button" data-name-mode="customer" style="flex:1;">Customer Mode</button>
@@ -46,7 +51,7 @@
         </div>
 
         <div class="field">
-          <label for="nameInput">ชื่อ</label>
+          <label for="nameInput" data-i18n="field.name">ชื่อ</label>
 
           <input
             id="nameInput"
@@ -58,7 +63,7 @@
         </div>
 
         <div class="field">
-          <label for="fontSelectTrigger">เลือกฟอนต์</label>
+          <label for="fontSelectTrigger" data-i18n="field.font">เลือกฟอนต์</label>
 
           <select id="fontSelect">
             <option value="18jindaEclair">18jindaEclair</option>
@@ -130,7 +135,7 @@
         </div>
 
         <div class="field">
-          <label for="nameSizeSlider">ขนาดตัวอักษร</label>
+          <label for="nameSizeSlider" data-i18n="field.size">ขนาดตัวอักษร</label>
           <input
             type="range"
             id="nameSizeSlider"
@@ -147,51 +152,51 @@
         </div>
 
         <div class="field">
-  <label for="baseStyleSelect">รูปทรงฐาน</label>
+  <label for="baseStyleSelect" data-i18n="field.baseShape">รูปทรงฐาน</label>
 
   <select id="baseStyleSelect">
-    <option value="outline">
+    <option value="outline" data-i18n="shape.outline">
       ไดคัทตามชื่อ
     </option>
 
-    <option value="capsule">
+    <option value="capsule" data-i18n="shape.capsule">
       แคปซูล
     </option>
 
-    <option value="rounded-rectangle">
+    <option value="rounded-rectangle" data-i18n="shape.roundedRectangle">
       สี่เหลี่ยมมุมมน
     </option>
 
-    <option value="oval">
+    <option value="oval" data-i18n="shape.oval">
       วงรี
     </option>
 
-    <option value="cloud">
+    <option value="cloud" data-i18n="shape.cloud">
       ก้อนเมฆ
     </option>
 
-    <option value="star">
+    <option value="star" data-i18n="shape.star">
       ดาว
     </option>
 
-    <option value="heart">
+    <option value="heart" data-i18n="shape.heart">
       หัวใจ
     </option>
 
-    <option value="flower">
+    <option value="flower" data-i18n="shape.flower">
       ดอกไม้
     </option>
 
-    <option value="clover">
+    <option value="clover" data-i18n="shape.clover">
       โคลเวอร์
     </option>
 
-    <option value="cat">
+    <option value="cat" data-i18n="shape.cat">
       แมว
     </option>
   </select>
   <div class="outline-control">
-  <label for="outlineSlider">ความหนาขอบไดคัท</label>
+  <label for="outlineSlider" data-i18n="field.outlineThickness">ความหนาขอบไดคัท</label>
 
   <input
     type="range"
@@ -203,283 +208,284 @@
   >
 
   <div class="outline-value">
-    <span>บาง</span>
+    <span data-i18n="slider.thin">บาง</span>
     <span id="outlineValue">0.18</span>
-    <span>หนา</span>
+    <span data-i18n="slider.thick">หนา</span>
   </div>
 </div>
 </div>
 
         <div class="field">
-          <label>สีฐาน</label>
+          <label data-i18n="field.baseColor">สีฐาน</label>
 
           <div class="color-row" id="baseColors">
             <button
               class="color-button active"
               data-color="#111111"
               style="background:#111111"
-              title="ดำ"
+              title="ดำ" data-i18n-title="color.black"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffffff"
               style="background:#ffffff"
-              title="ขาว"
+              title="ขาว" data-i18n-title="color.white"
             ></button>
 
             <button
               class="color-button"
               data-color="#9e9e9e"
               style="background:#9e9e9e"
-              title="เทา"
+              title="เทา" data-i18n-title="color.gray"
             ></button>
 
             <button
               class="color-button"
               data-color="#ff4f9d"
               style="background:#ff4f9d"
-              title="ชมพูเข้ม"
+              title="ชมพูเข้ม" data-i18n-title="color.hotPink"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffc2e2"
               style="background:#ffc2e2"
-              title="ชมพูอ่อน"
+              title="ชมพูอ่อน" data-i18n-title="color.lightPink"
             ></button>
 
             <button
               class="color-button"
               data-color="#e63946"
               style="background:#e63946"
-              title="แดง"
+              title="แดง" data-i18n-title="color.red"
             ></button>
 
             <button
               class="color-button"
               data-color="#ff9f43"
               style="background:#ff9f43"
-              title="ส้ม"
+              title="ส้ม" data-i18n-title="color.orange"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffe066"
               style="background:#ffe066"
-              title="เหลือง"
+              title="เหลือง" data-i18n-title="color.yellow"
             ></button>
 
             <button
               class="color-button"
               data-color="#fdf1c7"
               style="background:#fdf1c7"
-              title="ครีม"
+              title="ครีม" data-i18n-title="color.cream"
             ></button>
 
             <button
               class="color-button"
               data-color="#8fe3c0"
               style="background:#8fe3c0"
-              title="เขียวมิ้นต์"
+              title="เขียวมิ้นต์" data-i18n-title="color.mint"
             ></button>
 
             <button
               class="color-button"
               data-color="#4caf50"
               style="background:#4caf50"
-              title="เขียว"
+              title="เขียว" data-i18n-title="color.green"
             ></button>
 
             <button
               class="color-button"
               data-color="#78c8ff"
               style="background:#78c8ff"
-              title="ฟ้า"
+              title="ฟ้า" data-i18n-title="color.skyBlue"
             ></button>
 
             <button
               class="color-button"
               data-color="#4361ee"
               style="background:#4361ee"
-              title="น้ำเงิน"
+              title="น้ำเงิน" data-i18n-title="color.blue"
             ></button>
 
             <button
               class="color-button"
               data-color="#a889ff"
               style="background:#a889ff"
-              title="ม่วง"
+              title="ม่วง" data-i18n-title="color.purple"
             ></button>
 
             <button
               class="color-button"
               data-color="#d9c6ff"
               style="background:#d9c6ff"
-              title="ม่วงอ่อน"
+              title="ม่วงอ่อน" data-i18n-title="color.lightPurple"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffd8b8"
               style="background:#ffd8b8"
-              title="พีช"
+              title="พีช" data-i18n-title="color.peach"
             ></button>
 
             <button
               class="color-button"
               data-color="#a9784f"
               style="background:#a9784f"
-              title="น้ำตาล"
+              title="น้ำตาล" data-i18n-title="color.brown"
             ></button>
           </div>
         </div>
 
         <div class="field">
-          <label>สีตัวอักษร</label>
+          <label data-i18n="field.textColor">สีตัวอักษร</label>
 
           <div class="color-row" id="textColors">
             <button
               class="color-button active"
               data-color="#ffffff"
               style="background:#ffffff"
-              title="ขาว"
+              title="ขาว" data-i18n-title="color.white"
             ></button>
 
             <button
               class="color-button"
               data-color="#111111"
               style="background:#111111"
-              title="ดำ"
+              title="ดำ" data-i18n-title="color.black"
             ></button>
 
             <button
               class="color-button"
               data-color="#9e9e9e"
               style="background:#9e9e9e"
-              title="เทา"
+              title="เทา" data-i18n-title="color.gray"
             ></button>
 
             <button
               class="color-button"
               data-color="#ff4f9d"
               style="background:#ff4f9d"
-              title="ชมพูเข้ม"
+              title="ชมพูเข้ม" data-i18n-title="color.hotPink"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffc2e2"
               style="background:#ffc2e2"
-              title="ชมพูอ่อน"
+              title="ชมพูอ่อน" data-i18n-title="color.lightPink"
             ></button>
 
             <button
               class="color-button"
               data-color="#e63946"
               style="background:#e63946"
-              title="แดง"
+              title="แดง" data-i18n-title="color.red"
             ></button>
 
             <button
               class="color-button"
               data-color="#ff9f43"
               style="background:#ff9f43"
-              title="ส้ม"
+              title="ส้ม" data-i18n-title="color.orange"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffe066"
               style="background:#ffe066"
-              title="เหลือง"
+              title="เหลือง" data-i18n-title="color.yellow"
             ></button>
 
             <button
               class="color-button"
               data-color="#fdf1c7"
               style="background:#fdf1c7"
-              title="ครีม"
+              title="ครีม" data-i18n-title="color.cream"
             ></button>
 
             <button
               class="color-button"
               data-color="#8fe3c0"
               style="background:#8fe3c0"
-              title="เขียวมิ้นต์"
+              title="เขียวมิ้นต์" data-i18n-title="color.mint"
             ></button>
 
             <button
               class="color-button"
               data-color="#4caf50"
               style="background:#4caf50"
-              title="เขียว"
+              title="เขียว" data-i18n-title="color.green"
             ></button>
 
             <button
               class="color-button"
               data-color="#78c8ff"
               style="background:#78c8ff"
-              title="ฟ้า"
+              title="ฟ้า" data-i18n-title="color.skyBlue"
             ></button>
 
             <button
               class="color-button"
               data-color="#4361ee"
               style="background:#4361ee"
-              title="น้ำเงิน"
+              title="น้ำเงิน" data-i18n-title="color.blue"
             ></button>
 
             <button
               class="color-button"
               data-color="#a889ff"
               style="background:#a889ff"
-              title="ม่วง"
+              title="ม่วง" data-i18n-title="color.purple"
             ></button>
 
             <button
               class="color-button"
               data-color="#d9c6ff"
               style="background:#d9c6ff"
-              title="ม่วงอ่อน"
+              title="ม่วงอ่อน" data-i18n-title="color.lightPurple"
             ></button>
 
             <button
               class="color-button"
               data-color="#ffd8b8"
               style="background:#ffd8b8"
-              title="พีช"
+              title="พีช" data-i18n-title="color.peach"
             ></button>
 
             <button
               class="color-button"
               data-color="#a9784f"
               style="background:#a9784f"
-              title="น้ำตาล"
+              title="น้ำตาล" data-i18n-title="color.brown"
             ></button>
           </div>
         </div>
 
-        <button class="order-button" id="orderButton">
+        <button class="order-button" id="orderButton" data-i18n="button.confirmOrder">
           ยืนยันแบบนี้
         </button>
 
-        <button class="order-button secondary" id="sendDesignButton" type="button">
+        <button class="order-button secondary" id="sendDesignButton" type="button" data-i18n="button.sendToShop">
           ส่งแบบให้ร้าน
         </button>
 
         <div class="design-id-result" id="designIdResult" hidden>
-          บันทึกแบบเรียบร้อย! รหัสแบบของคุณคือ
+          <span data-i18n="result.savedPrefix">บันทึกแบบเรียบร้อย! รหัสแบบของคุณคือ</span>
           <strong id="designIdValue"></strong>
         </div>
 
         <div class="field load-design-field" id="loadDesignField">
-          <label for="loadDesignInput">โหลดแบบด้วยรหัส (สำหรับร้าน)</label>
+          <label for="loadDesignInput" data-i18n="field.loadDesign">โหลดแบบด้วยรหัส (สำหรับร้าน)</label>
           <div style="display:flex; gap:8px;">
             <input
               id="loadDesignInput"
               type="text"
               placeholder="เช่น KC-XXXXXXXX"
+              data-i18n-placeholder="placeholder.designCode"
               autocomplete="off"
               style="flex:1;"
             >
@@ -493,7 +499,7 @@
       <section class="preview-panel">
 
         <div class="preview-title">
-          <h2>ตัวอย่างสินค้า</h2>
+          <h2 data-i18n="panel.previewTitle">ตัวอย่างสินค้า</h2>
           <span class="live-badge">● LIVE PREVIEW</span>
         </div>
 
@@ -521,7 +527,7 @@
 
         </div>
 
-        <div class="hint">
+        <div class="hint" data-i18n="helper.livePreview">
           พิมพ์ชื่อหรือเลือกสี แล้วตัวอย่างจะเปลี่ยนทันที
         </div>
 
@@ -670,6 +676,7 @@
 <script src="https://unpkg.com/harfbuzzjs@0.8.0/hb.js"></script>
 <script src="https://unpkg.com/harfbuzzjs@0.8.0/hbjs.js"></script>
 <script type="module" src="firebase-designs.js"></script>
+<script src="i18n.js"></script>
 <script src="script.js"></script>
 <script src="font-select-ui.js"></script>
 <script type="module" src="viewer.js"></script>

@@ -71,7 +71,8 @@
 
     const previewText = document.createElement("span");
     previewText.className = "font-select-option-preview";
-    previewText.textContent = "ตัวอย่าง";
+    previewText.dataset.i18n = "font.preview";
+    previewText.textContent = window.t ? window.t("font.preview") : "ตัวอย่าง";
     row.appendChild(previewText);
 
     if (lazyFontObserver) {

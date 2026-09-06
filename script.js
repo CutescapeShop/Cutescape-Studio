@@ -273,7 +273,7 @@ if (sendDesignButton) {
     };
 
     if (!window.cutescapeSaveDesign) {
-      alert("ระบบบันทึกแบบยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง");
+      alert(window.t ? window.t("alert.saveSystemNotReady") : "ระบบบันทึกแบบยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง");
       return;
     }
 
@@ -292,7 +292,7 @@ if (sendDesignButton) {
         designIdResult.hidden = false;
       }
     } catch (error) {
-      alert("บันทึกแบบไม่สำเร็จ: " + error.message);
+      alert(window.t ? window.t("alert.saveFailed", { error: error.message }) : "บันทึกแบบไม่สำเร็จ: " + error.message);
     } finally {
       sendDesignButton.disabled = false;
     }
@@ -367,14 +367,14 @@ if (loadDesignButton) {
 
     if (!designId) {
       if (loadDesignStatus) {
-        loadDesignStatus.textContent = "กรุณาใส่รหัสแบบ";
+        loadDesignStatus.textContent = window.t ? window.t("status.enterCode") : "กรุณาใส่รหัสแบบ";
       }
       return;
     }
 
     if (!window.cutescapeLoadDesign) {
       if (loadDesignStatus) {
-        loadDesignStatus.textContent = "ระบบโหลดแบบยังไม่พร้อมใช้งาน";
+        loadDesignStatus.textContent = window.t ? window.t("status.loadSystemNotReady") : "ระบบโหลดแบบยังไม่พร้อมใช้งาน";
       }
       return;
     }
@@ -382,14 +382,14 @@ if (loadDesignButton) {
     loadDesignButton.disabled = true;
 
     if (loadDesignStatus) {
-      loadDesignStatus.textContent = "กำลังโหลด...";
+      loadDesignStatus.textContent = window.t ? window.t("status.loading") : "กำลังโหลด...";
     }
 
     window.cutescapeLoadDesign(designId)
       .then(function (design) {
         if (!design) {
           if (loadDesignStatus) {
-            loadDesignStatus.textContent = "ไม่พบแบบรหัสนี้";
+            loadDesignStatus.textContent = window.t ? window.t("status.notFound") : "ไม่พบแบบรหัสนี้";
           }
           return;
         }
@@ -397,13 +397,16 @@ if (loadDesignButton) {
         applyLoadedDesign(design);
 
         if (loadDesignStatus) {
-          loadDesignStatus.textContent = "โหลดแบบ " + designId + " สำเร็จ";
+          loadDesignStatus.textContent = window.t
+            ? window.t("status.loadSuccess", { id: designId })
+            : "โหลดแบบ " + designId + " สำเร็จ";
         }
       })
       .catch(function (error) {
         if (loadDesignStatus) {
-          loadDesignStatus.textContent =
-            "โหลดแบบไม่สำเร็จ: " + error.message;
+          loadDesignStatus.textContent = window.t
+            ? window.t("status.loadFailed", { error: error.message })
+            : "โหลดแบบไม่สำเร็จ: " + error.message;
         }
       })
       .finally(function () {

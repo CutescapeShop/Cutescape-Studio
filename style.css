@@ -403,6 +403,43 @@
     .header {
       text-align: center;
       margin-bottom: 28px;
+      position: relative;
+    }
+
+    .lang-toggle {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--cream-deep);
+      border: 1.5px solid var(--sage);
+      border-radius: 999px;
+      padding: 4px 6px;
+    }
+
+    .lang-toggle-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-family: var(--font-accent);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink-soft);
+    }
+
+    .lang-toggle-btn.active {
+      background: var(--sage-strong);
+      color: #ffffff;
+    }
+
+    .lang-toggle-sep {
+      color: var(--ink-soft);
+      opacity: 0.5;
+      font-size: 13px;
     }
 
     .header-logo {
@@ -1094,4 +1131,25 @@
       border-radius: 12px;
       background: #fff;
       image-rendering: pixelated;
+    }
+
+    /* =========================================
+       EN-mode typography experiment — Name Keychain only.
+       CSS-only, scoped to #nameKeychainPanel so Clicker (which
+       shares .field/.order-button/[data-name-mode]/etc.) is
+       never affected. The playful accent/display font stays on
+       the header tagline, panel.title, and panel.previewTitle
+       in both languages — everything else functional here
+       switches to a system sans stack for EN legibility.
+       ========================================= */
+
+    html[lang="en"] #nameKeychainPanel .field label,
+    html[lang="en"] #nameKeychainPanel #baseStyleSelect,
+    html[lang="en"] #nameKeychainPanel [data-name-mode],
+    html[lang="en"] #nameKeychainPanel .order-button,
+    html[lang="en"] #nameKeychainPanel .name-size-value span:first-child,
+    html[lang="en"] #nameKeychainPanel .name-size-value span:last-child,
+    html[lang="en"] #nameKeychainPanel .outline-value span:first-child,
+    html[lang="en"] #nameKeychainPanel .outline-value span:last-child {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
