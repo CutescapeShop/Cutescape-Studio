@@ -39,11 +39,30 @@
 
   const optionEls = [];
 
+  // Lazy-load preview fonts: applying font-family to every row up front makes
+  // the browser request every preview TTF the moment this script runs, well
+  // before the dropdown is ever opened. Instead each row's font-family is
+  // applied only once that row actually scrolls into the (open) panel's
+  // viewport, so only the fonts a user actually scrolls past get requested.
+  const lazyFontObserver =
+    "IntersectionObserver" in window
+      ? new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              const row = entry.target;
+              row.style.fontFamily = '"' + row.dataset.value + '"';
+              lazyFontObserver.unobserve(row);
+            });
+          },
+          { root: panel, rootMargin: "200px 0px" }
+        )
+      : null;
+
   options.forEach(function (opt) {
     const row = document.createElement("button");
     row.type = "button";
     row.className = "font-select-option";
-    row.style.fontFamily = '"' + opt.value + '"';
     row.dataset.value = opt.value;
     row.setAttribute("role", "option");
     row.append(
@@ -54,6 +73,12 @@
     previewText.className = "font-select-option-preview";
     previewText.textContent = "ตัวอย่าง";
     row.appendChild(previewText);
+
+    if (lazyFontObserver) {
+      lazyFontObserver.observe(row);
+    } else {
+      row.style.fontFamily = '"' + opt.value + '"';
+    }
 
     row.addEventListener("click", function () {
       nativeSelect.value = opt.value;

@@ -1779,6 +1779,7 @@ async function rebuildProduct() {
   );
 
   controls.update();
+  requestRender();
 }
 
 
@@ -1912,6 +1913,7 @@ window.set3DBaseColor =
     baseMaterial.color.set(
       color
     );
+    requestRender();
   };
 
 window.set3DTextColor =
@@ -1919,6 +1921,7 @@ window.set3DTextColor =
     textMaterial.color.set(
       color
     );
+    requestRender();
   };
 
 
@@ -1989,13 +1992,27 @@ productGroup.rotation.y =
 
 
 // =====================================
-// Render
+// Render (render-on-demand — pauses while the viewer is offscreen)
 // =====================================
+// Mobile perf: a plain requestAnimationFrame loop renders forever even when
+// the viewer has scrolled out of view or nothing changed. Instead we render
+// only when something actually changes (OrbitControls "change" — fired on
+// user input and on every damping step, so inertia after a drag still plays
+// out — or a product rebuild/resize), and only while the viewer is visible.
+// A change while offscreen still marks a render as pending so the viewer
+// catches up with one frame as soon as it scrolls back into view.
 
-function animate() {
-  requestAnimationFrame(
-    animate
-  );
+let isViewerVisible = true;
+let renderRequested = false;
+let renderPendingWhileHidden = false;
+
+function renderFrame() {
+  renderRequested = false;
+
+  if (!isViewerVisible) {
+    renderPendingWhileHidden = true;
+    return;
+  }
 
   controls.update();
 
@@ -2005,7 +2022,35 @@ function animate() {
   );
 }
 
-animate();
+function requestRender() {
+  if (renderRequested) return;
+  renderRequested = true;
+  requestAnimationFrame(renderFrame);
+}
+
+controls.addEventListener("change", requestRender);
+
+if ("IntersectionObserver" in window) {
+  const viewerVisibilityObserver = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        isViewerVisible = entry.isIntersecting;
+
+        if (isViewerVisible && renderPendingWhileHidden) {
+          renderPendingWhileHidden = false;
+          requestRender();
+        }
+      });
+    },
+    { threshold: 0 }
+  );
+
+  viewerVisibilityObserver.observe(viewer);
+} else {
+  isViewerVisible = true;
+}
+
+requestRender();
 
 
 // =====================================
@@ -2030,6 +2075,8 @@ window.addEventListener(
       width,
       height
     );
+
+    requestRender();
   }
 );
 
