@@ -18,7 +18,7 @@ function updateName() {
   let name = nameInput.value.trim();
 
   if (name === "") {
-    name = "Cutescape";
+    name = "Cute";
   }
 
   if (namePreview) {
@@ -262,7 +262,7 @@ if (sendDesignButton) {
     const outlineSlider = document.getElementById("outlineSlider");
 
     const design = {
-      name: nameInput.value.trim() || "Cutescape",
+      name: nameInput.value.trim() || "Cute",
       font: fontSelect.value,
       textSize: nameSizeSlider ? nameSizeSlider.value : "100",
       baseStyle: baseStyleSelect ? baseStyleSelect.value : "outline",
@@ -332,7 +332,7 @@ function applyLoadedDesign(design) {
   const baseStyleSelectEl = document.getElementById("baseStyleSelect");
   const outlineSliderEl = document.getElementById("outlineSlider");
 
-  nameInput.value = design.name || "Cutescape";
+  nameInput.value = design.name || "Cute";
   fireEvent(nameInput, "input");
 
   if (design.font) {

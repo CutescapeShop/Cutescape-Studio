@@ -1705,10 +1705,10 @@ async function rebuildProduct() {
   let textValue =
     nameInput
       ? nameInput.value.trim()
-      : "Cutescape";
+      : "Cute";
 
   if (textValue === "") {
-    textValue = "Cutescape";
+    textValue = "Cute";
   }
 
   const selectedStyle =
@@ -2072,7 +2072,7 @@ if (orderButton) {
       }
     });
 
-    const fileName = (nameInput.value || "Cutescape")
+    const fileName = (nameInput.value || "Cute")
   .trim()
   .replace(/[^\p{L}\p{N}_-]+/gu, "_");
 
