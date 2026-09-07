@@ -366,16 +366,16 @@ export function createTopRearShellGeometries(
   scaleMultiplier,
   bodyDepthMM,
   backingThicknessMM,
-  cavityProfile
+  cavityProfile,
+  topSocketProfile = null
 ) {
   if (!outerLoops || outerLoops.length === 0 || !autoFit) {
     return { geometries: [], outerMMLoops: [], cavityLoops: [], diagnostics: null, warnings: ["No outer silhouette"] };
   }
 
   const shapes = groupLoopsIntoSolidShapes(outerLoops);
-  const geometries = [];
   const outerMMLoops = [];
-  const cavityLoops = [];
+  const perShapeCavity = [];
   const diagnostics = {
     rawInsetLoops: 0,
     cleanedLoops: 0,
@@ -405,13 +405,47 @@ export function createTopRearShellGeometries(
     diagnostics.validInsetLoops += inset.loops.length;
     diagnostics.insetOffsetMs += inset.offsetMs;
     diagnostics.cavityCleanFilterMs += inset.cleaningFilteringMs;
+    if (inset.cacheHit) diagnostics.insetCacheHits += 1;
 
     const largestCavity = (inset.loops || []).sort((a, b) => Math.abs(signedArea(b)) - Math.abs(signedArea(a)))[0] || null;
-    if (largestCavity) {
-      cavityLoops.push(largestCavity);
-    }
+    perShapeCavity.push(largestCavity);
+  }
 
-    const shape = buildShapeFromMMLoops(mmOuter, largestCavity ? [largestCavity] : []);
+  // Guaranteed-relief fallback: on an irregular photo-derived outline,
+  // the silhouette-inset cavity search above can legitimately find
+  // nothing valid anywhere (self-intersections/boundary-crossings at
+  // narrow appendages — see sanitizeInsetLoops). Without ANY cavity,
+  // the shell stays fully solid and the MX pedestal boss (built
+  // separately by createTopPedestalGeometry, extruded to this SAME
+  // Z-depth) ends up completely embedded in solid material — a real
+  // mesh with zero visible relief. A plain circle is always a simple,
+  // self-intersection-free polygon regardless of how irregular the
+  // outer outline is, so carving one around wherever the pedestal will
+  // actually sit is robust for any silhouette. findPedestalLocation is
+  // a pure function of its inputs, so calling it here with cavityLoops
+  // = [] reproduces exactly the (x,y) createTopPedestalGeometry will
+  // independently compute next — no coordination between the two
+  // calls is needed for them to agree.
+  let fallbackCavity = null;
+  let fallbackShapeIndex = -1;
+  const hasAnyRealCavity = perShapeCavity.some(Boolean);
+  if (!hasAnyRealCavity && topSocketProfile) {
+    const pedestalRadius = topSocketProfile.bossDiameterMM / 2 + cavityProfile.bossKeepOutMM;
+    const location = findPedestalLocation(outerMMLoops, [], pedestalRadius, pedestalRadius, cavityProfile.minimumWallMM);
+    if (location) {
+      const relief = circlePolygon(pedestalRadius * 2 + 0.6, 32).map((p) => ({
+        x: p.x + location.x,
+        y: p.y + location.y,
+      }));
+      fallbackShapeIndex = outerMMLoops.findIndex((loop) => pointInPolygon(location, loop));
+      if (fallbackShapeIndex >= 0) fallbackCavity = relief;
+    }
+  }
+
+  const geometries = [];
+  outerMMLoops.forEach((mmOuter, index) => {
+    const chosenCavity = perShapeCavity[index] || (index === fallbackShapeIndex ? fallbackCavity : null);
+    const shape = buildShapeFromMMLoops(mmOuter, chosenCavity ? [chosenCavity] : []);
     const extrusionStartedAt = nowMs();
     const geometry = new THREE.ExtrudeGeometry(shape, {
       depth: Math.max(0.05, bodyDepthMM),
@@ -420,13 +454,19 @@ export function createTopRearShellGeometries(
     });
     geometry.translate(0, 0, -bodyDepthMM - backingThicknessMM);
     diagnostics.shellExtrusionMs += nowMs() - extrusionStartedAt;
-    diagnostics.cavityLoopsUsed += largestCavity ? 1 : 0;
-    if (inset.cacheHit) diagnostics.insetCacheHits += 1;
+    diagnostics.cavityLoopsUsed += chosenCavity ? 1 : 0;
     geometries.push(geometry);
-  }
+  });
+
+  const cavityLoops = perShapeCavity.filter(Boolean);
+  if (fallbackCavity) cavityLoops.push(fallbackCavity);
 
   const warnings = [];
-  if (cavityLoops.length === 0) warnings.push("No usable inset cavity; rear shell remains solid");
+  if (cavityLoops.length === 0) {
+    warnings.push("No usable inset cavity; rear shell remains solid");
+  } else if (fallbackCavity) {
+    warnings.push("Silhouette-derived cavity unavailable; used a guaranteed circular relief around the MX pedestal instead");
+  }
   return { geometries, outerMMLoops, cavityLoops, diagnostics, warnings };
 }
 
@@ -437,7 +477,8 @@ export function createTopPedestalGeometry(
   topSocketProfile,
   bodyDepthMM,
   backingThicknessMM,
-  bossKeepOutMM
+  bossKeepOutMM,
+  minimumWallMM = 0
 ) {
   const pedestalRadius = topSocketProfile.bossDiameterMM / 2 + bossKeepOutMM;
   const socketClearRadius = Math.max(
@@ -445,7 +486,7 @@ export function createTopPedestalGeometry(
     topSocketProfile.crossArmThickness + topSocketProfile.socketToleranceMM
   ) / 2 + 0.2;
 
-  const location = findPedestalLocation(outerMMLoops, cavityLoops, pedestalRadius, socketClearRadius);
+  const location = findPedestalLocation(outerMMLoops, cavityLoops, pedestalRadius, socketClearRadius, minimumWallMM);
   if (!location) {
     return {
       geometry: null,

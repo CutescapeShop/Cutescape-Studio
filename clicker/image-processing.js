@@ -121,6 +121,18 @@ export function buildMask(imageData, options = {}) {
 
   const mask = new Uint8Array(width * height);
 
+  // Does this image actually carry a transparent background (a real
+  // alpha-cutout PNG), or is it fully opaque (JPG, or a PNG exported
+  // without transparency)? Only in the transparent case does alpha
+  // alone define the silhouette correctly — see below.
+  let hasTransparency = false;
+  for (let i = 0; i < width * height; i++) {
+    if (data[i * 4 + 3] < alphaThreshold) {
+      hasTransparency = true;
+      break;
+    }
+  }
+
   for (let i = 0; i < width * height; i++) {
     const r = data[i * 4];
     const g = data[i * 4 + 1];
@@ -129,6 +141,19 @@ export function buildMask(imageData, options = {}) {
 
     if (a < alphaThreshold) {
       mask[i] = 0; // transparent pixel = always background
+      continue;
+    }
+
+    // Genuine alpha-cutout: every opaque pixel is part of the drawn
+    // subject by definition, regardless of its color. Re-testing color/
+    // luminance here (the old behavior) incorrectly excluded light-
+    // colored fill areas (e.g. a cat's cream belly) from the mask,
+    // fragmenting one solid silhouette into disconnected dark-outline
+    // islands. threshold/invert still apply as before to images with
+    // no real transparency, where alpha can't tell foreground from
+    // background at all.
+    if (hasTransparency) {
+      mask[i] = 1;
       continue;
     }
 

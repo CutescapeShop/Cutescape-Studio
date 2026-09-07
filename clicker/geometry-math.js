@@ -175,14 +175,20 @@ function pointSegmentDistance(point, a, b) {
   return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
 }
 
+// True "does a disk of this radius fit entirely inside the loop" test:
+// the center must be inside, and the minimum distance from the center
+// to every boundary EDGE must be >= radius. (The previous version only
+// sampled 32 points on the circle's own rim and inside-tested each one
+// individually — on a dense, irregular photo-traced silhouette, a thin
+// notch between two sample angles can sit well inside the sampled
+// radius without any sample ever landing on it, so it reported "fits"
+// even when the true clearance was much smaller. That's what let a
+// margin-widened radius requirement still resolve to the same
+// too-tight spot instead of rejecting it.)
 function circleInsideLoop(center, radius, loop) {
-  for (let i = 0; i < 32; i++) {
-    const angle = (i / 32) * Math.PI * 2;
-    const point = {
-      x: center.x + radius * Math.cos(angle),
-      y: center.y + radius * Math.sin(angle),
-    };
-    if (!pointInPolygon(point, loop)) return false;
+  if (!pointInPolygon(center, loop)) return false;
+  for (let i = 0; i < loop.length; i++) {
+    if (pointSegmentDistance(center, loop[i], loop[(i + 1) % loop.length]) < radius) return false;
   }
   return true;
 }
@@ -219,6 +225,7 @@ export function findPedestalLocation(
   cavityLoops,
   radius,
   cavityClearRadius = radius,
+  marginMM = 0,
   gridStep = 0.5
 ) {
   if (!outerLoops || outerLoops.length === 0) return null;
@@ -238,8 +245,22 @@ export function findPedestalLocation(
     }
   }
 
+  // The point must clear not just the boss itself but the wall/cavity
+  // margin around it (marginMM) — otherwise the boss can end up wedged
+  // into a spot barely wide enough for its own radius, with nothing
+  // left over for the rear-shell wall that's supposed to surround it
+  // (see createTopRearShellGeometries / housing chamber). Below this
+  // line, "solid" means clears radius + marginMM; "boss-only" means it
+  // clears just radius, kept as a fallback tier so a pedestal is never
+  // simply omitted on a very tight silhouette.
+  const requiredRadius = radius + marginMM;
   const fallbackCenter = loopCentroid(mainOuter);
-  if (circleInsideLoop(fallbackCenter, radius, mainOuter)) {
+
+  // Fast path: the plain centroid already has room for the boss AND
+  // its surrounding margin — skip the full-silhouette search below.
+  // Keeps already-well-proportioned bodies (switch naturally lands in
+  // an open area) exactly as fast as before this fix.
+  if (circleInsideLoop(fallbackCenter, requiredRadius, mainOuter)) {
     return { x: fallbackCenter.x, y: fallbackCenter.y, insideCavity: false, clearance: Infinity };
   }
 
@@ -250,13 +271,18 @@ export function findPedestalLocation(
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
 
-  // The MX pedestal/socket boss is a required, always-present solid
-  // island — it must never simply be omitted because no point cleared
-  // the ideal `radius`. Scan the FULL bounding box (not pre-shrunk by
-  // radius, which could make minX>maxX and bail out early on a small
-  // body) and keep the best point found even if it falls short of the
-  // ideal clearance, so a location is always produced.
-  let bestSolid = null; // fully clears the ideal `radius`
+  // Slow path: the centroid doesn't have enough surrounding room (e.g.
+  // it falls in a narrow neck/waist on an asymmetric photo silhouette).
+  // Search the full interior for the point with the MOST clearance from
+  // the boundary — the mechanically safest spot for the boss + wall,
+  // similar to how the reference model's switch sits in the widest part
+  // of the body (the "belly") rather than wherever the geometric
+  // centroid happens to fall. The MX pedestal/socket boss is a
+  // required, always-present solid island — it must never simply be
+  // omitted because no point cleared the ideal radius, so the best
+  // point found is kept even if it falls short, in three tiers.
+  let bestSolid = null; // clears radius + marginMM (fully viable)
+  let bestBossOnly = null; // clears radius only (boss fits, margin may not)
   let bestAny = null; // best available clearance, whatever it is
   for (let x = minX; x <= maxX + 1e-9; x += gridStep) {
     for (let y = minY; y <= maxY + 1e-9; y += gridStep) {
@@ -270,7 +296,10 @@ export function findPedestalLocation(
       if (!bestAny || score > bestAny.score) {
         bestAny = { x, y, clearance, score };
       }
-      if (clearance >= radius && (!bestSolid || score > bestSolid.score)) {
+      if (clearance >= radius && (!bestBossOnly || score > bestBossOnly.score)) {
+        bestBossOnly = { x, y, clearance, score };
+      }
+      if (clearance >= requiredRadius && (!bestSolid || score > bestSolid.score)) {
         bestSolid = { x, y, clearance, score };
       }
     }
@@ -278,6 +307,10 @@ export function findPedestalLocation(
 
   if (bestSolid) {
     return { x: bestSolid.x, y: bestSolid.y, insideCavity: false, clearance: bestSolid.clearance };
+  }
+
+  if (bestBossOnly) {
+    return { x: bestBossOnly.x, y: bestBossOnly.y, insideCavity: false, clearance: bestBossOnly.clearance, constrained: true };
   }
 
   if (bestAny) {

@@ -147,14 +147,26 @@ function init() {
   }
   animate();
 
-  window.addEventListener("resize", () => {
+  function syncRendererSize() {
     const width = viewerEl.clientWidth;
     const height = viewerEl.clientHeight;
     if (width === 0 || height === 0) return;
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
-  });
+  }
+
+  window.addEventListener("resize", syncRendererSize);
+
+  // init() runs at page load, while the Clicker panel is still hidden
+  // (display:none collapses viewerEl to 0x0 no matter what size it's
+  // told to be), so the very first setSize() above is stuck at 0x0.
+  // Switching the product tab later doesn't fire a window "resize"
+  // event, so nothing re-measures it — ResizeObserver does, since a
+  // hidden-to-visible transition is itself an observed size change.
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(syncRendererSize).observe(viewerEl);
+  }
 
 
   // ---------------- Groups ----------------
@@ -289,7 +301,11 @@ function init() {
       FIXED_CLICKER_SCALE_MULTIPLIER,
       CLICKER_PROFILE.topShell.bodyDepthMM,
       CLICKER_PROFILE.topShell.transitionThicknessMM,
-      { minimumWallMM: CLICKER_PROFILE.topShell.minimumWallMM }
+      {
+        minimumWallMM: CLICKER_PROFILE.topShell.minimumWallMM,
+        bossKeepOutMM: CLICKER_PROFILE.topShell.bossKeepOutMM,
+      },
+      CLICKER_PROFILE.topSocket
     );
     for (const geom of shellResult.geometries) {
       topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
@@ -306,7 +322,8 @@ function init() {
       CLICKER_PROFILE.topSocket,
       CLICKER_PROFILE.topShell.bodyDepthMM,
       CLICKER_PROFILE.topShell.transitionThicknessMM,
-      CLICKER_PROFILE.topShell.bossKeepOutMM
+      CLICKER_PROFILE.topShell.bossKeepOutMM,
+      CLICKER_PROFILE.topShell.minimumWallMM
     );
     if (pedestalResult.geometry) {
       topGroup.add(new THREE.Mesh(pedestalResult.geometry, topBaseMaterial));

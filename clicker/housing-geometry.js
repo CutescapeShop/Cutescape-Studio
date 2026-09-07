@@ -160,6 +160,32 @@ function loopContainsLoop(container, candidate) {
   return candidate.every((point) => pointInPolygon(point, container));
 }
 
+// MM-space Clipper union of a chamber candidate with the (small,
+// always-simple) plate rectangle, used only to patch a chamber that's
+// otherwise valid but doesn't quite cover the plate opening — see the
+// chamber fallback below.
+const MM_CLIPPER_SCALE = 1000;
+function unionLoopWithRect(loopMM, rectMM) {
+  const scale = MM_CLIPPER_SCALE;
+  const toPath = (loop) => loop.map((p) => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }));
+  const clipper = new ClipperLib.Clipper();
+  clipper.AddPath(toPath(loopMM), ClipperLib.PolyType.ptSubject, true);
+  clipper.AddPath(toPath(rectMM), ClipperLib.PolyType.ptSubject, true);
+  const result = new ClipperLib.Paths();
+  clipper.Execute(ClipperLib.ClipType.ctUnion, result, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+  if (result.length === 0) return loopMM;
+  // The union can leave near-duplicate points right at the seam between
+  // the two source polygons — close enough (sub-0.001mm) that the exact
+  // float equality check in cleanLoop() doesn't merge them, but not
+  // exactly equal, which left a handful of degenerate slivers in the
+  // wall mesh (open edges) exactly at that seam. Clean in integer
+  // Clipper space first, the same technique already used elsewhere in
+  // this project for exactly this kind of near-duplicate artifact.
+  const cleaned = ClipperLib.Clipper.CleanPolygons(result, 0.01 * scale);
+  const loops = cleaned.map((path) => path.map((pt) => ({ x: pt.X / scale, y: pt.Y / scale })));
+  return loops.sort((a, b) => Math.abs(signedArea2D(b)) - Math.abs(signedArea2D(a)))[0] || loopMM;
+}
+
 function loopBounds(loop) {
   const xs = loop.map((point) => point.x);
   const ys = loop.map((point) => point.y);
@@ -432,25 +458,71 @@ export function createHousingGeometries(
   let chamberSource = "none";
   if (functionalOuterIndex >= 0) {
     const functionalOuter = housingOuterMMLoops[functionalOuterIndex];
-    chamberLoop = chamberCandidatesMM
-      .filter(
-        (candidate) =>
-          loopContainsLoop(functionalOuter, candidate) &&
-          loopContainsLoop(candidate, plateLoop)
-      )
-      .sort((a, b) => Math.abs(signedArea2D(b)) - Math.abs(signedArea2D(a)))[0] ?? null;
+    // Candidates that at least stay within the correct outer region —
+    // independent of whether they also happen to fully contain the
+    // plate opening, which is checked separately below so a candidate
+    // that's the right SIZE but fails that check by a small local
+    // margin isn't discarded outright.
+    const candidatesInRegion = chamberCandidatesMM
+      .filter((candidate) => loopContainsLoop(functionalOuter, candidate))
+      .sort((a, b) => Math.abs(signedArea2D(b)) - Math.abs(signedArea2D(a)));
+
+    chamberLoop = candidatesInRegion.find((candidate) => loopContainsLoop(candidate, plateLoop)) ?? null;
     if (chamberLoop) {
       chamberSource = "silhouette-inset";
-    } else {
-      // A concave/elongated silhouette can have a valid switch pocket
-      // while its uniform wall inset no longer surrounds the plate.
-      // Keep the functional architecture by using the already-validated
-      // pocket footprint as the upper chamber, rather than silently
-      // replacing the whole housing with a solid prism.
-      chamberLoop = pocketLoop.map((point) => ({ ...point }));
-      chamberSource = "functional-pocket-fallback";
+    } else if (candidatesInRegion[0]) {
+      // The largest uniform-wall-inset candidate exists and is the
+      // right region/size, but a locally narrow/concave part of the
+      // outer silhouette (e.g. a notch near a limb) pinches a small
+      // bite out of it right where the plate opening needs to sit —
+      // not a fundamentally wrong-sized chamber. Union it with the
+      // plate rectangle itself so the plate is guaranteed covered
+      // while the rest of the chamber keeps its full uniform-wall
+      // size, instead of discarding all that size for a much smaller
+      // pocket-derived chamber.
+      // Union against a slightly LARGER plate rectangle than the one
+      // actually cut as the hole (below), not the exact plateLoop. If
+      // the union input matched the hole exactly, the patched region's
+      // outer boundary and the plate hole's boundary would coincide
+      // exactly there — a hole touching the outer boundary is a
+      // degenerate case for triangulation and left open edges in the
+      // wall mesh right at that seam. A small real margin keeps the
+      // hole strictly inside the chamber everywhere.
+      const patchMarginMM = 0.5;
+      const expandedPlateLoop = translateLoop(
+        roundedRectPolygon(plate.widthMM + patchMarginMM * 2, plate.depthMM + patchMarginMM * 2, plate.cornerRadiusMM, 6),
+        cutoutCenter
+      );
+      chamberLoop = unionLoopWithRect(candidatesInRegion[0], expandedPlateLoop);
+      chamberSource = "silhouette-inset-patched";
       warnings.push(
-        "Uniform upper-chamber inset did not contain the plate opening; used the validated switch-pocket footprint for the chamber."
+        "Uniform upper-chamber inset didn't fully cover the plate opening in one small area; unioned it with the plate opening instead of discarding the chamber's full size."
+      );
+    } else {
+      // No uniform-wall-inset candidate at all falls within the
+      // correct outer region — fall back to a pocket-derived chamber.
+      // Shrinking the pocket's own rectangle inward by the wall
+      // thickness is always a simple, valid polygon (same
+      // roundedRectPolygon construction as pocketLoop/plateLoop),
+      // independent of the outer silhouette entirely — robust for any
+      // photo-derived outline — and it keeps the stepped structure.
+      // Clamped so it never shrinks smaller than the plate opening it
+      // must still contain.
+      const chamberWidthMM = Math.max(
+        cav.widthMM + cav.clearanceMM - housingProfile.wallThicknessMM * 2,
+        plate.widthMM + 0.6
+      );
+      const chamberDepthMM = Math.max(
+        cav.depthMM + cav.clearanceMM - housingProfile.wallThicknessMM * 2,
+        plate.depthMM + 0.6
+      );
+      chamberLoop = translateLoop(
+        roundedRectPolygon(chamberWidthMM, chamberDepthMM, cav.cornerRadiusMM, 6),
+        cutoutCenter
+      );
+      chamberSource = "pocket-derived-fallback";
+      warnings.push(
+        "Uniform upper-chamber inset did not contain the plate opening; used a pocket-derived stepped chamber instead."
       );
     }
   }
