@@ -97,8 +97,253 @@ export function rgbToHex(r, g, b) {
 }
 
 // ---------------------------------------------------------------
+// Colour bins + spatial coherence
+// ---------------------------------------------------------------
+//
+// Flat artwork collapses to a very small palette: the reference images
+// reduce to 24-304 occupied bins at 6 bits/channel. Clustering over
+// those weighted bins instead of over every pixel is both far cheaper
+// and area-weighted by construction (each bin carries its pixel count).
+//
+// Each bin also records SPATIAL COHERENCE — the mean fraction of a
+// pixel's in-mask 4-neighbours that share its bin. Solid design shapes
+// score ~0.95-1.0 (measured: teal wing 0.999, cat whiskers 0.944, the
+// bird's 664px eye 0.953) while anti-aliasing/dither between two flat
+// colours scores ~0.0-0.44. That gap is what lets seeding ignore
+// blend noise without also discarding small intentional details.
+
+const COLOR_BIN_SHIFT = 2;          // 6 bits per channel
+const COHERENCE_MIN = 0.6;          // measured gap: real >= 0.88, dither <= 0.44
+const GATE_COVERAGE_MIN = 0.5;      // below this the image isn't flat art (photo//texture)
+const DISTINCTNESS_RESERVE_D2 = 1500; // ~dE 39 — "no design colour left unrepresented"
+
+function binKey(r, g, b) {
+  return ((r >> COLOR_BIN_SHIFT) << 12) | ((g >> COLOR_BIN_SHIFT) << 6) | (b >> COLOR_BIN_SHIFT);
+}
+
+/**
+ * Bucket every masked pixel into a colour bin, recording mean RGB/Lab,
+ * pixel weight and spatial coherence per bin, plus a per-pixel bin
+ * index so labels can be projected back onto the grid without a second
+ * colour pass.
+ *
+ * @returns {{n:number, L:Float64Array, a:Float64Array, b:Float64Array,
+ *   W:Float64Array, R:Float64Array, G:Float64Array, B:Float64Array,
+ *   coh:Float64Array, binOfPixel:Int32Array, total:number}}
+ */
+export function buildColorBins(imageData, baseMask) {
+  const { width, height, data } = imageData;
+  const pixels = width * height;
+  const index = new Map();
+  const acc = [];
+  const binOfPixel = new Int32Array(pixels).fill(-1);
+  let total = 0;
+
+  for (let i = 0; i < pixels; i++) {
+    if (!baseMask[i]) continue;
+    const key = binKey(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
+    let slot = index.get(key);
+    if (slot === undefined) {
+      slot = acc.length;
+      index.set(key, slot);
+      acc.push({ key, n: 0, r: 0, g: 0, b: 0, cohSum: 0, cohN: 0 });
+    }
+    const e = acc[slot];
+    e.n++; e.r += data[i * 4]; e.g += data[i * 4 + 1]; e.b += data[i * 4 + 2];
+    binOfPixel[i] = slot;
+    total++;
+
+    // coherence: how much of this pixel's in-mask neighbourhood is the same colour bin
+    const x = i % width, y = (i / width) | 0;
+    let same = 0, seen = 0;
+    if (x > 0 && baseMask[i - 1]) { seen++; if (binKey(data[(i-1)*4], data[(i-1)*4+1], data[(i-1)*4+2]) === key) same++; }
+    if (x < width - 1 && baseMask[i + 1]) { seen++; if (binKey(data[(i+1)*4], data[(i+1)*4+1], data[(i+1)*4+2]) === key) same++; }
+    if (y > 0 && baseMask[i - width]) { seen++; if (binKey(data[(i-width)*4], data[(i-width)*4+1], data[(i-width)*4+2]) === key) same++; }
+    if (y < height - 1 && baseMask[i + width]) { seen++; if (binKey(data[(i+width)*4], data[(i+width)*4+1], data[(i+width)*4+2]) === key) same++; }
+    if (seen > 0) { e.cohSum += same / seen; e.cohN++; }
+  }
+
+  const n = acc.length;
+  const L = new Float64Array(n), A = new Float64Array(n), B = new Float64Array(n);
+  const W = new Float64Array(n), R = new Float64Array(n), G = new Float64Array(n), Bl = new Float64Array(n);
+  const coh = new Float64Array(n);
+  for (let s = 0; s < n; s++) {
+    const e = acc[s];
+    const r = e.r / e.n, g = e.g / e.n, b = e.b / e.n;
+    const lab = rgbToLab(r, g, b);
+    L[s] = lab.L; A[s] = lab.a; B[s] = lab.b;
+    W[s] = e.n; R[s] = r; G[s] = g; Bl[s] = b;
+    coh[s] = e.cohN > 0 ? e.cohSum / e.cohN : 0;
+  }
+  return { n, L, a: A, b: B, W, R, G, B: Bl, coh, binOfPixel, total };
+}
+
+function binDistanceSq(bins, i, centroid) {
+  const dL = bins.L[i] - centroid.L;
+  const da = bins.a[i] - centroid.a;
+  const db = bins.b[i] - centroid.b;
+  return dL * dL + da * da + db * db;
+}
+
+/**
+ * Restrict seeding to bins that look like real design colours:
+ * coherent (not blend noise) AND at least one printable region in size
+ * (the same physical floor the small-region cleanup uses).
+ *
+ * Photographs and textured art have no flat regions at all, so the gate
+ * would starve them — when the surviving bins cover less than
+ * GATE_COVERAGE_MIN of the masked pixels the gate is abandoned and every
+ * bin stays eligible. (Measured coverage: bird 99.8%, cat 94.2%,
+ * fish 98.6%, dog photo 0.4%.)
+ *
+ * @returns {{indices:number[], gated:boolean}}
+ */
+export function selectSeedCandidates(bins, minAreaPx) {
+  const indices = [];
+  let covered = 0;
+  for (let i = 0; i < bins.n; i++) {
+    if (bins.coh[i] >= COHERENCE_MIN && bins.W[i] >= minAreaPx) {
+      indices.push(i);
+      covered += bins.W[i];
+    }
+  }
+  if (indices.length > 0 && covered >= GATE_COVERAGE_MIN * bins.total) {
+    return { indices, gated: true };
+  }
+  const all = [];
+  for (let i = 0; i < bins.n; i++) all.push(i);
+  return { indices: all, gated: false };
+}
+
+/**
+ * Deterministic area-weighted seeding: start from the heaviest bin (the
+ * dominant design colour), then repeatedly take the bin maximising
+ * area x distance² to the seeds so far. Unlike farthest-point seeding
+ * this cannot spend the cluster budget on a handful of outlier pixels,
+ * which is what previously collapsed the bird's wing and body into one
+ * cluster.
+ */
+export function seedCentroidsAreaWeighted(bins, k, indices) {
+  if (indices.length === 0) return [];
+  let first = indices[0];
+  for (const i of indices) if (bins.W[i] > bins.W[first]) first = i;
+  const centroids = [{ L: bins.L[first], a: bins.a[first], b: bins.b[first] }];
+
+  const minDist = new Float64Array(bins.n);
+  for (const i of indices) minDist[i] = binDistanceSq(bins, i, centroids[0]);
+
+  while (centroids.length < k) {
+    let best = -1, bestScore = -1;
+    for (const i of indices) {
+      const score = bins.W[i] * minDist[i];
+      if (score > bestScore) { bestScore = score; best = i; }
+    }
+    if (best < 0 || bestScore <= 0) break; // no distinct colour left to represent
+    centroids.push({ L: bins.L[best], a: bins.a[best], b: bins.b[best] });
+    for (const i of indices) {
+      const d = binDistanceSq(bins, i, centroids[centroids.length - 1]);
+      if (d < minDist[i]) minDist[i] = d;
+    }
+  }
+  return centroids;
+}
+
+/**
+ * Area-weighted seeding alone will sacrifice a small but perceptually
+ * unique colour (an eye, a beak) in favour of a larger near-duplicate
+ * of a colour already represented. If any candidate colour is still
+ * further than DISTINCTNESS_RESERVE_D2 from every seed, swap it in for
+ * whichever seed sits closest to another seed — the one whose loss
+ * costs the least coverage.
+ *
+ * Only meaningful on a gated pool, where every candidate is already
+ * known to be a real design colour rather than blend noise.
+ */
+export function applyDistinctnessReserve(bins, centroids, indices, tau = DISTINCTNESS_RESERVE_D2) {
+  const result = centroids.map((c) => ({ L: c.L, a: c.a, b: c.b }));
+  if (result.length < 2) return result;
+
+  for (let pass = 0; pass < 2; pass++) {
+    let far = -1, farDist = -1;
+    for (const i of indices) {
+      let nearest = Infinity;
+      for (const c of result) {
+        const d = binDistanceSq(bins, i, c);
+        if (d < nearest) nearest = d;
+      }
+      if (nearest > farDist) { farDist = nearest; far = i; }
+    }
+    if (far < 0 || farDist <= tau) break;
+
+    // never displace the dominant seed (index 0 — the heaviest bin)
+    let victim = -1, victimCost = Infinity;
+    for (let c = 1; c < result.length; c++) {
+      let nearest = Infinity;
+      for (let o = 0; o < result.length; o++) {
+        if (o === c) continue;
+        const dL = result[c].L - result[o].L, da = result[c].a - result[o].a, db = result[c].b - result[o].b;
+        const d = dL * dL + da * da + db * db;
+        if (d < nearest) nearest = d;
+      }
+      if (nearest < victimCost) { victimCost = nearest; victim = c; }
+    }
+    if (victim < 0 || victimCost >= farDist) break;
+    result[victim] = { L: bins.L[far], a: bins.a[far], b: bins.b[far] };
+  }
+  return result;
+}
+
+/** Lloyd's algorithm over weighted bins; centroids follow pixel mass. */
+export function weightedLloydBins(bins, seeds, indices, maxIterations = 20) {
+  let centroids = seeds.map((c) => ({ L: c.L, a: c.a, b: c.b }));
+  const K = centroids.length;
+  if (K === 0) return centroids;
+  const labels = new Int32Array(bins.n).fill(-1);
+
+  for (let iter = 0; iter < maxIterations; iter++) {
+    let changed = false;
+    for (const i of indices) {
+      let best = 0, bestD = Infinity;
+      for (let c = 0; c < K; c++) {
+        const d = binDistanceSq(bins, i, centroids[c]);
+        if (d < bestD) { bestD = d; best = c; }
+      }
+      if (labels[i] !== best) { labels[i] = best; changed = true; }
+    }
+    const sL = new Float64Array(K), sA = new Float64Array(K), sB = new Float64Array(K), sW = new Float64Array(K);
+    for (const i of indices) {
+      const c = labels[i], w = bins.W[i];
+      sL[c] += bins.L[i] * w; sA[c] += bins.a[i] * w; sB[c] += bins.b[i] * w; sW[c] += w;
+    }
+    for (let c = 0; c < K; c++) {
+      if (sW[c] > 0) centroids[c] = { L: sL[c] / sW[c], a: sA[c] / sW[c], b: sB[c] / sW[c] };
+    }
+    if (!changed) break;
+  }
+  return centroids;
+}
+
+/** Nearest-centroid label for every bin, including ungated blend noise. */
+export function assignBinsToCentroids(bins, centroids) {
+  const labels = new Int32Array(bins.n);
+  for (let i = 0; i < bins.n; i++) {
+    let best = 0, bestD = Infinity;
+    for (let c = 0; c < centroids.length; c++) {
+      const d = binDistanceSq(bins, i, centroids[c]);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    labels[i] = best;
+  }
+  return labels;
+}
+
+// ---------------------------------------------------------------
 // Deterministic K-means (Lab space)
 // ---------------------------------------------------------------
+//
+// Retained as a general-purpose primitive (and for direct unit
+// testing). quantizeImageColors no longer seeds this way — see
+// seedCentroidsAreaWeighted above for why.
 
 /**
  * Farthest-point deterministic seeding: first centroid is the sample
@@ -388,10 +633,16 @@ export function cleanupSmallRegionsIterative(labelGrid, width, height, insideMas
 // ---------------------------------------------------------------
 
 /**
- * Full pixel-level quantization: RGB samples inside `baseMask` -> Lab
- * K-means -> cleaned per-pixel cluster label grid -> per-cluster
- * representative color (mean RGB) + which cluster is dominant
- * (largest area, post-cleanup).
+ * Full pixel-level quantization: colour bins inside `baseMask` ->
+ * gated, area-weighted Lab clustering -> cleaned per-pixel cluster
+ * label grid -> per-cluster representative color (mean RGB) + which
+ * cluster is dominant (largest area, post-cleanup).
+ *
+ * Seeding runs on real design colours only (see selectSeedCandidates),
+ * so blend noise can no longer consume the cluster budget. On a gated
+ * pool the cluster count is capped at the number of design colours
+ * actually present — a two-colour logo yields two clusters instead of
+ * inventing extra ones out of anti-aliasing.
  *
  * @param {{data:Uint8ClampedArray, width:number, height:number}} imageData
  * @param {Uint8Array} baseMask
@@ -404,24 +655,24 @@ export function quantizeImageColors(imageData, baseMask, options = {}) {
   const minAreaPx = Math.max(0, options.minAreaPx ?? 0);
   const maxIterations = options.maxIterations ?? 20;
 
-  const sampleIndices = [];
-  const samples = [];
-  for (let i = 0; i < width * height; i++) {
-    if (!baseMask[i]) continue;
-    samples.push(rgbToLab(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]));
-    sampleIndices.push(i);
-  }
-
-  if (samples.length === 0) {
+  const bins = buildColorBins(imageData, baseMask);
+  if (bins.n === 0) {
     return { labelGrid: new Int32Array(width * height).fill(-1), dominantIndex: 0, colorHexByCluster: [], width, height };
   }
 
-  const { labels, centroids } = kMeansClusterLab(samples, k, maxIterations);
+  const { indices, gated } = selectSeedCandidates(bins, minAreaPx);
+  const effectiveK = gated ? Math.min(k, indices.length) : k;
+
+  let centroids = seedCentroidsAreaWeighted(bins, effectiveK, indices);
+  if (gated) centroids = applyDistinctnessReserve(bins, centroids, indices);
+  centroids = weightedLloydBins(bins, centroids, indices, maxIterations);
   const K = centroids.length;
 
+  const binLabels = assignBinsToCentroids(bins, centroids);
   const rawGrid = new Int32Array(width * height).fill(-1);
-  for (let s = 0; s < sampleIndices.length; s++) {
-    rawGrid[sampleIndices[s]] = labels[s];
+  for (let i = 0; i < width * height; i++) {
+    const bin = bins.binOfPixel[i];
+    if (bin >= 0) rawGrid[i] = binLabels[bin];
   }
 
   const cleanedGrid = cleanupSmallRegionsIterative(rawGrid, width, height, baseMask, minAreaPx, 3);
