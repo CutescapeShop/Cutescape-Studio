@@ -193,7 +193,11 @@ function circleInsideLoop(center, radius, loop) {
   return true;
 }
 
-function loopCentroid(loop) {
+// Exported for keychain-loop.js: a bounding-box center can fall outside
+// a very concave/crescent silhouette, so that caller falls back to this
+// true area centroid (guaranteed inside for any simple polygon) rather
+// than failing outright.
+export function loopCentroid(loop) {
   let totalArea = 0;
   let cx = 0;
   let cy = 0;
@@ -476,4 +480,39 @@ export function crossSocketPolygon(crossWidth, armThickness) {
     { x: -W, y: R }, { x: -W, y: W }, { x: -R, y: W }, { x: -R, y: -W },
     { x: -W, y: -W }, { x: -W, y: -R }, { x: W, y: -R }, { x: W, y: -W },
   ];
+}
+
+/**
+ * Farthest intersection of a ray (origin + t*direction, t>=0) with a
+ * closed polygon's edges — used by keychain-loop.js to find where a
+ * boundary-following feature should attach to an arbitrary silhouette
+ * at a given angle from the shape's own reference point. "Farthest" so
+ * a ray through a concave dip lands on the true outer edge rather than
+ * an inner notch.
+ *
+ * @param {Array<{x:number,y:number}>} loop
+ * @param {{x:number,y:number}} origin
+ * @param {{x:number,y:number}} direction unit vector
+ * @returns {{x:number,y:number,t:number}|null} null if the ray misses entirely
+ */
+export function farthestRayPolygonIntersection(loop, origin, direction) {
+  let best = null;
+  for (let i = 0; i < loop.length; i++) {
+    const a = loop[i];
+    const b = loop[(i + 1) % loop.length];
+    const edgeX = b.x - a.x;
+    const edgeY = b.y - a.y;
+    const denom = direction.x * edgeY - direction.y * edgeX;
+    if (Math.abs(denom) < 1e-12) continue; // ray parallel to this edge
+    const ax = a.x - origin.x;
+    const ay = a.y - origin.y;
+    const t = (ax * edgeY - ay * edgeX) / denom;
+    const u = (ax * direction.y - ay * direction.x) / denom;
+    if (t >= 0 && u >= 0 && u <= 1) {
+      if (!best || t > best.t) {
+        best = { x: origin.x + direction.x * t, y: origin.y + direction.y * t, t };
+      }
+    }
+  }
+  return best;
 }

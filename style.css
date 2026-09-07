@@ -1258,6 +1258,33 @@
     }
 
     /* =========================================
+       Clicker optional keychain loop (HOUSING only).
+       ========================================= */
+
+    .keychain-loop-rotate-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .keychain-loop-rotate-button {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      font-size: 20px;
+      padding: 0;
+    }
+
+    .keychain-loop-angle {
+      min-width: 48px;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 16px;
+      color: var(--ink);
+    }
+
+    /* =========================================
        EN-mode typography experiment — Name Keychain only.
        CSS-only, scoped to #nameKeychainPanel so Clicker (which
        shares .field/.order-button/[data-name-mode]/etc.) is

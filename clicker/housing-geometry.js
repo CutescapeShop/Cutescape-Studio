@@ -593,6 +593,14 @@ export function createHousingGeometries(
       functionalCenter: cutoutCenter,
       pocketBounds: loopBounds(pocketLoop),
       functionalFitDiagnostics,
+      // Additive only — consumed by keychain-loop.js (via
+      // clicker-viewer.js) to attach an OPTIONAL loop to HOUSING's own
+      // final outer boundary and validate it against the real
+      // pocket/plate cutouts. Nothing in this file reads these fields
+      // back; every existing consumer of `diagnostics` is unaffected.
+      housingOuterMMLoops,
+      pocketLoopMM: pocketLoop,
+      plateLoopMM: plateLoop,
       zRanges,
       heightMM: housingProfile.heightMM,
       ...topology,

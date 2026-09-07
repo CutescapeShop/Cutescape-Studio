@@ -200,4 +200,48 @@ export const CLICKER_PROFILE = {
     min: 0.5,
     max: 2.5,
   },
+
+  // Optional keychain loop. Attaches to HOUSING ONLY, never to TOP —
+  // HOUSING is the structural part that stays permanently on the
+  // keyring, while TOP only connects to it via the MX switch's own
+  // clip mechanism, which is built for click-actuation force, not for
+  // carrying a keychain's pull/swing load. Modeled the same way Name
+  // Keychain's own ring is (viewer.js's createRingMesh): an outer
+  // ellipse with a circular hole, added as a separate, overlapping
+  // solid mesh into the same STL group — no CSG boolean. See
+  // keychain-loop.js.
+  keychainLoop: {
+    enabledDefault: false,
+
+    // Fixed mm, independent of body.targetSize/the size slider — same
+    // convention as every other mechanical dimension in this file
+    // ("Only artwork uses the selected size; all mechanical builders
+    // use mm" — see clicker-viewer.js).
+    outerWidthMM: 8,    // across the attachment point (tangent to the silhouette)
+    outerLengthMM: 10,  // tip-to-tip along the pointing-outward direction
+    holeDiameterMM: 4.2, // fits a standard small keyring wire
+    thicknessMM: 3.5,   // Z=[0, thicknessMM] — within HOUSING's solid floor+pocket region on any normally-proportioned silhouette
+
+    // How far the loop's near edge is pushed back INTO HOUSING's own
+    // solid material, so it's a real overlapping join rather than a
+    // single-point touch (same idea as Name Keychain's ringOverlap).
+    overlapMM: 1.8,
+    // Never place a loop with less overlap than this — below it, reject
+    // the position outright (return no geometry) rather than risk a
+    // weak or intersecting attachment. See keychain-loop.js's tiered
+    // overlap search.
+    minOverlapMM: 0.6,
+
+    // 0° = the image's own local +Y axis ("up" as originally drawn) —
+    // fixed in the model's own coordinate frame, not camera/screen
+    // space, so the loop's position follows the silhouette regardless
+    // of how the 3D preview is orbited. Rotate-left/right buttons step
+    // by this amount and wrap continuously modulo 360 (25 does not
+    // evenly divide 360 — repeatedly rotating one direction cycles
+    // through all 72 multiples of 5° before returning to the exact
+    // starting angle, rather than a clean 15-position loop; this is a
+    // deliberate consequence of the requested step size, not a bug).
+    angleStepDeg: 25,
+    angleDefaultDeg: 0,
+  },
 };

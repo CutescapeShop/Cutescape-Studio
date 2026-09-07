@@ -56,6 +56,7 @@ import {
 } from "./keycap-geometry.js";
 import { createAccentRegionGeometries } from "./image-geometry.js";
 import { createHousingGeometries } from "./housing-geometry.js?v=housing-floor-v4";
+import { createKeychainLoopGeometry } from "./keychain-loop.js";
 
 
 // ---------------- DOM references ----------------
@@ -66,6 +67,13 @@ const exportButton = document.getElementById("clickerExportButton");
 const exportStatus = document.getElementById("clickerExportStatus");
 
 const housingColorsContainer = document.getElementById("clickerBaseColors");
+
+const keychainLoopToggleButton = document.getElementById("clickerKeychainLoopToggle");
+const keychainLoopControls = document.getElementById("clickerKeychainLoopControls");
+const keychainLoopRotateLeftButton = document.getElementById("clickerKeychainLoopRotateLeft");
+const keychainLoopRotateRightButton = document.getElementById("clickerKeychainLoopRotateRight");
+const keychainLoopAngleLabel = document.getElementById("clickerKeychainLoopAngle");
+const keychainLoopStatus = document.getElementById("clickerKeychainLoopStatus");
 
 const FIXED_CLICKER_SCALE_MULTIPLIER = 1;
 
@@ -215,6 +223,13 @@ function init() {
     // rows). Display/material only — never affects which regions exist,
     // their shape, or the dominant-color selection itself.
     colorOverrides: {},
+    // Optional keychain loop — attaches to HOUSING only (see
+    // stem-profile.js's keychainLoop section for why). Populated after
+    // every rebuildHousing() with the exact final boundary/cutout loops
+    // it computed, so the loop always attaches to what actually printed.
+    keychainLoopEnabled: CLICKER_PROFILE.keychainLoop.enabledDefault,
+    keychainLoopAngleDeg: CLICKER_PROFILE.keychainLoop.angleDefaultDeg,
+    housingLoopDiagnostics: null, // { outerMMLoops, pocketLoopMM, plateLoopMM }
   };
 
   // Detected accent hex -> its live material, so a color-only override can
@@ -447,7 +462,10 @@ function init() {
   function rebuildHousing() {
     const startedAt = performance.now();
     disposeGroupChildren(housingGroup);
+    keychainLoopMesh = null; // disposeGroupChildren above already freed it
     if (!currentAutoFit || !state.outerLoops || state.outerLoops.length === 0) {
+      state.housingLoopDiagnostics = null;
+      updateKeychainLoopStatus();
       return { totalMs: performance.now() - startedAt };
     }
 
@@ -463,10 +481,57 @@ function init() {
     for (const geom of housingGeometries) {
       housingGroup.add(new THREE.Mesh(geom, housingMaterial));
     }
+
+    // Attach to HOUSING's own FINAL outer boundary (post pocket-fit
+    // extension, if any) and the exact cutout footprints it just built —
+    // never a stale or pre-extension shape.
+    state.housingLoopDiagnostics = {
+      outerMMLoops: housingStageTimings.housingOuterMMLoops || [],
+      pocketLoopMM: housingStageTimings.pocketLoopMM || null,
+      plateLoopMM: housingStageTimings.plateLoopMM || null,
+    };
+    rebuildKeychainLoop();
+
     return {
       totalMs: performance.now() - startedAt,
       ...housingStageTimings,
     };
+  }
+
+  // Optional keychain loop — independent of the main HOUSING rebuild
+  // above so toggling it on/off or rotating never re-runs the
+  // (expensive) chamber/pocket/plate construction. Never touches
+  // housingGeometries or any other child already in housingGroup.
+  let keychainLoopMesh = null;
+  function rebuildKeychainLoop() {
+    if (keychainLoopMesh) {
+      housingGroup.remove(keychainLoopMesh);
+      keychainLoopMesh.geometry.dispose();
+      keychainLoopMesh = null;
+    }
+    let warning = null;
+    if (state.keychainLoopEnabled && state.housingLoopDiagnostics) {
+      const { outerMMLoops, pocketLoopMM, plateLoopMM } = state.housingLoopDiagnostics;
+      const result = createKeychainLoopGeometry(
+        outerMMLoops, pocketLoopMM, plateLoopMM,
+        state.keychainLoopAngleDeg, CLICKER_PROFILE.keychainLoop
+      );
+      warning = result.warning;
+      if (result.geometry) {
+        keychainLoopMesh = new THREE.Mesh(result.geometry, housingMaterial);
+        housingGroup.add(keychainLoopMesh);
+      }
+    }
+    updateKeychainLoopStatus(warning);
+  }
+
+  function updateKeychainLoopStatus(warning) {
+    if (keychainLoopAngleLabel) keychainLoopAngleLabel.textContent = `${state.keychainLoopAngleDeg}°`;
+    if (keychainLoopStatus) {
+      keychainLoopStatus.textContent = state.keychainLoopEnabled
+        ? (warning || (keychainLoopMesh ? "" : "ยังไม่มีรูปให้ยึดห่วง"))
+        : "";
+    }
   }
 
   function rebuildAll() {
@@ -558,6 +623,37 @@ function init() {
     window.setupColorButtons("clickerBaseColors", function (color) {
       housingMaterial.color.set(color);
     });
+  }
+
+
+  // ---------------- Controls: optional keychain loop (HOUSING only) ----------------
+  // Material-only-equivalent for geometry: toggling/rotating calls
+  // rebuildKeychainLoop() alone, never the full HOUSING chamber/pocket/
+  // plate rebuild above, and never touches TOP at all.
+
+  if (keychainLoopToggleButton) {
+    keychainLoopToggleButton.addEventListener("click", function () {
+      state.keychainLoopEnabled = !state.keychainLoopEnabled;
+      keychainLoopToggleButton.classList.toggle("active", state.keychainLoopEnabled);
+      keychainLoopToggleButton.textContent = state.keychainLoopEnabled
+        ? "พวงกุญแจ: เปิด"
+        : "พวงกุญแจ: ปิด";
+      if (keychainLoopControls) keychainLoopControls.hidden = !state.keychainLoopEnabled;
+      rebuildKeychainLoop();
+    });
+  }
+
+  function rotateKeychainLoop(directionSign) {
+    const step = CLICKER_PROFILE.keychainLoop.angleStepDeg * directionSign;
+    state.keychainLoopAngleDeg = ((state.keychainLoopAngleDeg + step) % 360 + 360) % 360;
+    rebuildKeychainLoop();
+  }
+
+  if (keychainLoopRotateLeftButton) {
+    keychainLoopRotateLeftButton.addEventListener("click", () => rotateKeychainLoop(-1));
+  }
+  if (keychainLoopRotateRightButton) {
+    keychainLoopRotateRightButton.addEventListener("click", () => rotateKeychainLoop(1));
   }
 
 

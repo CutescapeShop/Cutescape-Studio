@@ -658,6 +658,20 @@
           </div>
         </div>
 
+        <div class="field">
+          <button class="toggle-button" id="clickerKeychainLoopToggle" type="button">พวงกุญแจ: ปิด</button>
+        </div>
+
+        <div class="field" id="clickerKeychainLoopControls" hidden>
+          <label>ตำแหน่งห่วง (หมุนทีละ 25°)</label>
+          <div class="keychain-loop-rotate-row">
+            <button class="toggle-button keychain-loop-rotate-button" id="clickerKeychainLoopRotateLeft" type="button" aria-label="หมุนห่วงทวนเข็มนาฬิกา 25 องศา">↶</button>
+            <span id="clickerKeychainLoopAngle" class="keychain-loop-angle">0°</span>
+            <button class="toggle-button keychain-loop-rotate-button" id="clickerKeychainLoopRotateRight" type="button" aria-label="หมุนห่วงตามเข็มนาฬิกา 25 องศา">↷</button>
+          </div>
+          <p class="clicker-debug-info" id="clickerKeychainLoopStatus"></p>
+        </div>
+
         <button class="order-button" id="clickerExportButton" type="button">
           Export STL (TOP + ACCENT + HOUSING)
         </button>
