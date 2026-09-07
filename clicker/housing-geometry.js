@@ -45,6 +45,7 @@
 // =====================================================================
 
 import * as THREE from "three";
+import { unionMechanicalRegions, containsMechanicalRegion } from "./mechanical-regions.js";
 
 import ClipperLib from
   "https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/+esm";
@@ -213,7 +214,10 @@ function addPlanarRegion(positions, outerLoop, holeLoops, z, normalZ) {
     let b = vertices[face[1]];
     let c = vertices[face[2]];
     const crossZ = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-    if (crossZ * normalZ < 0) [b, c] = [c, b];
+    // Earcut's nearly collinear bridge triangles still carry topology.
+    // At large sizes their cross product can round to zero; retain the
+    // triangulator's CCW order before orienting the rear cap downward.
+    if (Math.abs(crossZ) < 1e-10 ? normalZ < 0 : crossZ * normalZ < 0) [b, c] = [c, b];
     addTriangle(
       positions,
       { x: a.x, y: a.y, z },
@@ -444,10 +448,24 @@ export function createHousingGeometries(
   );
   const chamberOffsetMs = performance.now() - chamberOffsetStartedAt;
 
-  const functionalOuterIndex = housingOuterMMLoops
+  let functionalOuterIndex = housingOuterMMLoops
     .map((outer, index) => ({ outer, index, area: Math.abs(signedArea2D(outer)) }))
     .filter(({ outer }) => loopContainsLoop(outer, pocketLoop))
     .sort((a, b) => b.area - a.area)[0]?.index ?? -1;
+  let functionalBlockExtended = false;
+  if (functionalOuterIndex < 0) {
+    // Keep the switch pocket, plate and walls at their physical dimensions.
+    // Small artwork may sit on a protruding block; never substitute a solid.
+    const block = translateLoop(roundedRectPolygon(
+      cav.widthMM + cav.clearanceMM + 2 * housingProfile.wallThicknessMM,
+      cav.depthMM + cav.clearanceMM + 2 * housingProfile.wallThicknessMM,
+      cav.cornerRadiusMM + housingProfile.wallThicknessMM, 12), cutoutCenter);
+    const extended = unionMechanicalRegions([...housingOuterMMLoops, block]);
+    housingOuterMMLoops.splice(0, housingOuterMMLoops.length, ...extended);
+    functionalOuterIndex = housingOuterMMLoops.findIndex((outer) => containsMechanicalRegion([outer], pocketLoop));
+    chamberCandidatesMM.push(pocketLoop);
+    functionalBlockExtended = true;
+  }
   const functionalFitDiagnostics = housingOuterMMLoops.map((outer, index) => ({
     index,
     outerBounds: loopBounds(outer),
@@ -570,6 +588,7 @@ export function createHousingGeometries(
       chamberCandidates: chamberCandidatesMM.length,
       chamberLoopsUsed: chamberLoop ? 1 : 0,
       chamberSource,
+      functionalBlockExtended,
       functionalOuterIndex,
       functionalCenter: cutoutCenter,
       pocketBounds: loopBounds(pocketLoop),

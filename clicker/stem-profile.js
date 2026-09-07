@@ -39,16 +39,11 @@
 
 export const CLICKER_PROFILE = {
   body: {
-    // The uploaded silhouette is auto-scaled to roughly this overall
-    // size (computeAutoFitTransform balances both axes so narrow/
-    // elongated silhouettes still get enough real-world room). Both
-    // TOP and HOUSING scale from this SAME anchor, which is what
-    // keeps their footprints locked together regardless of image
-    // shape.
-    // Nudged up slightly from 30.0 — real test prints at 30mm left
-    // too little headroom around the rear cavity wall + MX pedestal/
-    // socket boss on some silhouettes.
-    targetSize: 34.0,
+    // Longest side of TOP artwork, preserving the source aspect ratio.
+    // Mechanical dimensions are independent of this image transform.
+    targetSize: 35.0,
+    minSizeMM: 20,
+    maxSizeMM: 70,
   },
 
   topSocket: {

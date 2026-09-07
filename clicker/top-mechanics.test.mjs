@@ -38,8 +38,9 @@ function assertClosedMesh(geometry) {
 }
 
 for (const [name, fixture] of Object.entries(fixtures)) {
-  const fit = computeAutoFitTransform(fixture.loops, profile.body.targetSize, profile.body.targetSize);
-  assert.deepEqual(fit, fixture.baseline.fit, `${name}: global sizing unchanged`);
+  // Exercise the checkpoint geometry at its original fit independently
+  // of the new user-facing size rule.
+  const fit = fixture.baseline.fit;
   const shell = createTopRearShellGeometries(fixture.loops, fit, 1,
     profile.topShell.bodyDepthMM, profile.topShell.transitionThicknessMM, profile.topShell, profile.topSocket);
   assert.ok(shell.diagnostics.validInsetLoops > 0, `${name}: silhouette cavity recovered`);

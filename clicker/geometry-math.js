@@ -357,18 +357,9 @@ export function computeAutoFitTransform(loops, targetWidth, targetDepth) {
 
   const widthScale = targetWidth / rawWidthPx;
   const depthScale = targetDepth / rawHeightPx;
-  // Geometric mean of the two per-axis fit scales, rather than the
-  // smaller of the two ("fit the longest side, shrink everything else
-  // with it"). A pure min-fit starves the short axis on narrow/
-  // elongated silhouettes, leaving too little real-world (mm) room on
-  // that axis for the rear cavity's minimum wall thickness plus the
-  // MX pedestal/socket boss (see topShell.minimumWallMM / topSocket.*
-  // in stem-profile.js). The geometric mean keeps the body's total
-  // footprint area close to targetWidth * targetDepth regardless of
-  // aspect ratio, so both axes end up with usable real-world space —
-  // for a square silhouette this reduces to the exact same value as
-  // before.
-  const scale = Math.sqrt(widthScale * depthScale);
+  // Size describes the artwork's longest side. Mechanical builders add
+  // fixed-size support where needed instead of enlarging small artwork.
+  const scale = Math.min(widthScale, depthScale);
 
   return {
     scale,

@@ -207,6 +207,7 @@ function init() {
     colorRegions: null, // { dominantColorHex, accentRegions: [{colorHex, loops}] }
     silhouetteKey: null,
     colorKey: null,
+    sizeMM: CLICKER_PROFILE.body.targetSize,
   };
 
   // The shared transform TOP/ACCENT/HOUSING's outer boundary all use —
@@ -217,16 +218,51 @@ function init() {
   let topGeometryDiagnostics = null;
   let lastViewerTimings = null;
 
-  function updatePreviewLayout() {
+  function modelingBounds(groups) {
+    const bounds = new THREE.Box3();
+    for (const group of groups) for (const child of group.children) {
+      if (!child.geometry) continue;
+      child.geometry.computeBoundingBox();
+      bounds.union(child.geometry.boundingBox);
+    }
+    return bounds;
+  }
+
+  function updatePreviewLayout(fitView = false) {
     const topPreviewWidthMM = currentAutoFit
       ? currentAutoFit.rawWidthPx * currentAutoFit.scale * FIXED_CLICKER_SCALE_MULTIPLIER
       : CLICKER_PROFILE.body.targetSize;
     const housingPreviewWidthMM = topPreviewWidthMM + CLICKER_PROFILE.housing.offsetMM * 2;
-    const previewCenterOffsetMM =
-      (topPreviewWidthMM / 2 + PREVIEW_PIECE_GAP_MM + housingPreviewWidthMM / 2) / 2;
+    const topBounds = modelingBounds([topGroup, accentGroup]);
+    const housingBounds = modelingBounds([housingGroup]);
+    const previewCenterOffsetMM = fitView && !topBounds.isEmpty() && !housingBounds.isEmpty()
+      ? (topBounds.max.x + PREVIEW_PIECE_GAP_MM - housingBounds.min.x) / 2
+      : (topPreviewWidthMM / 2 + PREVIEW_PIECE_GAP_MM + housingPreviewWidthMM / 2) / 2;
     topGroup.position.x = -previewCenterOffsetMM;
     accentGroup.position.x = -previewCenterOffsetMM;
     housingGroup.position.x = previewCenterOffsetMM;
+    if (fitView && !topBounds.isEmpty() && !housingBounds.isEmpty()) {
+      const bounds = topBounds.translate(topGroup.position).union(housingBounds.translate(housingGroup.position));
+      const center = bounds.getCenter(new THREE.Vector3());
+      const direction = camera.position.clone().sub(controls.target).normalize();
+      const right = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
+      const up = new THREE.Vector3().crossVectors(direction, right).normalize();
+      const tanY = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      const tanX = tanY * Math.max(0.1, camera.aspect);
+      let distance = 0;
+      for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) {
+        for (const z of [bounds.min.z, bounds.max.z]) {
+          const corner = new THREE.Vector3(x, y, z).sub(center);
+          distance = Math.max(distance, corner.dot(direction) + Math.max(
+            Math.abs(corner.dot(right)) / tanX, Math.abs(corner.dot(up)) / tanY));
+        }
+      }
+      distance *= 1.12;
+      controls.target.copy(center);
+      camera.position.copy(center).addScaledVector(direction, distance);
+      controls.maxDistance = Math.max(160, distance * 3);
+      controls.update();
+    }
     console.info("Clicker preview layout", JSON.stringify({
       previewOnly: true,
       gapMM: PREVIEW_PIECE_GAP_MM,
@@ -243,8 +279,8 @@ function init() {
     }
     currentAutoFit = computeAutoFitTransform(
       state.outerLoops,
-      CLICKER_PROFILE.body.targetSize,
-      CLICKER_PROFILE.body.targetSize
+      state.sizeMM,
+      state.sizeMM
     );
     updatePreviewLayout();
   }
@@ -279,20 +315,6 @@ function init() {
     }
     timings.artworkExtrusionMs = performance.now() - artworkStartedAt;
 
-    // Simple solid backing behind the artwork. It follows only the
-    // full outer silhouette; there is no procedural inner wall/shell.
-    const backingStartedAt = performance.now();
-    const transitionGeometries = createTopTransitionGeometries(
-      state.outerLoops,
-      currentAutoFit,
-      FIXED_CLICKER_SCALE_MULTIPLIER,
-      CLICKER_PROFILE.topShell.transitionThicknessMM
-    );
-    for (const geom of transitionGeometries) {
-      topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
-    }
-    timings.backingExtrusionMs = performance.now() - backingStartedAt;
-
     // Rear shell uses every substantial inset loop. Cavity topology
     // never controls whether the shell itself is returned.
     const shellResult = createTopRearShellGeometries(
@@ -308,6 +330,14 @@ function init() {
       },
       CLICKER_PROFILE.topSocket
     );
+    const backingStartedAt = performance.now();
+    const transitionGeometries = createTopTransitionGeometries(
+      state.outerLoops, currentAutoFit, FIXED_CLICKER_SCALE_MULTIPLIER,
+      CLICKER_PROFILE.topShell.transitionThicknessMM,
+      shellResult.diagnostics?.structuralExtension ? shellResult.outerMMLoops : null
+    );
+    for (const geom of transitionGeometries) topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
+    timings.backingExtrusionMs = performance.now() - backingStartedAt;
     for (const geom of shellResult.geometries) {
       topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
     }
@@ -413,6 +443,7 @@ function init() {
     const top = rebuildTopBaseAndSocket();
     const accentExtrusionMs = rebuildAccent();
     const housing = rebuildHousing();
+    updatePreviewLayout(true);
     lastViewerTimings = {
       ...top,
       accentExtrusionMs,
@@ -448,13 +479,15 @@ function init() {
   window.onClickerPipelineResult = function (result) {
     const nextLoops = result && result.loops ? result.loops : null;
     const nextColors = result && result.colorRegions ? result.colorRegions : null;
-    const nextSilhouetteKey = result?.silhouetteKey || Symbol("uncached-silhouette");
+    const nextSilhouetteKey = result?.geometryKey || result?.silhouetteKey || Symbol("uncached-silhouette");
     const nextColorKey = result?.colorKey || Symbol("uncached-colors");
     const silhouetteChanged = nextSilhouetteKey !== state.silhouetteKey;
     const colorChanged = nextColorKey !== state.colorKey;
 
     state.outerLoops = nextLoops;
     state.colorRegions = nextColors;
+    state.sizeMM = Math.max(CLICKER_PROFILE.body.minSizeMM, Math.min(CLICKER_PROFILE.body.maxSizeMM,
+      Number(result?.sizeMM) || CLICKER_PROFILE.body.targetSize));
     state.silhouetteKey = nextSilhouetteKey;
     state.colorKey = nextColorKey;
 
@@ -463,8 +496,7 @@ function init() {
   };
 
 
-  // Fixed-size generation mode: use the standard Clicker size for
-  // TOP, cavity, pedestal/socket, and HOUSING every time.
+  // Only artwork uses the selected size; all mechanical builders use mm.
 
   // ---------------- Controls: HOUSING color (same #clickerBaseColors UI as before) ----------------
 

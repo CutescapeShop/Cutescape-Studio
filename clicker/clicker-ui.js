@@ -46,6 +46,13 @@ const finalCanvas = document.getElementById("clickerFinalCanvas");
 // CLICKER_PROFILE.accent.colorCount.default rather than failing.
 const colorCountSlider = document.getElementById("clickerColorCountSlider");
 const colorCountValue = document.getElementById("clickerColorCountValue");
+const sizeSlider = document.getElementById("clickerSizeSlider");
+const sizeValue = document.getElementById("clickerSizeValue");
+
+function selectedSizeMM() {
+  return Math.max(CLICKER_PROFILE.body.minSizeMM, Math.min(CLICKER_PROFILE.body.maxSizeMM,
+    Number(sizeSlider?.value) || CLICKER_PROFILE.body.targetSize));
+}
 
 // If the Clicker markup isn't present (e.g. this file loaded on a page
 // without it), do nothing rather than throw — keeps this module inert
@@ -143,6 +150,21 @@ function init() {
   updateThresholdLabel();
   updateSmoothingLabel();
   updateColorCountLabel();
+  if (sizeSlider) {
+    sizeSlider.min = CLICKER_PROFILE.body.minSizeMM;
+    sizeSlider.max = CLICKER_PROFILE.body.maxSizeMM;
+    sizeSlider.value = CLICKER_PROFILE.body.targetSize;
+    if (sizeValue) sizeValue.textContent = sizeSlider.value;
+    sizeSlider.addEventListener("input", () => {
+      if (sizeValue) sizeValue.textContent = String(selectedSizeMM());
+      schedulePipeline();
+    });
+    sizeSlider.addEventListener("change", runPipelineNow);
+  }
+  // Export the visible size even if a slider's debounce has not fired yet.
+  document.getElementById("clickerExportButton")?.addEventListener("click", () => {
+    if (pipelineTimer !== null) runPipelineNow();
+  }, true);
 }
 
 function updateThresholdLabel() {
@@ -182,6 +204,7 @@ function runPipeline(state) {
 
   const threshold = Number(thresholdSlider.value);
   const smoothing = Number(smoothingSlider.value);
+  const sizeMM = selectedSizeMM();
 
   const silhouetteKey = `${state.imageKey}|${threshold}|${state.invert ? 1 : 0}|${smoothing}`;
   const t0 = performance.now();
@@ -211,6 +234,8 @@ function runPipeline(state) {
   let colorCacheHit = false;
   let colorKey = `${silhouetteKey}|none`;
   try {
+    // Keep the same color islands while resizing. Physical-size cleanup
+    // uses the default artwork size; the viewer alone scales the artwork.
     const autoFit = computeAutoFitTransform(
       loops,
       CLICKER_PROFILE.body.targetSize,
@@ -264,6 +289,8 @@ function runPipeline(state) {
       height,
       loops,
       colorRegions,
+      sizeMM,
+      geometryKey: `${silhouetteKey}|size:${sizeMM}`,
       silhouetteKey,
       colorKey,
     });

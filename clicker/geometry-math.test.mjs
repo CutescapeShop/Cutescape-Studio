@@ -83,7 +83,7 @@ const birdLikeBodyScale = (await import(moduleUrl)).computeAutoFitTransform(
   30,
   30
 ).scale;
-assert.ok(birdLikeBodyScale > 1, "narrow bird-like silhouettes enlarge enough for the main body cavity + socket");
+assert.equal(birdLikeBodyScale, 30 / 47, "longest side matches selected size without distorting aspect ratio");
 
 const viewerSource = await readFile(new URL("./clicker-viewer.js", import.meta.url), "utf8");
 assert.doesNotMatch(viewerSource, /createTopWallGeometries/, "TOP build/export path must not create a silhouette wall");

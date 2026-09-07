@@ -21,6 +21,7 @@
 // =====================================================================
 
 import * as THREE from "three";
+import { unionMechanicalRegions, containsMechanicalRegion } from "./mechanical-regions.js";
 
 import ClipperLib from
   "https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/+esm";
@@ -340,16 +341,18 @@ export function createTopBaseGeometries(outerLoops, autoFit, scaleMultiplier, zO
  * @param {number} transitionThicknessMM mm
  * @returns {THREE.BufferGeometry[]}
  */
-export function createTopTransitionGeometries(outerLoops, autoFit, scaleMultiplier, transitionThicknessMM) {
+export function createTopTransitionGeometries(outerLoops, autoFit, scaleMultiplier, transitionThicknessMM, structuralMMLoops = null) {
   if (!outerLoops || outerLoops.length === 0 || !autoFit) return [];
 
-  const shapes = groupLoopsIntoSolidShapes(outerLoops);
+  const shapes = structuralMMLoops
+    ? structuralMMLoops.map((outer) => ({ outer }))
+    : groupLoopsIntoSolidShapes(outerLoops);
   const geometries = [];
 
   for (const { outer } of shapes) {
     if (outer.length < 3) continue;
 
-    const mmOuter = loopToMM(outer, autoFit, scaleMultiplier);
+    const mmOuter = structuralMMLoops ? outer : loopToMM(outer, autoFit, scaleMultiplier);
     // This is the structural, full-silhouette backing. Do
     // not carry artwork/alpha holes into it: those openings belong to
     // the visible front layer only. Preserving them here would punch
@@ -429,6 +432,30 @@ export function createTopRearShellGeometries(
   // This preserves the functional center consumed by HOUSING and exports.
   const pedestalLocation = findPedestalLocation(outerMMLoops, placementCavities,
     placementRadius, placementClearRadius, cavityProfile.minimumWallMM);
+
+  diagnostics.minimumBossReliefAdded = false;
+  diagnostics.structuralExtension = false;
+  if (pedestalLocation && topSocketProfile) {
+    const footRadius = Math.max(...topSocketProfile.bossFlareProfileMM.map(([, radius]) => radius));
+    const reliefRadius = footRadius + cavityProfile.bossKeepOutMM;
+    const centeredCircle = (radius) => circlePolygon(radius * 2, 64).map((p) => ({
+      x: p.x + pedestalLocation.x, y: p.y + pedestalLocation.y,
+    }));
+    const requiredRelief = centeredCircle(reliefRadius);
+    if (!containsMechanicalRegion(perShapeCavity.filter(Boolean), requiredRelief)) {
+      const support = centeredCircle(reliefRadius + cavityProfile.minimumWallMM);
+      if (!containsMechanicalRegion(outerMMLoops, support)) {
+        const extended = unionMechanicalRegions([...outerMMLoops, support]);
+        outerMMLoops.splice(0, outerMMLoops.length, ...extended);
+        diagnostics.structuralExtension = true;
+      }
+      const cavities = unionMechanicalRegions([...perShapeCavity.filter(Boolean), requiredRelief]);
+      perShapeCavity.splice(0, perShapeCavity.length, ...outerMMLoops.map((outer) =>
+        cavities.filter((cavity) => containsMechanicalRegion([outer], cavity))
+          .sort((a, b) => Math.abs(signedArea(b)) - Math.abs(signedArea(a)))[0] ?? null));
+      diagnostics.minimumBossReliefAdded = true;
+    }
+  }
 
   // Last resort for outlines with no usable inset. Clear the entire
   // flared foot at the preserved switch center; never cut outside the TOP.
