@@ -304,6 +304,7 @@ function init() {
       {
         minimumWallMM: CLICKER_PROFILE.topShell.minimumWallMM,
         bossKeepOutMM: CLICKER_PROFILE.topShell.bossKeepOutMM,
+        switchPlacement: CLICKER_PROFILE.topShell.switchPlacement,
       },
       CLICKER_PROFILE.topSocket
     );
@@ -323,7 +324,8 @@ function init() {
       CLICKER_PROFILE.topShell.bodyDepthMM,
       CLICKER_PROFILE.topShell.transitionThicknessMM,
       CLICKER_PROFILE.topShell.bossKeepOutMM,
-      CLICKER_PROFILE.topShell.minimumWallMM
+      CLICKER_PROFILE.topShell.minimumWallMM,
+      shellResult.pedestalLocation
     );
     if (pedestalResult.geometry) {
       topGroup.add(new THREE.Mesh(pedestalResult.geometry, topBaseMaterial));

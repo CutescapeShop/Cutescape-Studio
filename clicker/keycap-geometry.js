@@ -6,8 +6,8 @@
 //     silhouette, filled with the single auto-detected dominant color.
 //     TOP ARTWORK — createTopBaseGeometries() is UNCHANGED from the
 //     already-working color pipeline; do not modify its logic.
-//   - TOP's simple backside: a solid full-silhouette backing with a
-//     centered MX socket boss. No procedural inner wall or shell.
+//   - TOP's backside: silhouette rear shell and a curved, flared MX
+//     socket boss attached to the solid backing.
 //
 // Coordinate convention (fixed — see geometry-math.js header): X/Y is
 // the image plane, Z is thickness. Z=0 is topBase's own back face —
@@ -220,7 +220,15 @@ function createSimplifiedInsetCavities(mmOuter, wallThicknessMM) {
   offsetter.Execute(insetPaths, -wallThicknessMM * scale);
   const offsetMs = nowMs() - offsetStartedAt;
   const cleaningStartedAt = nowMs();
-  const cleaned = ClipperLib.Clipper.CleanPolygons(insetPaths, 0.25 * scale);
+  // Keep the previous placement input separate from the printable cavity:
+  // changing the cavity must not move the shared HOUSING switch cutouts.
+  const placementPaths = ClipperLib.Clipper.CleanPolygons(insetPaths, 0.25 * scale);
+  const placementLoops = sanitizeInsetLoops(mmOuter,
+    ClipperLib.Clipper.SimplifyPolygons(placementPaths, ClipperLib.PolyFillType.pftNonZero)
+      .map((loop) => loop.map((point) => ({ x: point.X / scale, y: point.Y / scale }))));
+  // A 0.25 mm clean replaces narrow concavities with chords that can cut
+  // outside CAT/Fish silhouettes, causing valid broad insets to be rejected.
+  const cleaned = ClipperLib.Clipper.CleanPolygons(insetPaths, 0.05 * scale);
   const allSimplified = ClipperLib.Clipper.SimplifyPolygons(cleaned, ClipperLib.PolyFillType.pftNonZero)
     .map((loop) => loop.map((point) => ({ x: point.X / scale, y: point.Y / scale })))
     .filter((loop) => loop.length >= 3);
@@ -230,6 +238,7 @@ function createSimplifiedInsetCavities(mmOuter, wallThicknessMM) {
 
   return {
     loops,
+    placementLoops,
     rawCount: insetPaths.length,
     cleanedCount: cleaned.length,
     simplifiedCount: allSimplified.length,
@@ -376,6 +385,7 @@ export function createTopRearShellGeometries(
   const shapes = groupLoopsIntoSolidShapes(outerLoops);
   const outerMMLoops = [];
   const perShapeCavity = [];
+  const placementCavities = [];
   const diagnostics = {
     rawInsetLoops: 0,
     cleanedLoops: 0,
@@ -409,36 +419,35 @@ export function createTopRearShellGeometries(
 
     const largestCavity = (inset.loops || []).sort((a, b) => Math.abs(signedArea(b)) - Math.abs(signedArea(a)))[0] || null;
     perShapeCavity.push(largestCavity);
+    if (inset.placementLoops[0]) placementCavities.push(inset.placementLoops[0]);
   }
 
-  // Guaranteed-relief fallback: on an irregular photo-derived outline,
-  // the silhouette-inset cavity search above can legitimately find
-  // nothing valid anywhere (self-intersections/boundary-crossings at
-  // narrow appendages — see sanitizeInsetLoops). Without ANY cavity,
-  // the shell stays fully solid and the MX pedestal boss (built
-  // separately by createTopPedestalGeometry, extruded to this SAME
-  // Z-depth) ends up completely embedded in solid material — a real
-  // mesh with zero visible relief. A plain circle is always a simple,
-  // self-intersection-free polygon regardless of how irregular the
-  // outer outline is, so carving one around wherever the pedestal will
-  // actually sit is robust for any silhouette. findPedestalLocation is
-  // a pure function of its inputs, so calling it here with cavityLoops
-  // = [] reproduces exactly the (x,y) createTopPedestalGeometry will
-  // independently compute next — no coordination between the two
-  // calls is needed for them to agree.
+  const placement = cavityProfile.switchPlacement;
+  const placementRadius = placement?.radiusMM ?? 3.55;
+  const placementClearRadius = placement?.cavityClearRadiusMM ?? 2.3125;
+  // Use the old placement inputs even when the recovered cavity is larger.
+  // This preserves the functional center consumed by HOUSING and exports.
+  const pedestalLocation = findPedestalLocation(outerMMLoops, placementCavities,
+    placementRadius, placementClearRadius, cavityProfile.minimumWallMM);
+
+  // Last resort for outlines with no usable inset. Clear the entire
+  // flared foot at the preserved switch center; never cut outside the TOP.
   let fallbackCavity = null;
   let fallbackShapeIndex = -1;
   const hasAnyRealCavity = perShapeCavity.some(Boolean);
   if (!hasAnyRealCavity && topSocketProfile) {
-    const pedestalRadius = topSocketProfile.bossDiameterMM / 2 + cavityProfile.bossKeepOutMM;
-    const location = findPedestalLocation(outerMMLoops, [], pedestalRadius, pedestalRadius, cavityProfile.minimumWallMM);
+    const pedestalRadius = Math.max(topSocketProfile.bossDiameterMM / 2,
+      ...topSocketProfile.bossFlareProfileMM.map(([, radius]) => radius));
+    const location = pedestalLocation;
     if (location) {
-      const relief = circlePolygon(pedestalRadius * 2 + 0.6, 32).map((p) => ({
+      const relief = circlePolygon((pedestalRadius + cavityProfile.bossKeepOutMM) * 2, 64).map((p) => ({
         x: p.x + location.x,
         y: p.y + location.y,
       }));
       fallbackShapeIndex = outerMMLoops.findIndex((loop) => pointInPolygon(location, loop));
-      if (fallbackShapeIndex >= 0) fallbackCavity = relief;
+      if (fallbackShapeIndex >= 0 && sanitizeInsetLoops(outerMMLoops[fallbackShapeIndex], [relief]).length) {
+        fallbackCavity = relief;
+      }
     }
   }
 
@@ -460,6 +469,9 @@ export function createTopRearShellGeometries(
 
   const cavityLoops = perShapeCavity.filter(Boolean);
   if (fallbackCavity) cavityLoops.push(fallbackCavity);
+  if (pedestalLocation) {
+    pedestalLocation.insideCavity = cavityLoops.some((loop) => pointInPolygon(pedestalLocation, loop));
+  }
 
   const warnings = [];
   if (cavityLoops.length === 0) {
@@ -467,7 +479,7 @@ export function createTopRearShellGeometries(
   } else if (fallbackCavity) {
     warnings.push("Silhouette-derived cavity unavailable; used a guaranteed circular relief around the MX pedestal instead");
   }
-  return { geometries, outerMMLoops, cavityLoops, diagnostics, warnings };
+  return { geometries, outerMMLoops, cavityLoops, pedestalLocation, diagnostics, warnings };
 }
 
 /** Build the independently-positioned MX pedestal/socket. */
@@ -478,7 +490,8 @@ export function createTopPedestalGeometry(
   bodyDepthMM,
   backingThicknessMM,
   bossKeepOutMM,
-  minimumWallMM = 0
+  minimumWallMM = 0,
+  functionalLocation = null
 ) {
   const pedestalRadius = topSocketProfile.bossDiameterMM / 2 + bossKeepOutMM;
   const socketClearRadius = Math.max(
@@ -486,7 +499,7 @@ export function createTopPedestalGeometry(
     topSocketProfile.crossArmThickness + topSocketProfile.socketToleranceMM
   ) / 2 + 0.2;
 
-  const location = findPedestalLocation(outerMMLoops, cavityLoops, pedestalRadius, socketClearRadius, minimumWallMM);
+  const location = functionalLocation ?? findPedestalLocation(outerMMLoops, cavityLoops, pedestalRadius, socketClearRadius, minimumWallMM);
   if (!location) {
     return {
       geometry: null,
@@ -498,16 +511,58 @@ export function createTopPedestalGeometry(
   const holeWidth = topSocketProfile.crossWidth + topSocketProfile.socketToleranceMM;
   const holeArm = topSocketProfile.crossArmThickness + topSocketProfile.socketToleranceMM;
   const hole = crossSocketPolygon(holeWidth, holeArm);
-  const shape = buildShapeFromMMLoops(circlePolygon(pedestalRadius * 2, 32), [hole]);
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: Math.max(0.05, bodyDepthMM),
-    bevelEnabled: false,
-    curveSegments: 1,
-  });
-  geometry.translate(location.x, location.y, -bodyDepthMM - backingThicknessMM);
+  const geometry = buildFlaredBossGeometry(topSocketProfile, hole, backingThicknessMM);
+  geometry.translate(location.x, location.y, 0);
   return {
     geometry,
     location,
     warning: null,
   };
+}
+
+/** Closed boss mesh with measured outer rings and an unscaled cross socket. */
+function buildFlaredBossGeometry(profile, hole, backingThicknessMM) {
+  const rings = [...profile.bossFlareProfileMM,
+    [profile.bossDepthMM, profile.bossDiameterMM / 2]];
+  const segments = 64;
+  const positions = [];
+  const triangle = (a, b, c) => positions.push(...a, ...b, ...c);
+  const at = (point, depth) => [point.x, point.y, -backingThicknessMM - depth];
+  const outlines = rings.map(([, radius]) => circlePolygon(radius * 2, segments));
+  // Ring order travels toward negative Z. This winding faces outward.
+  for (let r = 0; r < rings.length - 1; r++) {
+    for (let i = 0; i < segments; i++) {
+      const j = (i + 1) % segments;
+      const a = at(outlines[r][i], rings[r][0]);
+      const b = at(outlines[r][j], rings[r][0]);
+      const c = at(outlines[r + 1][j], rings[r + 1][0]);
+      const d = at(outlines[r + 1][i], rings[r + 1][0]);
+      triangle(a, c, b); triangle(a, d, c);
+    }
+  }
+  const depth = profile.bossDepthMM;
+  for (let i = 0; i < hole.length; i++) {
+    const j = (i + 1) % hole.length;
+    const a = at(hole[i], 0), b = at(hole[j], 0);
+    const c = at(hole[j], depth), d = at(hole[i], depth);
+    if (signedArea(hole) > 0) { triangle(a, b, c); triangle(a, c, d); }
+    else { triangle(a, c, b); triangle(a, d, c); }
+  }
+  for (const r of [0, rings.length - 1]) {
+    const outer = outlines[r];
+    const points = [...outer, ...hole];
+    const faces = THREE.ShapeUtils.triangulateShape(
+      outer.map((p) => new THREE.Vector2(p.x, p.y)),
+      [hole.map((p) => new THREE.Vector2(p.x, p.y))]);
+    for (const face of faces) {
+      const [a, b, c] = face.map((i) => points[i]);
+      const positive = orientation(a, b, c) > 0;
+      const order = positive === (r === 0) ? [a, b, c] : [a, c, b];
+      triangle(...order.map((p) => at(p, rings[r][0])));
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.computeVertexNormals();
+  return geometry;
 }

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { loadClickerModules } from "../tools/clicker-test-modules.mjs";
 
 const source = await readFile(new URL("./geometry-math.js", import.meta.url), "utf8");
 const moduleUrl = `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
@@ -97,7 +98,7 @@ assert.match(viewerSource, /root\.matrixWorld\.clone\(\)\.invert\(\)/, "export c
 assert.match(viewerSource, /multiplyMatrices\(\s*rootInverse,\s*object\.matrixWorld\s*\)/s, "export retains only modeling transforms relative to the preview root");
 assert.doesNotMatch(viewerSource, /applyMatrix4\(object\.matrixWorld\)/, "STL export must not bake preview offsets");
 assert.match(viewerSource, /nextSilhouetteKey !== state\.silhouetteKey/, "unchanged silhouette geometry is not rebuilt for color-only changes");
-assert.match(viewerSource, /setTimeout\(\(\) => \{[\s\S]*?rebuildAll\(\);[\s\S]*?\}, 140\)/, "3D scale rebuild is debounced");
+assert.match(viewerSource, /FIXED_CLICKER_SCALE_MULTIPLIER = 1/, "global sizing remains fixed");
 
 const uiSource = await readFile(new URL("./clicker-ui.js", import.meta.url), "utf8");
 assert.match(uiSource, /silhouetteCache:\s*new Map\(\)/, "silhouette results are cached by image and settings");
@@ -106,19 +107,18 @@ assert.match(uiSource, /function schedulePipeline\(\)/, "slider-driven pipeline 
 assert.match(uiSource, /silhouetteKey,\s*colorKey/s, "viewer receives independent silhouette and color cache keys");
 
 const profileSource = await readFile(new URL("./stem-profile.js", import.meta.url), "utf8");
-const topShellConfig = profileSource.match(/topShell:\s*\{([\s\S]*?)\n\s*\},\n\n\s*housing:/)?.[1] ?? "";
+const topShellConfig = profileSource.replace(/\r\n/g, "\n").match(/topShell:\s*\{([\s\S]*?)\n\s*\},\n\n\s*housing:/)?.[1] ?? "";
 assert.doesNotMatch(topShellConfig, /wallDepthMM|wallThicknessMM/, "removed TOP wall settings must not remain active");
-assert.match(topShellConfig, /bodyDepthMM:\s*5\.7/, "solid rear body remains 5.7 mm deep");
+assert.match(topShellConfig, /bodyDepthMM:\s*5\.6374/, "rear body matches CAT/Fish depth");
 assert.doesNotMatch(topShellConfig, /cavityWidthMM|cavityHeightMM/, "cavity size must not be capped by fixed dimensions");
 assert.match(topShellConfig, /minimumWallMM:\s*1\.6/, "minimum cavity wall remains 1.6 mm");
 assert.match(topShellConfig, /bossKeepOutMM:\s*0\.8/, "boss keep-out remains 0.8 mm");
 
-const maxTopThicknessMM = 0.4 + 0.2 + 0.95 + 5.7;
+const maxTopThicknessMM = 0.4 + 0.2 + 0.95 + 5.6374;
 assert.ok(maxTopThicknessMM <= 7.437, "artwork + backing + solid body must not exceed the reference TOP thickness");
 
 const keycapSource = await readFile(new URL("./keycap-geometry.js", import.meta.url), "utf8");
-const keycapModuleUrl = `data:text/javascript;base64,${Buffer.from(keycapSource).toString("base64")}`;
-const { sanitizeInsetLoops } = await import(keycapModuleUrl);
+const { sanitizeInsetLoops } = (await loadClickerModules())["keycap-geometry"];
 
 const invalidOuter = [
   { x: -10, y: -10 }, { x: 10, y: -10 }, { x: 10, y: 10 }, { x: -10, y: 10 },
@@ -131,7 +131,7 @@ assert.deepEqual(sanitizeInsetLoops(invalidOuter, [invalidLoop]), [], "invalid i
 const validLoop = [
   { x: -6, y: -6 }, { x: 6, y: -6 }, { x: 6, y: 6 }, { x: -6, y: 6 }, { x: -6, y: -6 },
 ];
-assert.deepEqual(sanitizeInsetLoops(invalidOuter, [validLoop]), [validLoop], "valid inset loop remains inside the silhouette");
+assert.deepEqual(sanitizeInsetLoops(invalidOuter, [validLoop]), [validLoop.slice(0, -1)], "valid inset loop remains inside the silhouette with duplicate closure removed");
 
 const touchedOuter = [
   { x: -10, y: -10 }, { x: 10, y: -10 }, { x: 10, y: 10 }, { x: -10, y: 10 },
@@ -139,7 +139,7 @@ const touchedOuter = [
 const touchedLoop = [
   { x: -8, y: -8 }, { x: 8, y: -8 }, { x: 8, y: 8 }, { x: -8, y: 8 }, { x: -8, y: -8 },
 ];
-assert.deepEqual(sanitizeInsetLoops(touchedOuter, [touchedLoop]), [touchedLoop], "valid inset loop survives when it touches the boundary without crossing it");
+assert.deepEqual(sanitizeInsetLoops(touchedOuter, [touchedLoop]), [touchedLoop.slice(0, -1)], "valid inset loop survives with duplicate closure removed");
 
 const housingSource = await readFile(new URL("./housing-geometry.js", import.meta.url), "utf8");
 assert.match(housingSource, /groupLoopsIntoSolidShapes\(outerLoops\)/, "HOUSING begins from solid structural outer silhouettes");
@@ -148,7 +148,7 @@ assert.match(housingSource, /buildFunctionalHousingGeometry/, "functional housin
 assert.match(housingSource, /analyzeHousingTopology/, "HOUSING reports open and non-manifold edges");
 assert.match(housingSource, /addPlanarRegion\(positions, outer, \[\], zRanges\.floor\[0\], -1\)/, "rear floor is a solid outer-silhouette cap");
 assert.match(housingSource, /chamberLoopsUsed:\s*chamberLoop \? 1 : 0/, "only a validated structural inset becomes the upper chamber");
-assert.match(housingSource, /functional-pocket-fallback/, "a valid pocket remains functional when the uniform chamber inset misses the plate");
+assert.match(housingSource, /silhouette-inset-patched/, "confirmed chamber patch remains available");
 assert.match(housingSource, /functionalCenter/, "HOUSING functional cutouts share TOP's MX location");
 assert.doesNotMatch(housingSource, /buildSolidLayer|buildUpperShellLayer/, "old stacked extrusions with coplanar caps are removed");
 assert.match(viewerSource, /topGeometryDiagnostics\?\.pedestalLocation \|\| null/, "preview and export align HOUSING cutouts to TOP's MX location");

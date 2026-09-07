@@ -56,14 +56,23 @@ export const CLICKER_PROFILE = {
     // through it — mirrors how a real Cherry-style keycap underside is
     // actually built (thick boss + "+" cavity, not thin free-standing
     // ribs). Always centered at X=0,Y=0.
-    bossDiameterMM: 5.5,   // measured (5.51)
-    bossDepthMM: 5.7,      // measured
+    bossDiameterMM: 5.5118,
+    bossDepthMM: 5.6374,
+    // CAT/Fish 3MF sections: [distance behind backing, outer radius].
+    // The curved foot becomes a straight cylinder after 1.7461 mm.
+    bossFlareProfileMM: [
+      [0, 3.9478], [0.0244, 3.8884], [0.1018, 3.7299],
+      [0.1937, 3.5793], [0.2994, 3.4381], [0.4179, 3.3074],
+      [0.5482, 3.1885], [0.6890, 3.0823], [0.8393, 2.9898],
+      [0.9975, 2.9118], [1.1624, 2.8491], [1.3324, 2.8021],
+      [1.5061, 2.7713], [1.6819, 2.7570], [1.7461, 2.7559],
+    ],
 
     // Nominal Cherry MX cross-stem dimensions (industry-standard,
     // matches direct measurement of the reference almost exactly:
     // measured arm envelope ~4.0mm tip-to-tip, ~1.17mm arm thickness).
-    crossWidth: 4.1,
-    crossArmThickness: 1.17,
+    crossWidth: 4.0386,
+    crossArmThickness: 1.1938,
 
     // Added to crossWidth/crossArmThickness ONLY when cutting the
     // socket HOLE (never reused for any printed-peg sizing — a female
@@ -72,7 +81,7 @@ export const CLICKER_PROFILE = {
     // any other tolerance in this file). Positive = looser fit.
     // Start here after a real print's test-fit and adjust up/down in
     // ~0.02mm steps.
-    socketToleranceMM: 0.125,
+    socketToleranceMM: 0,
   },
 
   topShell: {
@@ -89,9 +98,15 @@ export const CLICKER_PROFILE = {
     frontThicknessMM: 0.79, // measured, reference-only (see note above)
 
     transitionThicknessMM: 0.95, // measured
-    bodyDepthMM: 5.7,
+    bodyDepthMM: 5.6374,
     minimumWallMM: 1.6,
     bossKeepOutMM: 0.8,
+    // Preserve the existing shared TOP/HOUSING switch position while
+    // refining TOP geometry. These are placement clearances, not solids.
+    switchPlacement: {
+      radiusMM: 3.55,
+      cavityClearRadiusMM: 2.3125,
+    },
   },
 
   housing: {
