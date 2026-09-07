@@ -533,6 +533,10 @@
       color: var(--sage-deep);
     }
 
+    .field-disabled {
+      opacity: 0.5;
+    }
+
     input[type="text"],
     select {
       width: 100%;

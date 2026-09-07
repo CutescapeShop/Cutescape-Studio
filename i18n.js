@@ -17,6 +17,7 @@
 
       "panel.title": "ออกแบบสินค้า",
       "field.name": "ชื่อ",
+      "field.line2": "บรรทัดที่ 2 (ไม่บังคับ)",
       "field.font": "เลือกฟอนต์",
       "field.size": "ขนาดตัวอักษร",
       "field.baseShape": "รูปทรงฐาน",
@@ -61,6 +62,7 @@
       "button.sendToShop": "ส่งแบบให้ร้าน",
 
       "placeholder.designCode": "เช่น KC-XXXXXXXX",
+      "placeholder.line2": "เว้นว่างไว้ถ้าไม่ต้องการบรรทัดที่ 2",
 
       "result.savedPrefix": "บันทึกแบบเรียบร้อย! รหัสแบบของคุณคือ",
 
@@ -87,6 +89,7 @@
 
       "panel.title": "Design Your Keychain",
       "field.name": "Name",
+      "field.line2": "Second Line (Optional)",
       "field.font": "Font",
       "field.size": "Text Size",
       "field.baseShape": "Base Shape",
@@ -131,6 +134,7 @@
       "button.sendToShop": "Send to Shop",
 
       "placeholder.designCode": "e.g. KC-XXXXXXXX",
+      "placeholder.line2": "Leave blank for a single-line design",
 
       "result.savedPrefix": "Design saved! Your design code is",
 

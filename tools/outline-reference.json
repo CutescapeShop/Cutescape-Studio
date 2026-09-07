@@ -1,0 +1,507 @@
+{
+  "description": "Captured from the validated synchronous stash merge on bd1adb4, before Worker changes. Three.js 0.167.1, Clipper 6.4.2, HarfBuzz 0.8.0; text size 100%.",
+  "cases": [
+    {
+      "case": 0,
+      "fontName": "18jindaEclairBold",
+      "text": "Cute",
+      "line2": "",
+      "margin": 0.18,
+      "width": 3.9499999885559083,
+      "totalMs": 1267.5971,
+      "clipMs": 1040.609,
+      "pathsHash": "9ba4c2df0dc27b21779fcec477b8fef42b79848a4d1f71a752bbebb86e8c5b6b",
+      "stlHash": "8b24e49bc93bb7f43469cb43d2aa4521efc4666341326bb396b44357245dffaa",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "e9328a36d3707db29e61daeb24426d36786cdbb9a22cb06b9ca9d03745144529",
+            "uv": "83748f02f221067f2745cac7f80d9d25b3146cde979a70aac54bae53d8e51124",
+            "normal": "303b3c8fe42bb87dca4f280d0b3b1035c95ea44a3ab45517ee43caa8f80ae4fc"
+          },
+          "triangles": 152716
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "0f3eec23933d0172a4842376a02eb6bf4d59e012da3afda587bbcfab90d41387",
+            "uv": "744d52504b1d7b9ca7d2d028ccf38cd724bd1bc8aa92e29ad5e775bef7e86703",
+            "normal": "27b4b357fb51552cd71f008b68aa1ce4e824776effb0b597900005f7a14d22fd"
+          },
+          "triangles": 23076
+        },
+        {
+          "position": [
+            -1.8949999942779543,
+            0.18324999511241913,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 1,
+      "fontName": "Srisakdi",
+      "text": "น่ารัก",
+      "line2": "",
+      "margin": 0.18,
+      "width": 2.760079920768738,
+      "totalMs": 2000.9286000000002,
+      "clipMs": 1611.906,
+      "pathsHash": "d712e72f57926ed6770831a8a4ad935d9252399ed53cb0a649ba8a0dd80c05cd",
+      "stlHash": "477fb564048900df57a6a79e1eac5a7bb525987f6ce9ca46fd8590b82cf38fe6",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "75f759854548738691d315c79af4b8a958a641a34ef616acc8cfb466cf276a03",
+            "uv": "eef48000f2e4fa1eb6ead4a9ad361b6d68c6af9e7a5ebf5dddc9bfcda2deb536",
+            "normal": "0df3990d3cc9624634f9b7efed9aa077782d0fabd5438b95311e7557e1a6f6bf"
+          },
+          "triangles": 67184
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "54818829ae9cee93d720ec5f87d18b6549ee927025ff97c6a8f31f4938ef41c6",
+            "uv": "b53b8fd13947e8077758f4c6450da3d5a537b46476c50e196332b9c1512b8b45",
+            "normal": "a072a1341f8ba16320b7e2614462c1e5988dedffb417888c6bf760bbdc706c0a"
+          },
+          "triangles": 201464
+        },
+        {
+          "position": [
+            -1.1000401391983035,
+            0.17676075547933578,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 2,
+      "fontName": "18jindaEclairBold",
+      "text": "Cute",
+      "line2": "Cute",
+      "margin": 0.18,
+      "width": 2.584799945831299,
+      "totalMs": 2974.6147999999994,
+      "clipMs": 2824.452,
+      "pathsHash": "28b9631ffc28b71b2ad5deda10b8fcf2adcb928c600f3155442e6e51a11ba454",
+      "stlHash": "c267084d3ae5d01ace19d4340f842a3702c4f7dc5d387df4217717eed38d792b",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "8d41e9aa13d55ce7b6bd6286a6021a719988897ad6d4a7ecec4e990e7c9d20b3",
+            "uv": "98aa4591743c8726529221b1b75ab771a76044ccd35dc90cf49450086b2a5dfe",
+            "normal": "b0b6c99bc86f05bbfc2d0b414692d806d13554bbe35265665efd21e57f397e85"
+          },
+          "triangles": 94728
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "07627b2d4936b0da8ed046aac4f4eb88c2d25ba33005dde488a369760cc7b49c",
+            "uv": "744d52504b1d7b9ca7d2d028ccf38cd724bd1bc8aa92e29ad5e775bef7e86703",
+            "normal": "ba984e90813ab9a16ac8a34dd02e75b1c9344a73e534c89e442250e832fd82f7"
+          },
+          "triangles": 23076
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "2edc2cca5179585980c9659d29cf42dab4b7b0b81c58c247a3e6600d593e8763",
+            "uv": "744d52504b1d7b9ca7d2d028ccf38cd724bd1bc8aa92e29ad5e775bef7e86703",
+            "normal": "ba984e90813ab9a16ac8a34dd02e75b1c9344a73e534c89e442250e832fd82f7"
+          },
+          "triangles": 23076
+        },
+        {
+          "position": [
+            0,
+            0.9409999766349791,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 3,
+      "fontName": "18jindaEclairBold",
+      "text": "Cutescape",
+      "line2": "A",
+      "margin": 0.1,
+      "width": 4.103399932861328,
+      "totalMs": 2483.7083999999995,
+      "clipMs": 2205.5780000000004,
+      "pathsHash": "0215b53011e88ffe898f72351acc78271de39f231fb787be26aaa1e272af77f2",
+      "stlHash": "bd2d5781dd6b65f1a96283cb05032d8bfe994ebd21a139e58681bd0cd7df6b42",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "fd5b431e788a38ba58f962b306124827f42d3664cc2dfac0ad33c390e4a62494",
+            "uv": "2f57d4dedc63065ae3c1e5b9bce639946ff19bce236cd4b09aa8020f281947eb",
+            "normal": "eb5bb30b7b7030fd812d30e3773ec70b3af945968419bd41d2fee102e32575e3"
+          },
+          "triangles": 230416
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "d03284fd59810d07cfa1b0399b59835d24fe09098caf378e61eb96780c3e6b19",
+            "uv": "5296d7443e9b4ccb70bc7315fc9564755a4400086128e867e698eed86a33210b",
+            "normal": "b76b6479e4a9bd380d1fd383ac9396849afe30fec690e6081e210dbeec7fdbe9"
+          },
+          "triangles": 52476
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "d4381babd6c03befa9b50ff0849331875cc9b56c7ee59e770c73496407635184",
+            "uv": "7ad44b93617757970b261cb2dae1808c96a50c797eb18e6a01eb371de94471fb",
+            "normal": "22466f2442a1cf1ef1a9bd3548f6ec1a3038697dbffacff13b0b2c8e5fb14649"
+          },
+          "triangles": 5632
+        },
+        {
+          "position": [
+            0,
+            0.8609999933242797,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 4,
+      "fontName": "18jindaEclairBold",
+      "text": "A",
+      "line2": "Cutescape",
+      "margin": 0.32,
+      "width": 4.668399990081787,
+      "totalMs": 9075.3493,
+      "clipMs": 8898.393599999998,
+      "pathsHash": "94402e07b50345e3faa408c354644e4c7f3f06f387fe1f1110d1e62f985be7f4",
+      "stlHash": "352e59c3dd6447d4e4fef04ba03076d3bbfbe6a7e79981d82d205dc40647d7cf",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "cb33ce642d71a5ad151e9c7f661934014f57dd606b4508a97cbd5fcf0f7d59a1",
+            "uv": "8856b5898b06750be6c47a82776d187c69164ced517b682aa8ad17cca0edeb10",
+            "normal": "b8e096b864abe8a8d68a4b329a89d6a18872dfa43e9470ea734a116256293b56"
+          },
+          "triangles": 116024
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "93b0c8e304dcb9b32215b6fc7f2bcaa7e02e9d6cfd4f93717616ed658d5ab00a",
+            "uv": "7ad44b93617757970b261cb2dae1808c96a50c797eb18e6a01eb371de94471fb",
+            "normal": "ef6ccb488f6bd2e2e36a6f11d653568953983c933717f0ba40dd7d7d8edbf98f"
+          },
+          "triangles": 5632
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "803a4896a12ac6a563dc5374ebe07a152f39f1d40d08ea1754b3cb9dd637965c",
+            "uv": "5296d7443e9b4ccb70bc7315fc9564755a4400086128e867e698eed86a33210b",
+            "normal": "8f54efeef618ce328420b5836f776dd0739b97bd13d9c4b7079e7edab9ed70f4"
+          },
+          "triangles": 52476
+        },
+        {
+          "position": [
+            0,
+            1.0810000219345093,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 5,
+      "fontName": "Srisakdi",
+      "text": "น่ารัก",
+      "line2": "ดี",
+      "margin": 0.18,
+      "width": 2.1039364938735963,
+      "totalMs": 3178.2865999999995,
+      "clipMs": 2697.839799999998,
+      "pathsHash": "6c87562eecefd560c653e37ed86485641575ea1fc2db61fb4f499d19ff999f64",
+      "stlHash": "987fa2891c6c62ba10b8fd819fe0e9ef2fa3d8454668017e7305cf2558425203",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "226ee3a6bbb512f5e02fc2d3b292f70c5f2906e875fe3bf09bda4178969d85a5",
+            "uv": "8e96033f62113c1a59856765a24fbea40cbe69907ad6905eb3461990b069a697",
+            "normal": "8b268ddeebb2df6bd0a525151ec540fe776e327a823d97ead2ecbe209378d74a"
+          },
+          "triangles": 49672
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "5ad1f4f7ef073739b48f3f75a35f84e35b431b4ef86d63cc96521606889026c7",
+            "uv": "b53b8fd13947e8077758f4c6450da3d5a537b46476c50e196332b9c1512b8b45",
+            "normal": "8879117283b6ad51c72cb802feb754b31fb1964845dfd4f861e08d253fb22985"
+          },
+          "triangles": 201464
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "9a3cb0eb3517e8e257c28150353ed58d5bcd6ba51bd185ca067e38d01bdef665",
+            "uv": "3e7bad3cfba63e46e45112962b4eac9b16e281586c1e3ff40504c5c2060349e2",
+            "normal": "805cff458ffbce6116de7dbf2673be373cdcb628db94cec0dc85272bfed7ccb6"
+          },
+          "triangles": 73824
+        },
+        {
+          "position": [
+            -0.00005352497100830078,
+            0.9410399117469787,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 6,
+      "fontName": "Thasadith",
+      "text": "ไทย",
+      "line2": "Cute",
+      "margin": 0.1,
+      "width": 2.3773999814987183,
+      "totalMs": 1493.4539000000004,
+      "clipMs": 1127.7095000000008,
+      "pathsHash": "fa3349042050b89d69629c4d27872bb434fb16693e931ce03f8d3c89403c200a",
+      "stlHash": "f190735fc3733717b91066b144aa061473f42b0c86415434790c20321969fede",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "073772371dfee51ec612c17c5075f4ae676aad60a244cab32660b97c7a0ce875",
+            "uv": "3fa902346df19b18237701e5a438238e9d1327af46b5eea8ca34341026308449",
+            "normal": "fe197c48dd6ad6faf3242994d689d7a09ea434315ffb4f9d0e45abe9159bb470"
+          },
+          "triangles": 129564
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "4cad93e966a716f216c8b2391ebe47581c1b086a5323a23d08152ce6d3a5a808",
+            "uv": "cb9e696d3374ce3c3c26194fd53afe368a4e5b2efc6f1083ef3089456cf20a6b",
+            "normal": "d523b9e625341202fba8e9bbaa44525713cd4e7cc5d99ee165e59849ace4b641"
+          },
+          "triangles": 169264
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "38848d72cc7aa708e26560b9febfca3abbaf478091a1dd2f5213bcfa956f1d9c",
+            "uv": "bfe2be270f64d2a2c3d3559b32f0a0f5a53ad751e64a6bfe8c8601a202baf460",
+            "normal": "7dc977217861e2fdc4768320231c9d43a7864e49fc188010e9a98cfb7b76483f"
+          },
+          "triangles": 14820
+        },
+        {
+          "position": [
+            0,
+            0.8609576740264892,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    },
+    {
+      "case": 7,
+      "fontName": "Anton",
+      "text": "ABC",
+      "line2": "KIRIN",
+      "margin": 0.32,
+      "width": 2.4806000595092774,
+      "totalMs": 289.97940000000017,
+      "clipMs": 228.10119999999733,
+      "pathsHash": "bb26ba260d8c8891d2e64ebe1742a01d9ae8a208d76847aa9c7c0d1224f76792",
+      "stlHash": "ce37a3d11efe0dfc52de979c3c46e16630de58b99e8776e6eed2477a6c082cff",
+      "meshes": [
+        {
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "attributes": {
+            "position": "6ffa156f6abe5030a3a4855cf85ee99dda15fed8079f1f301c12d88304772644",
+            "uv": "836f5357fac91cda4c813eeb103e08554ebcdc1455e37365dd362e8791be381d",
+            "normal": "a4d0f11224cfa8dfae94a493ed1f19304653eb3a583ad085fcecf0ba285eb7f2"
+          },
+          "triangles": 17640
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "ab8e73b9824d1044bc05c1ac54aa43a13eda9f03d04fb36b7066679d45957d33",
+            "uv": "95b781d78ff2c374c4c4142336648664028fbc611ff0bf0ca7375eb917f0da05",
+            "normal": "571fa8ca1b7e84fc8a11832ceb897e9953797ec0e0c774680282fc598dae3149"
+          },
+          "triangles": 6832
+        },
+        {
+          "position": [
+            0,
+            0,
+            0.37
+          ],
+          "attributes": {
+            "position": "c64d01cf0256e19d01a59c4ec9007368aa1cb7b422e45421a4a1284d114be2d5",
+            "uv": "cee651c0d5ae4896ea54e458fad15438a2cedf4a00bc5c0f28e922d6912692f2",
+            "normal": "039f0e4ea6af4718b3a381662c429928df1525b22343699511ca425308738c18"
+          },
+          "triangles": 2912
+        },
+        {
+          "position": [
+            0,
+            1.0810000219345093,
+            0
+          ],
+          "attributes": {
+            "position": "f1bf8dff2d7d786bb7f5acdd6ab009ecb5f9588c0719b147df02869bfdc637f3",
+            "uv": "d8767f133145dd75160eb944ad47399a639028eaf6951a17d78c1a98c454ecef",
+            "normal": "c943c57d27d4acdd78198227c11037681acf1226570431edf881aec72a687807"
+          },
+          "triangles": 22616
+        }
+      ]
+    }
+  ]
+}

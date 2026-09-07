@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { computeOutline } from "./outline-clipper.js";
+import { createOutlineJobs } from "./outline-jobs.js";
 
 import { OrbitControls } from
   "https://unpkg.com/three@0.167.1/examples/jsm/controls/OrbitControls.js";
@@ -31,6 +33,12 @@ const viewer =
 
 const nameInput =
   document.getElementById("nameInput");
+
+const nameInput2 =
+  document.getElementById("nameInput2");
+
+const nameLine2Field =
+  document.getElementById("nameLine2Field");
 
 const fontSelect =
   document.getElementById("fontSelect");
@@ -148,6 +156,19 @@ const textMaterial =
 
 const baseDepth = 0.52;
 const textDepth = 0.18;
+
+// ระยะห่างระหว่างบรรทัดที่ 1 และ 2 ของฐาน outline — ผูกกับ outlineMargin (ไม่ใช่ความสูง
+// ตัวอักษร) เพื่อให้ Clipper เชื่อม silhouette ของสองบรรทัดติดกันแน่นอนไม่ว่าปรับความหนา
+// ขอบไดคัทเท่าไหร่ก็ตาม ค่าทั้งสองนี้คือสัดส่วนต่อ outlineMargin:
+// - widthRatio = 1 (สองบรรทัดกว้างเท่ากัน): ช่องว่าง = outlineMargin * TWO_LINE_GAP_MAX_FACTOR
+// - widthRatio -> 0 (บรรทัดหนึ่งแคบกว่าอีกบรรทัดมาก): ซ้อนทับกันจริง
+//   = outlineMargin * TWO_LINE_OVERLAP_MIN_FACTOR เพื่อบังคับให้คอเชื่อมหนาแทนคอคอดบาง
+// หมายเหตุ: เกณฑ์ทางทฤษฎีที่ Clipper เชื่อมได้คือช่องว่าง < 2×margin แต่จากการทดสอบจริง
+// มุมโค้ง (jtRound) และจุดที่ใกล้กันที่สุดของสองบรรทัดไม่ได้อยู่ตรงกันแนวตั้งเสมอไป ทำให้
+// ระยะเชื่อมได้จริงแคบกว่าทฤษฎีมาก จึงตั้งค่าไว้ต่ำกว่าเกณฑ์ทฤษฎีมากเพื่อความปลอดภัย
+// (ทดสอบแล้วว่า 1.1 ไม่พอที่ margin ต่ำสุด 0.10 — ใช้ 0.4 จึงเชื่อมติดทุกกรณี)
+const TWO_LINE_GAP_MAX_FACTOR = 0.4;
+const TWO_LINE_OVERLAP_MIN_FACTOR = 0.3;
 
 // ลดขนาดวงแหวนลง ~15% จากต้นฉบับ (0.88 / 0.68 / 0.42) โดยคงสัดส่วนผนัง/รูเดิมไว้
 const ringOuterWidth = 0.748;
@@ -433,7 +454,7 @@ function destroyHarfBuzzFont() {
   harfBuzzFontUrl = null;
 }
 
-async function loadHarfBuzzFont(fontUrl) {
+async function loadHarfBuzzFont(fontUrl, isCurrent = () => true) {
   const hb = await initHarfBuzz();
   const response = await fetch(fontUrl);
   if (!response.ok) {
@@ -441,6 +462,7 @@ async function loadHarfBuzzFont(fontUrl) {
   }
 
   const fontData = new Uint8Array(await response.arrayBuffer());
+  if (!isCurrent()) return;
   destroyHarfBuzzFont();
 
   harfBuzzBlob = hb.createBlob(fontData);
@@ -873,16 +895,250 @@ ringGeometry.translate(
 // สร้างฐานตามตัวอักษร
 // =====================================
 
-function createOutlineProduct(textValue) {
-  const sourceShapes = generateProductShapes(textValue, 1);
-  const sampled = [];
+function createOutlineProduct(textValue, textValue2, revision = geometryRevision) {
+  const hasSecondLine = !!(textValue2 && textValue2.trim());
 
-  sourceShapes.forEach((shape) => {
-    const points = shape.getPoints(80);
-    if (points.length >= 3) sampled.push(points);
-  });
+  if (!hasSecondLine) {
+    // =====================================================================
+    // เส้นทางเดิม (บรรทัดเดียว) — คงไว้ทั้งหมดโดยไม่แก้ไข ห้ามแตะโค้ดส่วนนี้
+    // =====================================================================
+    const sourceShapes = generateProductShapes(textValue, 1);
+    const sampled = [];
 
-  if (sampled.length === 0) return 3;
+    sourceShapes.forEach((shape) => {
+      const points = shape.getPoints(80);
+      if (points.length >= 3) sampled.push(points);
+    });
+
+    if (sampled.length === 0) return 3;
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    sampled.flat().forEach((p) => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+
+    const rawWidth = Math.max(maxX - minX, 0.001);
+    const rawHeight = Math.max(maxY - minY, 0.001);
+    const scale = Math.min(1.24 / rawHeight, 8.5 / rawWidth, 1);
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    // Clipper ใช้เลขจำนวนเต็ม จึงขยายพิกัดก่อนคำนวณ offset/union
+    const CLIPPER_SCALE = 10000;
+    const outlineMargin =
+    outlineSlider
+      ? parseFloat(outlineSlider.value)
+      : 0.18;
+
+    const paths = sampled.map((points) =>
+      points.map((p) => ({
+        X: Math.round((p.x - centerX) * scale * CLIPPER_SCALE),
+        Y: Math.round((p.y - centerY) * scale * CLIPPER_SCALE)
+      }))
+    );
+
+    // ขยายแต่ละส่วนของตัวอักษรให้เป็นขอบมน แล้ว union ให้กลายเป็น silhouette รวม
+    // arcTolerance ต่ำ = Clipper ใส่จุดตามส่วนโค้งมากขึ้น = โค้งมนเนียนขึ้น (ไม่กระทบระยะ offset)
+    const offsetter = new ClipperLib.ClipperOffset(2, 0.0006 * CLIPPER_SCALE);
+    offsetter.AddPaths(
+      paths,
+      ClipperLib.JoinType.jtRound,
+      ClipperLib.EndType.etClosedPolygon
+    );
+
+    const expandedPaths = new ClipperLib.Paths();
+    offsetter.Execute(expandedPaths, outlineMargin * CLIPPER_SCALE);
+
+    const clipper = new ClipperLib.Clipper();
+    clipper.AddPaths(expandedPaths, ClipperLib.PolyType.ptSubject, true);
+
+    const unitedPaths = new ClipperLib.Paths();
+    clipper.Execute(
+      ClipperLib.ClipType.ctUnion,
+      unitedPaths,
+      ClipperLib.PolyFillType.pftNonZero,
+      ClipperLib.PolyFillType.pftNonZero
+    );
+
+  const baseShapes = unitedPaths
+    .filter((path) => path.length >= 3)
+    .map((path) => {
+      const shape = new THREE.Shape();
+
+      path.forEach((p, index) => {
+        const x = p.X / CLIPPER_SCALE;
+        const y = p.Y / CLIPPER_SCALE;
+
+        if (index === 0) {
+          shape.moveTo(x, y);
+        } else {
+          shape.lineTo(x, y);
+        }
+      });
+
+      shape.closePath();
+
+      return shape;
+    });
+
+    const baseGeometry = new THREE.ExtrudeGeometry(baseShapes, {
+      depth: 0.34,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 0.035,
+      bevelSize: 0.012,
+      bevelSegments: 10
+    });
+
+    baseGeometry.computeBoundingBox();
+    const baseBox = baseGeometry.boundingBox;
+    const finalBaseWidth = baseBox.max.x - baseBox.min.x;
+    const finalBaseHeight = baseBox.max.y - baseBox.min.y;
+
+    const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
+    productGroup.add(baseMesh);
+
+    // ตัวอักษรด้านหน้า ใช้ transform ชุดเดียวกับ silhouette จึงตรงกันพอดี
+    const frontGeometry = createTextGeometry(textValue, 0.15, 0.012);
+    frontGeometry.scale(scale, scale, 1);
+    frontGeometry.translate(-centerX * scale, -centerY * scale, 0);
+
+    const frontTextMesh = new THREE.Mesh(frontGeometry, textMaterial);
+    applyNameTextScale(frontGeometry);
+    frontTextMesh.position.z = 0.37;
+    productGroup.add(frontTextMesh);
+
+    // ห่วงแบบฝังชิดฐานเหมือนชิ้นงานตัวอย่าง
+    // ให้ขอบขวาของห่วงกินเข้าไปใน silhouette ของฐานโดยตรง
+    // จึงไม่ต้องมีก้านยาว/คอเหลี่ยมซึ่งเป็นจุดหักง่าย
+    const leftEdge = baseBox.min.x;
+    const ringOverlap = 0.16;
+    // เฉพาะฟอนต์ Srisakdi + ข้อความไทย: baseBox.min.x มาจากจุดต่ำสุดของตัวอักษร ไม่ใช่ขอบซ้าย
+    // จริงที่ระดับความสูงของห่วง (เส้นโค้งตัวอักษรไทยเบี่ยงมาก) ทำให้ห่วงดูลอยห่างจากตัวอักษร
+    // จึงชดเชยด้วยค่าคงที่เล็กน้อยเฉพาะกรณีนี้เท่านั้น ไม่แตะตำแหน่ง/สูตรของฟอนต์หรือสคริปต์อื่น
+    const isSrisakdiThai =
+      !!fontSelect &&
+      fontSelect.value === "Srisakdi" &&
+      isThaiText(textValue);
+    const srisakdiThaiRingXOffset = isSrisakdiThai ? 0.2 : 0;
+    const ringX = leftEdge - ringOuterWidth / 2 + ringOverlap + srisakdiThaiRingXOffset;
+    // ตำแหน่งแนวตั้งของห่วง: ~37.5% จากขอบบนของ silhouette (โซนบนซ้ายแบบพวงกุญแจทั่วไป)
+    const ringVerticalFraction = 0.375;
+    const ringY = baseBox.max.y - ringVerticalFraction * finalBaseHeight;
+    const ringMesh = createRingMesh(ringX, 0, ringY);
+    productGroup.add(ringMesh);
+
+    return finalBaseWidth + (ringOuterWidth - ringOverlap);
+  }
+
+  // ===========================================================================
+  // เส้นทางสองบรรทัด — จัดกึ่งกลางแต่ละบรรทัดแยกกัน แล้ววางซ้อนตามแนวตั้งด้วยระยะห่าง
+  // คงที่ ก่อนป้อนจุดรวมของทั้งสองบรรทัดเข้าสู่ pipeline ของ Clipper/ฐาน/ห่วงเดิมทุกจุด
+  // ===========================================================================
+
+  function sampleLinePoints(line) {
+    const shapes = generateProductShapes(line, 1);
+    const points = [];
+
+    shapes.forEach((shape) => {
+      const shapePoints = shape.getPoints(80);
+      if (shapePoints.length >= 3) points.push(shapePoints);
+    });
+
+    return points;
+  }
+
+  function boundsOf(pointGroups) {
+    let bMinX = Infinity;
+    let bMinY = Infinity;
+    let bMaxX = -Infinity;
+    let bMaxY = -Infinity;
+
+    pointGroups.flat().forEach((p) => {
+      bMinX = Math.min(bMinX, p.x);
+      bMinY = Math.min(bMinY, p.y);
+      bMaxX = Math.max(bMaxX, p.x);
+      bMaxY = Math.max(bMaxY, p.y);
+    });
+
+    return { minX: bMinX, minY: bMinY, maxX: bMaxX, maxY: bMaxY };
+  }
+
+  const line1Points = sampleLinePoints(textValue);
+  const line2Points = sampleLinePoints(textValue2.trim());
+
+  if (line1Points.length === 0 && line2Points.length === 0) {
+    clearProduct();
+    return 3;
+  }
+
+  // บรรทัดที่ขาดจุด (เช่น สระ/ฟอนต์ไม่รองรับ) ให้ตกกลับไปใช้เส้นทางบรรทัดเดียวของอีกบรรทัด
+  if (line1Points.length === 0 || line2Points.length === 0) {
+    clearProduct();
+    return createOutlineProduct(line1Points.length === 0 ? textValue2.trim() : textValue);
+  }
+
+  const bounds1 = boundsOf(line1Points);
+  const bounds2 = boundsOf(line2Points);
+
+  const centerX1 = (bounds1.minX + bounds1.maxX) / 2;
+  const centerX2 = (bounds2.minX + bounds2.maxX) / 2;
+
+  const width1 = bounds1.maxX - bounds1.minX;
+  const width2 = bounds2.maxX - bounds2.minX;
+  const height1 = bounds1.maxY - bounds1.minY;
+  const height2 = bounds2.maxY - bounds2.minY;
+
+  // outlineMargin คือหน่วยจริงหลัง scale (เหมือนที่ใช้กับ Clipper offset ด้านล่าง) จึงต้อง
+  // ประเมิน scale เบื้องต้นจากความสูงรวมสองบรรทัด (ไม่รวมช่องว่างซึ่งยังไม่รู้) เพื่อแปลง
+  // outlineMargin กลับเป็นหน่วยดิบสำหรับคำนวณ shiftY2 — scale จริงจะถูกคำนวณใหม่ทีหลังจาก
+  // ขอบเขตรวมที่วางบรรทัดสองแล้ว จึงไม่มีปัญหาความคลาดเคลื่อนสะสม
+  const outlineMargin =
+  outlineSlider
+    ? parseFloat(outlineSlider.value)
+    : 0.18;
+
+  const provisionalRawHeight = Math.max(height1 + height2, 0.001);
+  const provisionalRawWidth = Math.max(width1, width2, 0.001);
+  const provisionalScale = Math.min(
+    1.24 / provisionalRawHeight,
+    8.5 / provisionalRawWidth,
+    1
+  );
+
+  // ยิ่งสองบรรทัดกว้างต่างกันมาก (widthRatio ต่ำ) ยิ่งต้องซ้อน/เข้าใกล้กันมาก
+  // เพื่อไม่ให้เกิดคอคอดบางตรงจุดเชื่อมของบรรทัดสั้นกับบรรทัดยาว
+  const minWidth = Math.min(width1, width2);
+  const maxWidth = Math.max(width1, width2);
+  const widthRatio = maxWidth > 0.0001 ? minWidth / maxWidth : 1;
+
+  const finalGap =
+    outlineMargin *
+    (TWO_LINE_GAP_MAX_FACTOR * widthRatio -
+      TWO_LINE_OVERLAP_MIN_FACTOR * (1 - widthRatio));
+
+  const lineGap = finalGap / provisionalScale;
+
+  // บรรทัด 1 อยู่บน (ไม่ขยับแนวตั้ง) บรรทัด 2 เลื่อนลงให้ขอบบนของมันอยู่ต่ำกว่า
+  // ขอบล่างของบรรทัด 1 เป็นระยะ lineGap พอดี (ค่าติดลบ = ซ้อนทับกันจริงเมื่อกว้างต่างกันมาก)
+  const shiftY2 = (bounds1.minY - lineGap) - bounds2.maxY;
+
+  const line1Adjusted = line1Points.map((group) =>
+    group.map((p) => new THREE.Vector2(p.x - centerX1, p.y))
+  );
+
+  const line2Adjusted = line2Points.map((group) =>
+    group.map((p) => new THREE.Vector2(p.x - centerX2, p.y + shiftY2))
+  );
+
+  const sampled = [...line1Adjusted, ...line2Adjusted];
 
   let minX = Infinity;
   let minY = Infinity;
@@ -902,12 +1158,7 @@ function createOutlineProduct(textValue) {
   const centerX = (minX + maxX) / 2;
   const centerY = (minY + maxY) / 2;
 
-  // Clipper ใช้เลขจำนวนเต็ม จึงขยายพิกัดก่อนคำนวณ offset/union
   const CLIPPER_SCALE = 10000;
-  const outlineMargin =
-  outlineSlider
-    ? parseFloat(outlineSlider.value)
-    : 0.18;
 
   const paths = sampled.map((points) =>
     points.map((p) => ({
@@ -916,57 +1167,38 @@ function createOutlineProduct(textValue) {
     }))
   );
 
-  // ขยายแต่ละส่วนของตัวอักษรให้เป็นขอบมน แล้ว union ให้กลายเป็น silhouette รวม
-  // arcTolerance ต่ำ = Clipper ใส่จุดตามส่วนโค้งมากขึ้น = โค้งมนเนียนขึ้น (ไม่กระทบระยะ offset)
-  const offsetter = new ClipperLib.ClipperOffset(2, 0.0006 * CLIPPER_SCALE);
-  offsetter.AddPaths(
-    paths,
-    ClipperLib.JoinType.jtRound,
-    ClipperLib.EndType.etClosedPolygon
-  );
+  return outlineJobs.request(paths, outlineMargin).then((unitedPaths) => {
+    if (!unitedPaths || revision !== geometryRevision) return null;
+    // Retain the previous preview until the latest outline is ready.
+    clearProduct();
+    const baseShapes = unitedPaths
+      .filter((path) => path.length >= 3)
+      .map((path) => {
+        const shape = new THREE.Shape();
 
-  const expandedPaths = new ClipperLib.Paths();
-  offsetter.Execute(expandedPaths, outlineMargin * CLIPPER_SCALE);
+        path.forEach((p, index) => {
+          const x = p.X / CLIPPER_SCALE;
+          const y = p.Y / CLIPPER_SCALE;
 
-  const clipper = new ClipperLib.Clipper();
-  clipper.AddPaths(expandedPaths, ClipperLib.PolyType.ptSubject, true);
+          if (index === 0) {
+            shape.moveTo(x, y);
+          } else {
+            shape.lineTo(x, y);
+          }
+        });
 
-  const unitedPaths = new ClipperLib.Paths();
-  clipper.Execute(
-    ClipperLib.ClipType.ctUnion,
-    unitedPaths,
-    ClipperLib.PolyFillType.pftNonZero,
-    ClipperLib.PolyFillType.pftNonZero
-  );
+        shape.closePath();
 
-const baseShapes = unitedPaths
-  .filter((path) => path.length >= 3)
-  .map((path) => {
-    const shape = new THREE.Shape();
+        return shape;
+      });
 
-    path.forEach((p, index) => {
-      const x = p.X / CLIPPER_SCALE;
-      const y = p.Y / CLIPPER_SCALE;
-
-      if (index === 0) {
-        shape.moveTo(x, y);
-      } else {
-        shape.lineTo(x, y);
-      }
-    });
-
-    shape.closePath();
-
-    return shape;
-  });
-
-  const baseGeometry = new THREE.ExtrudeGeometry(baseShapes, {
-    depth: 0.34,
-    curveSegments: 12,
-    bevelEnabled: true,
-    bevelThickness: 0.035,
-    bevelSize: 0.012,
-    bevelSegments: 10
+    const baseGeometry = new THREE.ExtrudeGeometry(baseShapes, {
+      depth: 0.34,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 0.035,
+      bevelSize: 0.012,
+      bevelSegments: 10
   });
 
   baseGeometry.computeBoundingBox();
@@ -977,37 +1209,41 @@ const baseShapes = unitedPaths
   const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
   productGroup.add(baseMesh);
 
-  // ตัวอักษรด้านหน้า ใช้ transform ชุดเดียวกับ silhouette จึงตรงกันพอดี
-  const frontGeometry = createTextGeometry(textValue, 0.15, 0.012);
-  frontGeometry.scale(scale, scale, 1);
-  frontGeometry.translate(-centerX * scale, -centerY * scale, 0);
+  // ตัวอักษรด้านหน้า: สร้างทีละบรรทัดด้วย createTextGeometry เดิม (คงความละเอียดของเส้นโค้ง)
+  // แล้วแปลง transform ให้ตรงกับจุดที่ใช้สร้างฐานทุกประการ (จัดกึ่งกลางเฉพาะบรรทัด + scale/center รวม)
+  function buildLineTextMesh(line, localCenterX, verticalShift) {
+    const geometry = createTextGeometry(line, 0.15, 0.012);
 
-  const frontTextMesh = new THREE.Mesh(frontGeometry, textMaterial);
-  applyNameTextScale(frontGeometry);
-  frontTextMesh.position.z = 0.37;
-  productGroup.add(frontTextMesh);
+    geometry.translate(
+      -(localCenterX + centerX),
+      -(centerY - verticalShift),
+      0
+    );
+    geometry.scale(scale, scale, 1);
 
-  // ห่วงแบบฝังชิดฐานเหมือนชิ้นงานตัวอย่าง
-  // ให้ขอบขวาของห่วงกินเข้าไปใน silhouette ของฐานโดยตรง
-  // จึงไม่ต้องมีก้านยาว/คอเหลี่ยมซึ่งเป็นจุดหักง่าย
-  const leftEdge = baseBox.min.x;
+    const mesh = new THREE.Mesh(geometry, textMaterial);
+    applyNameTextScale(geometry);
+    mesh.position.z = 0.37;
+    return mesh;
+  }
+
+  const line1TextMesh = buildLineTextMesh(textValue, centerX1, 0);
+  const line2TextMesh = buildLineTextMesh(textValue2.trim(), centerX2, shiftY2);
+
+  productGroup.add(line1TextMesh);
+  productGroup.add(line2TextMesh);
+
+  // ห่วง (สองบรรทัด): วางไว้กึ่งกลางด้านบนของฐานรวม (ไม่ใช่ชิดซ้ายแบบบรรทัดเดียว)
+  // ขนาด/รูปร่าง/ระยะกินเข้าไปในฐาน (ringOverlap) เท่าเดิมทุกประการ เปลี่ยนแค่ตำแหน่ง
+  const baseCenterX = (baseBox.min.x + baseBox.max.x) / 2;
   const ringOverlap = 0.16;
-  // เฉพาะฟอนต์ Srisakdi + ข้อความไทย: baseBox.min.x มาจากจุดต่ำสุดของตัวอักษร ไม่ใช่ขอบซ้าย
-  // จริงที่ระดับความสูงของห่วง (เส้นโค้งตัวอักษรไทยเบี่ยงมาก) ทำให้ห่วงดูลอยห่างจากตัวอักษร
-  // จึงชดเชยด้วยค่าคงที่เล็กน้อยเฉพาะกรณีนี้เท่านั้น ไม่แตะตำแหน่ง/สูตรของฟอนต์หรือสคริปต์อื่น
-  const isSrisakdiThai =
-    !!fontSelect &&
-    fontSelect.value === "Srisakdi" &&
-    isThaiText(textValue);
-  const srisakdiThaiRingXOffset = isSrisakdiThai ? 0.2 : 0;
-  const ringX = leftEdge - ringOuterWidth / 2 + ringOverlap + srisakdiThaiRingXOffset;
-  // ตำแหน่งแนวตั้งของห่วง: ~37.5% จากขอบบนของ silhouette (โซนบนซ้ายแบบพวงกุญแจทั่วไป)
-  const ringVerticalFraction = 0.375;
-  const ringY = baseBox.max.y - ringVerticalFraction * finalBaseHeight;
+  const ringX = baseCenterX;
+  const ringY = baseBox.max.y + ringOuterHeight / 2 - ringOverlap;
   const ringMesh = createRingMesh(ringX, 0, ringY);
   productGroup.add(ringMesh);
 
   return finalBaseWidth + (ringOuterWidth - ringOverlap);
+  });
 }
 
 function createStickerProduct(textValue) {
@@ -1360,10 +1596,14 @@ function createStarProduct(textValue) {
   return sizingText.width * 2.2;
 }
 
-async function createHeartProduct(textValue) {
+async function createHeartProduct(textValue, revision = geometryRevision) {
   const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
   const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
   const sourceShapes = await loadHeartSvgShape();
+  if (revision !== geometryRevision) {
+    frontTextGeometry.dispose();
+    return null;
+  }
   const sourceShape = sourceShapes[0];
   const sourcePoints = sourceShape.getPoints(256);
   const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
@@ -1413,10 +1653,14 @@ async function createHeartProduct(textValue) {
   return sourceWidth * targetScale;
 }
 
-async function createFlowerProduct(textValue) {
+async function createFlowerProduct(textValue, revision = geometryRevision) {
   const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
   const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
   const sourceShapes = await loadFlowerSvgShape();
+  if (revision !== geometryRevision) {
+    frontTextGeometry.dispose();
+    return null;
+  }
   const sourceShape = sourceShapes[0];
   const sourcePoints = sourceShape.getPoints(256);
   const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
@@ -1466,10 +1710,14 @@ async function createFlowerProduct(textValue) {
   return sourceWidth * targetScale;
 }
 
-async function createCloverProduct(textValue) {
+async function createCloverProduct(textValue, revision = geometryRevision) {
   const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
   const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
   const sourceShapes = await loadCloverSvgShape();
+  if (revision !== geometryRevision) {
+    frontTextGeometry.dispose();
+    return null;
+  }
   const sourceShape = sourceShapes[0];
   const sourcePoints = sourceShape.getPoints(256);
   const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
@@ -1519,10 +1767,14 @@ async function createCloverProduct(textValue) {
   return sourceWidth * targetScale;
 }
 
-async function createCatProduct(textValue) {
+async function createCatProduct(textValue, revision = geometryRevision) {
   const frontTextGeometry = createTextGeometry(textValue, textDepth, 0.018);
   const fittedText = fitTextGeometry(frontTextGeometry, 1.12, 8.2);
   const sourceShapes = await loadCatSvgShape();
+  if (revision !== geometryRevision) {
+    frontTextGeometry.dispose();
+    return null;
+  }
   const sourceShape = sourceShapes[0];
   const sourcePoints = sourceShape.getPoints(256);
   const sourceMinX = Math.min(...sourcePoints.map((point) => point.x));
@@ -1717,8 +1969,28 @@ function createCapsuleProduct(
 // สร้างสินค้าใหม่
 // =====================================
 let rebuildTimer = null;
+let geometryRevision = 0;
+let renderedRevision = -1;
+let fontLoadRevision = 0;
+let fontLoading = false;
+const outlineJobs = createOutlineJobs(
+  (paths, margin) => computeOutline(ClipperLib, paths, margin),
+  () => new Worker(new URL("./outline-worker.js", import.meta.url), { type: "module" })
+);
+
+function updateExportAvailability() {
+  const button = document.getElementById("orderButton");
+  if (button) button.disabled = fontLoading || renderedRevision !== geometryRevision;
+}
+
+function invalidateGeometry() {
+  geometryRevision++;
+  outlineJobs.invalidate();
+  updateExportAvailability();
+}
 
 function scheduleRebuild() {
+  invalidateGeometry();
   clearTimeout(rebuildTimer);
 
   rebuildTimer = setTimeout(() => {
@@ -1727,11 +1999,11 @@ function scheduleRebuild() {
 }
 
 async function rebuildProduct() {
-  if (!loadedFont) {
+  invalidateGeometry();
+  const revision = geometryRevision;
+  if (!loadedFont || fontLoading) {
     return;
   }
-
-  clearProduct();
 
   let textValue =
     nameInput
@@ -1747,7 +2019,16 @@ async function rebuildProduct() {
       ? baseStyleSelect.value
       : "outline";
 
+  // บรรทัดที่ 2 ใช้เฉพาะสไตล์ "outline" — สไตล์อื่นละเลยค่านี้เสมอ
+  const textValue2 =
+    selectedStyle === "outline" && nameInput2
+      ? nameInput2.value.trim()
+      : "";
+
+  if (!textValue2) clearProduct();
   let productWidth;
+
+  try {
 
  if (selectedStyle === "capsule") {
   productWidth = createCapsuleProduct(
@@ -1775,26 +2056,36 @@ async function rebuildProduct() {
   );
 } else if (selectedStyle === "heart") {
   productWidth = await createHeartProduct(
-    textValue
+    textValue, revision
   );
 } else if (selectedStyle === "flower") {
   productWidth = await createFlowerProduct(
-    textValue
+    textValue, revision
   );
 } else if (selectedStyle === "clover") {
   productWidth = await createCloverProduct(
-    textValue
+    textValue, revision
   );
 } else if (selectedStyle === "cat") {
   productWidth = await createCatProduct(
-    textValue
+    textValue, revision
   );
 } else {
-  productWidth = createOutlineProduct(
-    textValue
+  productWidth = await createOutlineProduct(
+    textValue,
+    textValue2,
+    revision
   );
 }
 
+
+  } catch (error) {
+    if (revision === geometryRevision) console.error("Name Keychain geometry failed", error);
+    return;
+  }
+  if (revision !== geometryRevision || productWidth == null) return;
+  renderedRevision = revision;
+  updateExportAvailability();
 
   // กล้องถอยตามความยาวชื่อ
   camera.position.z =
@@ -1819,6 +2110,10 @@ async function rebuildProduct() {
 // =====================================
 
 function loadSelectedFont() {
+  const loadRevision = ++fontLoadRevision;
+  const isCurrent = () => loadRevision === fontLoadRevision;
+  fontLoading = true;
+  invalidateGeometry();
   const selectedFont =
     fontSelect
       ? fontSelect.value
@@ -1835,16 +2130,21 @@ function loadSelectedFont() {
       fontUrl,
 
       async function (fontData) {
-        loadedFont = fontLoader.parse(fontData);
-        patchThaiCombiningMarks(loadedFont);
+        if (!isCurrent()) return;
+        const nextFont = fontLoader.parse(fontData);
+        patchThaiCombiningMarks(nextFont);
 
         try {
-          await loadHarfBuzzFont(fontUrl);
+          await loadHarfBuzzFont(fontUrl, isCurrent);
         } catch (error) {
+          if (!isCurrent()) return;
           console.error("โหลด HarfBuzz ไม่สำเร็จ — ใช้ระบบ Three.js เดิมแทน", error);
           destroyHarfBuzzFont();
         }
 
+        if (!isCurrent()) return;
+        loadedFont = nextFont;
+        fontLoading = false;
         rebuildProduct();
       },
 
@@ -1865,6 +2165,8 @@ function loadSelectedFont() {
     fontUrl,
 
     function (font) {
+      if (!isCurrent()) return;
+      fontLoading = false;
       loadedFont = font;
       patchThaiCombiningMarks(loadedFont);
       destroyHarfBuzzFont();
@@ -1894,6 +2196,13 @@ if (nameInput) {
   );
 }
 
+if (nameInput2) {
+  nameInput2.addEventListener(
+    "input",
+    scheduleRebuild
+  );
+}
+
 if (fontSelect) {
   fontSelect.addEventListener(
     "change",
@@ -1901,10 +2210,30 @@ if (fontSelect) {
   );
 }
 
+// บรรทัดที่ 2 ใช้ได้เฉพาะรูปทรงฐาน "outline" (ไดคัทตามชื่อ) เท่านั้น —
+// สไตล์อื่นยังไม่รองรับ layout สองบรรทัด จึงปิดช่องนี้ไว้กันความสับสน
+function updateLine2FieldAvailability() {
+  if (!nameInput2) return;
+
+  const isOutline =
+    !baseStyleSelect || baseStyleSelect.value === "outline";
+
+  nameInput2.disabled = !isOutline;
+
+  if (nameLine2Field) {
+    nameLine2Field.classList.toggle("field-disabled", !isOutline);
+  }
+}
+
+updateLine2FieldAvailability();
+
 if (baseStyleSelect) {
   baseStyleSelect.addEventListener(
     "change",
-    rebuildProduct
+    function () {
+      updateLine2FieldAvailability();
+      rebuildProduct();
+    }
   );
 }
 if (nameSizeSlider) {
@@ -2121,6 +2450,7 @@ const orderButton = document.getElementById("orderButton");
 
 if (orderButton) {
   orderButton.addEventListener("click", function () {
+    if (fontLoading || renderedRevision !== geometryRevision) return;
     const exporter = new STLExporter();
 
     productGroup.updateMatrixWorld(true);

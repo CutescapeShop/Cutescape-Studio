@@ -1,6 +1,9 @@
 const nameInput =
   document.getElementById("nameInput");
 
+const nameInput2 =
+  document.getElementById("nameInput2");
+
 const namePreview =
   document.getElementById("namePreview");
 
@@ -263,6 +266,7 @@ if (sendDesignButton) {
 
     const design = {
       name: nameInput.value.trim() || "Cute",
+      line2: nameInput2 ? nameInput2.value.trim() : "",
       font: fontSelect.value,
       textSize: nameSizeSlider ? nameSizeSlider.value : "100",
       baseStyle: baseStyleSelect ? baseStyleSelect.value : "outline",
@@ -334,6 +338,12 @@ function applyLoadedDesign(design) {
 
   nameInput.value = design.name || "Cute";
   fireEvent(nameInput, "input");
+
+  if (nameInput2) {
+    // เข้ากันได้กับแบบเก่าที่ไม่มี line2: จะได้ค่าว่าง = เส้นทางบรรทัดเดียวเดิม
+    nameInput2.value = design.line2 || "";
+    fireEvent(nameInput2, "input");
+  }
 
   if (design.font) {
     fontSelect.value = design.font;
