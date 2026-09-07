@@ -106,11 +106,14 @@ function init() {
   const productGroup = new THREE.Group();
   scene.add(productGroup);
 
-  // Auto-detected dominant color from the image — NOT user-facing.
-  // Also used for the socket boss (it's part of the same printed TOP
-  // object as TOP_BASE).
+  // Auto-detected dominant color from the image, applied to the whole
+  // TOP_BASE fill (see onClickerPipelineResult below). Also used for
+  // the socket boss (it's part of the same printed TOP object as
+  // TOP_BASE). Falls back to this neutral gray before any image is
+  // loaded or if detection didn't produce a usable color.
+  const TOP_BASE_FALLBACK_COLOR = "#cccccc";
   const topBaseMaterial = new THREE.MeshStandardMaterial({
-    color: "#cccccc",
+    color: TOP_BASE_FALLBACK_COLOR,
     roughness: 0.35,
     metalness: 0.02,
   });
@@ -490,6 +493,15 @@ function init() {
       Number(result?.sizeMM) || CLICKER_PROFILE.body.targetSize));
     state.silhouetteKey = nextSilhouetteKey;
     state.colorKey = nextColorKey;
+
+    // TOP_BASE is a material-only recolor — the auto-detected dominant
+    // color, not a geometry change. Falls back to the original neutral
+    // gray whenever there's no valid detected color to show.
+    topBaseMaterial.color.set(
+      nextColors && typeof nextColors.dominantColorHex === "string"
+        ? nextColors.dominantColorHex
+        : TOP_BASE_FALLBACK_COLOR
+    );
 
     if (silhouetteChanged) rebuildAll();
     else if (colorChanged) rebuildColorsOnly();
