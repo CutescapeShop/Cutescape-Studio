@@ -561,12 +561,6 @@
 
       <aside class="panel">
         <h2>🖼️ Clicker from Image</h2>
-        <p class="clicker-phase-note">
-          Phase 2 — TOP หลายสี (auto-detect จากภาพ) มี boss + female MX cross-socket
-          ด้านหลัง สำหรับคลิปเข้ากับ switch จริง — HOUSING แยกชิ้น เป็น shell กลวง
-          สำหรับใส่ switch (offset ออก 2.7mm จากขอบ TOP) Preview 3D และ Export STL
-          แยกไฟล์ (ยังไม่รองรับ 3MF ในเฟสนี้)
-        </p>
 
         <div class="field">
           <label for="clickerFileInput">อัปโหลดรูป (PNG / JPG / WebP)</label>
@@ -578,45 +572,9 @@
         </div>
 
         <div class="field">
-          <label for="clickerThresholdSlider">
-            Threshold (<span id="clickerThresholdValue">128</span>)
-          </label>
-          <input
-            id="clickerThresholdSlider"
-            type="range"
-            min="0"
-            max="255"
-            step="1"
-            value="128"
-          >
-        </div>
-
-        <div class="field">
-          <button
-            class="toggle-button"
-            id="clickerInvertButton"
-            type="button"
-          >Invert: ปิด</button>
-        </div>
-
-        <div class="field">
           <label for="clickerSizeSlider">ขนาด TOP ด้านยาวสุด (<span id="clickerSizeValue">35</span> mm)</label>
           <input id="clickerSizeSlider" type="range" min="20" max="70" step="1" value="35" aria-describedby="clickerSizeHelp">
           <small id="clickerSizeHelp">ขนาดรูปคงสัดส่วนเดิม ส่วนยึดสวิตช์มีขนาดคงที่ และอาจยื่นพ้นรูปเมื่อเลือกขนาดเล็ก</small>
-        </div>
-
-        <div class="field">
-          <label for="clickerSmoothingSlider">
-            ความเรียบของเส้น (<span id="clickerSmoothingValue">1</span>px)
-          </label>
-          <input
-            id="clickerSmoothingSlider"
-            type="range"
-            min="0"
-            max="6"
-            step="0.5"
-            value="1"
-          >
         </div>
 
         <div class="field">
@@ -638,11 +596,6 @@
           <div id="clickerColorRegionRows" class="color-region-rows">
             <p class="clicker-color-region-empty">อัปโหลดรูปเพื่อแก้ไขสี</p>
           </div>
-        </div>
-
-        <div class="field">
-          <label>ข้อมูลดีบัก</label>
-          <pre class="clicker-debug-info" id="clickerDebugInfo">ยังไม่ได้อัปโหลดรูป</pre>
         </div>
 
         <hr>
@@ -676,6 +629,70 @@
           Export STL (TOP + ACCENT + HOUSING)
         </button>
         <p class="clicker-debug-info" id="clickerExportStatus"></p>
+
+        <details class="clicker-advanced">
+          <summary>ขั้นสูง / ดีบัก</summary>
+
+          <p class="clicker-phase-note">
+            Phase 2 — TOP หลายสี (auto-detect จากภาพ) มี boss + female MX cross-socket
+            ด้านหลัง สำหรับคลิปเข้ากับ switch จริง — HOUSING แยกชิ้น เป็น shell กลวง
+            สำหรับใส่ switch (offset ออก 2.7mm จากขอบ TOP) Preview 3D และ Export STL
+            แยกไฟล์ (ยังไม่รองรับ 3MF ในเฟสนี้)
+          </p>
+
+          <div class="field">
+            <label for="clickerThresholdSlider">
+              Threshold (<span id="clickerThresholdValue">128</span>)
+            </label>
+            <input
+              id="clickerThresholdSlider"
+              type="range"
+              min="0"
+              max="255"
+              step="1"
+              value="128"
+            >
+          </div>
+
+          <div class="field">
+            <button
+              class="toggle-button"
+              id="clickerInvertButton"
+              type="button"
+            >Invert: ปิด</button>
+          </div>
+
+          <div class="field">
+            <label for="clickerSmoothingSlider">
+              ความเรียบของเส้น (<span id="clickerSmoothingValue">1</span>px)
+            </label>
+            <input
+              id="clickerSmoothingSlider"
+              type="range"
+              min="0"
+              max="6"
+              step="0.5"
+              value="1"
+            >
+          </div>
+
+          <div class="field">
+            <label>ข้อมูลดีบัก</label>
+            <pre class="clicker-debug-info" id="clickerDebugInfo">ยังไม่ได้อัปโหลดรูป</pre>
+          </div>
+
+          <div class="clicker-canvas-row--static">
+            <div class="clicker-canvas-box">
+              <span>Mask ก่อน Smoothing</span>
+              <canvas id="clickerMaskCanvas"></canvas>
+            </div>
+
+            <div class="clicker-canvas-box">
+              <span>ผลลัพธ์สุดท้าย (Silhouette)</span>
+              <canvas id="clickerFinalCanvas"></canvas>
+            </div>
+          </div>
+        </details>
       </aside>
 
       <div id="clickerColorPalettePopover" class="color-palette-popover" hidden>
@@ -701,19 +718,9 @@
         </p>
 
         <div class="clicker-canvas-row" id="clickerCanvasRow">
-          <div class="clicker-canvas-box">
+          <div class="clicker-canvas-box clicker-canvas-box--compact">
             <span>ต้นฉบับ</span>
             <canvas id="clickerOriginalCanvas"></canvas>
-          </div>
-
-          <div class="clicker-canvas-box">
-            <span>Mask ก่อน Smoothing</span>
-            <canvas id="clickerMaskCanvas"></canvas>
-          </div>
-
-          <div class="clicker-canvas-box">
-            <span>ผลลัพธ์สุดท้าย (Silhouette)</span>
-            <canvas id="clickerFinalCanvas"></canvas>
           </div>
         </div>
       </section>

@@ -1137,6 +1137,68 @@
       image-rendering: pixelated;
     }
 
+    /* Main-view original-image thumbnail — kept visible but small, so
+       the 3D preview stays the main visual focus. Only this box's
+       canvas shrinks; the same base canvas box used inside "ขั้นสูง /
+       ดีบัก" below is untouched. */
+    .clicker-canvas-box--compact canvas {
+      max-width: 130px;
+      max-height: 130px;
+    }
+
+    /* Collapsed "Advanced / Debug" section — moved-in technical
+       controls (Threshold/Invert/Smoothing), the raw debug readout,
+       and the Mask/Silhouette 2D previews. Same visual language as the
+       rest of the panel, just tucked away by default. */
+    .clicker-advanced {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 2px dashed var(--sage-strong);
+    }
+
+    .clicker-advanced summary {
+      cursor: pointer;
+      font-family: var(--font-display);
+      font-size: 15px;
+      color: var(--ink-soft);
+      list-style: none;
+    }
+
+    .clicker-advanced summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .clicker-advanced summary::before {
+      content: "▸ ";
+    }
+
+    .clicker-advanced[open] summary::before {
+      content: "▾ ";
+    }
+
+    .clicker-advanced summary + * {
+      margin-top: 14px;
+    }
+
+    .clicker-advanced .field {
+      margin-top: 14px;
+    }
+
+    /* Static (always-laid-out) row for the Mask/Silhouette previews
+       inside the collapsed section — separate from .clicker-canvas-row
+       because that class defaults to display:none and is only flipped
+       to flex by clicker-ui.js for the #clickerCanvasRow original-image
+       box specifically; these two canvases have no upload gate of
+       their own and simply sit inside the closed <details> until
+       expanded. */
+    .clicker-canvas-row--static {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+      margin-top: 14px;
+    }
+
     /* =========================================
        Clicker TOP color regions — editable detected → output colors.
        ========================================= */
