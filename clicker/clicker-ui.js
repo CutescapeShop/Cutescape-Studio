@@ -49,6 +49,69 @@ const colorCountValue = document.getElementById("clickerColorCountValue");
 const sizeSlider = document.getElementById("clickerSizeSlider");
 const sizeValue = document.getElementById("clickerSizeValue");
 
+// Editable TOP color regions (detected -> print color). Optional, same
+// fallback pattern as colorCountSlider above.
+const colorRegionRowsContainer = document.getElementById("clickerColorRegionRows");
+const colorPalettePopover = document.getElementById("clickerColorPalettePopover");
+const colorPaletteGroups = document.getElementById("clickerColorPaletteGroups");
+const colorPaletteCustomInput = document.getElementById("clickerColorPaletteCustom");
+
+// Curated common filament colors, grouped by family, offered before the
+// custom picker so most choices don't need one.
+const CURATED_FILAMENT_PALETTE = [
+  { family: "ขาว", swatches: [{ hex: "#ffffff", name: "ขาว" }] },
+  { family: "ดำ", swatches: [{ hex: "#0a0a0a", name: "ดำ" }] },
+  { family: "เทา", swatches: [
+    { hex: "#4d4d4d", name: "เทาเข้ม" },
+    { hex: "#9e9e9e", name: "เทา" },
+    { hex: "#cfcfcf", name: "เทาอ่อน" },
+  ] },
+  { family: "ครีม / เบจ", swatches: [
+    { hex: "#f0e6d2", name: "ครีม" },
+    { hex: "#d8c3a5", name: "เบจ" },
+  ] },
+  { family: "น้ำตาล", swatches: [
+    { hex: "#6b4423", name: "น้ำตาลเข้ม" },
+    { hex: "#a9702f", name: "น้ำตาล" },
+  ] },
+  { family: "แดง", swatches: [
+    { hex: "#d32f2f", name: "แดง" },
+    { hex: "#8b1a1a", name: "แดงเข้ม" },
+  ] },
+  { family: "ชมพู", swatches: [
+    { hex: "#ffc1cc", name: "ชมพูอ่อน" },
+    { hex: "#ff7eb6", name: "ชมพู" },
+    { hex: "#d6336c", name: "บานเย็น" },
+  ] },
+  { family: "ส้ม", swatches: [
+    { hex: "#ff7f11", name: "ส้ม" },
+    { hex: "#ffa94d", name: "ส้มอ่อน" },
+  ] },
+  { family: "เหลือง", swatches: [
+    { hex: "#ffd60a", name: "เหลือง" },
+    { hex: "#fff275", name: "เหลืองอ่อน" },
+  ] },
+  { family: "เขียว", swatches: [
+    { hex: "#0f5132", name: "เขียวเข้ม" },
+    { hex: "#2e7d32", name: "เขียว" },
+    { hex: "#7cb342", name: "เขียวมะนาว" },
+  ] },
+  { family: "เขียวมิ้นท์ / เทอร์ควอยซ์", swatches: [
+    { hex: "#00897b", name: "เทอร์ควอยซ์" },
+    { hex: "#4dd0c4", name: "มิ้นท์" },
+  ] },
+  { family: "ฟ้า / น้ำเงิน", swatches: [
+    { hex: "#78c8ff", name: "ฟ้า" },
+    { hex: "#1565c0", name: "น้ำเงิน" },
+    { hex: "#0d1b6e", name: "กรมท่า" },
+  ] },
+  { family: "ม่วง", swatches: [
+    { hex: "#c77dff", name: "ม่วงอ่อน" },
+    { hex: "#a889ff", name: "ม่วง" },
+    { hex: "#7b2cbf", name: "ม่วงเข้ม" },
+  ] },
+];
+
 function selectedSizeMM() {
   return Math.max(CLICKER_PROFILE.body.minSizeMM, Math.min(CLICKER_PROFILE.body.maxSizeMM,
     Number(sizeSlider?.value) || CLICKER_PROFILE.body.targetSize));
@@ -76,9 +139,167 @@ function init() {
     imageKey: null,
     silhouetteCache: new Map(),
     colorCache: new Map(),
+    // Detected TOP color hex -> user-chosen print color hex. Keyed by the
+    // ORIGINAL detected color, not by region index, so it survives cache
+    // hits and slider tweaks that don't change detection. Display-only:
+    // never fed back into detection/segmentation/geometry.
+    colorOverrides: new Map(),
+    lastColorRegions: null,
   };
 
   let pipelineTimer = null;
+  let activePaletteSourceHex = null;
+  let activePaletteTargetEl = null;
+
+  function resolvePrintColor(sourceHex) {
+    return state.colorOverrides.get(sourceHex) || sourceHex;
+  }
+
+  function notifyColorOverrideChange() {
+    if (typeof window.onClickerColorOverrideChange === "function") {
+      window.onClickerColorOverrideChange(Object.fromEntries(state.colorOverrides));
+    }
+  }
+
+  function closeColorPalette() {
+    if (colorPalettePopover) colorPalettePopover.hidden = true;
+    activePaletteSourceHex = null;
+    activePaletteTargetEl = null;
+  }
+
+  function applyColorSelection(sourceHex, targetHex) {
+    state.colorOverrides.set(sourceHex, targetHex);
+    if (activePaletteTargetEl) {
+      activePaletteTargetEl.style.background = targetHex;
+      activePaletteTargetEl.title = `สีที่ใช้พิมพ์: ${targetHex}`;
+    }
+    // Preview must update immediately — no pipeline re-run, no geometry
+    // change, just the existing material's color on the live scene.
+    notifyColorOverrideChange();
+  }
+
+  function openColorPalette(anchorEl, sourceHex) {
+    if (!colorPalettePopover) return;
+    activePaletteSourceHex = sourceHex;
+    activePaletteTargetEl = anchorEl;
+
+    const rect = anchorEl.getBoundingClientRect();
+    const popoverWidth = 232;
+    colorPalettePopover.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - popoverWidth - 8))}px`;
+    colorPalettePopover.style.top = `${rect.bottom + 6}px`;
+    colorPalettePopover.hidden = false;
+
+    const currentColor = resolvePrintColor(sourceHex).toLowerCase();
+    if (colorPaletteGroups) {
+      colorPaletteGroups.innerHTML = "";
+      for (const group of CURATED_FILAMENT_PALETTE) {
+        const wrap = document.createElement("div");
+        wrap.className = "color-palette-family";
+        const heading = document.createElement("p");
+        heading.className = "color-palette-family-name";
+        heading.textContent = group.family;
+        wrap.appendChild(heading);
+
+        const row = document.createElement("div");
+        row.className = "color-palette-swatches";
+        for (const swatch of group.swatches) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "color-palette-swatch";
+          btn.style.background = swatch.hex;
+          btn.title = swatch.name;
+          if (swatch.hex.toLowerCase() === currentColor) btn.classList.add("active");
+          btn.addEventListener("click", () => {
+            applyColorSelection(sourceHex, swatch.hex);
+            closeColorPalette();
+          });
+          row.appendChild(btn);
+        }
+        wrap.appendChild(row);
+        colorPaletteGroups.appendChild(wrap);
+      }
+    }
+    if (colorPaletteCustomInput) colorPaletteCustomInput.value = currentColor;
+  }
+
+  if (colorPaletteCustomInput) {
+    // Live-update while dragging the native picker, same as a swatch click.
+    colorPaletteCustomInput.addEventListener("input", () => {
+      if (!activePaletteSourceHex) return;
+      applyColorSelection(activePaletteSourceHex, colorPaletteCustomInput.value);
+    });
+  }
+
+  document.addEventListener("click", (ev) => {
+    if (!colorPalettePopover || colorPalettePopover.hidden) return;
+    if (colorPalettePopover.contains(ev.target)) return;
+    if (activePaletteTargetEl && activePaletteTargetEl.contains(ev.target)) return;
+    closeColorPalette();
+  });
+
+  function renderColorRegionRows() {
+    if (!colorRegionRowsContainer) return;
+    const wasOpenFor = activePaletteSourceHex;
+    closeColorPalette();
+    colorRegionRowsContainer.innerHTML = "";
+
+    const colorRegions = state.lastColorRegions;
+    if (!colorRegions) {
+      const empty = document.createElement("p");
+      empty.className = "clicker-color-region-empty";
+      empty.textContent = "อัปโหลดรูปเพื่อแก้ไขสี";
+      colorRegionRowsContainer.appendChild(empty);
+      return;
+    }
+
+    const regions = [
+      { label: "TOP หลัก", sourceHex: colorRegions.dominantColorHex },
+      ...colorRegions.accentRegions.map((r, i) => ({ label: `สีเสริม ${i + 1}`, sourceHex: r.colorHex })),
+    ];
+
+    for (const region of regions) {
+      const row = document.createElement("div");
+      row.className = "color-region-row";
+
+      const label = document.createElement("span");
+      label.className = "color-region-label";
+      label.textContent = region.label;
+
+      const source = document.createElement("span");
+      source.className = "color-region-swatch";
+      source.style.background = region.sourceHex;
+      source.title = `ตรวจพบ: ${region.sourceHex}`;
+
+      const arrow = document.createElement("span");
+      arrow.className = "color-region-arrow";
+      arrow.textContent = "→";
+      arrow.setAttribute("aria-hidden", "true");
+
+      const printColor = resolvePrintColor(region.sourceHex);
+      const target = document.createElement("button");
+      target.type = "button";
+      target.className = "color-region-target";
+      target.style.background = printColor;
+      target.title = `สีที่ใช้พิมพ์: ${printColor}`;
+      target.setAttribute("aria-label", `เลือกสีพิมพ์สำหรับ ${region.label}`);
+      target.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        openColorPalette(target, region.sourceHex);
+      });
+
+      row.appendChild(label);
+      row.appendChild(source);
+      row.appendChild(arrow);
+      row.appendChild(target);
+      colorRegionRowsContainer.appendChild(row);
+
+      if (wasOpenFor === region.sourceHex) openColorPalette(target, region.sourceHex);
+    }
+  }
+  // runPipeline() below is a module-level function (shared shape with the
+  // rest of this file); expose the renderer through state rather than
+  // duplicating the color-region UI logic outside init()'s closure.
+  state.renderColorRegionRows = renderColorRegionRows;
 
   function schedulePipeline() {
     if (pipelineTimer !== null) clearTimeout(pipelineTimer);
@@ -268,6 +489,12 @@ function runPipeline(state) {
     console.error("buildColorRegions failed:", err);
   }
 
+  // Refresh the editable TOP-color rows against whatever regions this run
+  // detected. Display only — colorRegions itself (the actual detected
+  // segmentation) is untouched by this.
+  state.lastColorRegions = colorRegions;
+  if (typeof state.renderColorRegionRows === "function") state.renderColorRegionRows();
+
   // Phase 2 hook (optional — only present if clicker-viewer.js is also
   // loaded). Purely additive: Phase-1 2D preview above is unaffected
   // whether or not this is defined.
@@ -289,6 +516,9 @@ function runPipeline(state) {
       height,
       loops,
       colorRegions,
+      // User-chosen print colors, keyed by detected hex. The viewer
+      // applies these to materials only — never to geometry.
+      colorOverrides: Object.fromEntries(state.colorOverrides),
       sizeMM,
       geometryKey: `${silhouetteKey}|size:${sizeMM}`,
       silhouetteKey,

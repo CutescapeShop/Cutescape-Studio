@@ -211,7 +211,32 @@ function init() {
     silhouetteKey: null,
     colorKey: null,
     sizeMM: CLICKER_PROFILE.body.targetSize,
+    // User-chosen print color per DETECTED hex (from clicker-ui.js's color
+    // rows). Display/material only — never affects which regions exist,
+    // their shape, or the dominant-color selection itself.
+    colorOverrides: {},
   };
+
+  // Detected accent hex -> its live material, so a color-only override can
+  // recolor the existing mesh without rebuilding any geometry.
+  const accentMaterialsBySourceHex = new Map();
+
+  function resolvePrintColor(sourceHex) {
+    return (state.colorOverrides && state.colorOverrides[sourceHex]) || sourceHex;
+  }
+
+  // Re-applies current overrides to already-built materials. Called both
+  // when overrides change live and right after any rebuild, so a rebuild
+  // triggered by something unrelated (size, threshold) never reverts a
+  // color the user already picked.
+  function applyColorOverrides() {
+    if (state.colorRegions && typeof state.colorRegions.dominantColorHex === "string") {
+      topBaseMaterial.color.set(resolvePrintColor(state.colorRegions.dominantColorHex));
+    }
+    for (const [sourceHex, material] of accentMaterialsBySourceHex) {
+      material.color.set(resolvePrintColor(sourceHex));
+    }
+  }
 
   // The shared transform TOP/ACCENT/HOUSING's outer boundary all use —
   // computed once from the outer silhouette whenever it (or the scale
@@ -390,6 +415,7 @@ function init() {
   function rebuildAccent() {
     const startedAt = performance.now();
     disposeGroupChildren(accentGroup);
+    accentMaterialsBySourceHex.clear();
     if (!currentAutoFit || !state.colorRegions || state.colorRegions.accentRegions.length === 0) {
       return performance.now() - startedAt;
     }
@@ -403,11 +429,14 @@ function init() {
     );
 
     for (const { colorHex, geometries } of accentByColor) {
+      // colorHex here is the DETECTED region color; resolvePrintColor
+      // substitutes the user's chosen print color if one was picked for it.
       const material = new THREE.MeshStandardMaterial({
-        color: colorHex,
+        color: resolvePrintColor(colorHex),
         roughness: 0.35,
         metalness: 0.02,
       });
+      accentMaterialsBySourceHex.set(colorHex, material);
       for (const geom of geometries) {
         accentGroup.add(new THREE.Mesh(geom, material));
       }
@@ -489,22 +518,35 @@ function init() {
 
     state.outerLoops = nextLoops;
     state.colorRegions = nextColors;
+    state.colorOverrides = (result && result.colorOverrides) || {};
     state.sizeMM = Math.max(CLICKER_PROFILE.body.minSizeMM, Math.min(CLICKER_PROFILE.body.maxSizeMM,
       Number(result?.sizeMM) || CLICKER_PROFILE.body.targetSize));
     state.silhouetteKey = nextSilhouetteKey;
     state.colorKey = nextColorKey;
 
     // TOP_BASE is a material-only recolor — the auto-detected dominant
-    // color, not a geometry change. Falls back to the original neutral
-    // gray whenever there's no valid detected color to show.
+    // color (or the user's chosen print color for it), not a geometry
+    // change. Falls back to the original neutral gray whenever there's no
+    // valid detected color to show.
     topBaseMaterial.color.set(
       nextColors && typeof nextColors.dominantColorHex === "string"
-        ? nextColors.dominantColorHex
+        ? resolvePrintColor(nextColors.dominantColorHex)
         : TOP_BASE_FALLBACK_COLOR
     );
 
     if (silhouetteChanged) rebuildAll();
     else if (colorChanged) rebuildColorsOnly();
+    // A rebuild above already applies current overrides when it (re)creates
+    // materials; this covers the case where neither ran (e.g. only the
+    // export-size number changed) but overrides did.
+    else applyColorOverrides();
+  };
+
+  // Hook clicker-ui.js's color-row picker calls on every selection —
+  // material-only, immediate, no pipeline re-run and no geometry rebuild.
+  window.onClickerColorOverrideChange = function (overrides) {
+    state.colorOverrides = overrides || {};
+    applyColorOverrides();
   };
 
 

@@ -634,6 +634,13 @@
         </div>
 
         <div class="field">
+          <label>สี TOP (ตรวจพบ → สีที่ใช้พิมพ์)</label>
+          <div id="clickerColorRegionRows" class="color-region-rows">
+            <p class="clicker-color-region-empty">อัปโหลดรูปเพื่อแก้ไขสี</p>
+          </div>
+        </div>
+
+        <div class="field">
           <label>ข้อมูลดีบัก</label>
           <pre class="clicker-debug-info" id="clickerDebugInfo">ยังไม่ได้อัปโหลดรูป</pre>
         </div>
@@ -656,6 +663,14 @@
         </button>
         <p class="clicker-debug-info" id="clickerExportStatus"></p>
       </aside>
+
+      <div id="clickerColorPalettePopover" class="color-palette-popover" hidden>
+        <div class="color-palette-groups" id="clickerColorPaletteGroups"></div>
+        <div class="color-palette-custom">
+          <label for="clickerColorPaletteCustom">กำหนดเอง</label>
+          <input type="color" id="clickerColorPaletteCustom" value="#808080">
+        </div>
+      </div>
 
       <section class="preview-panel">
         <div class="preview-title">
