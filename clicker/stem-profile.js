@@ -170,7 +170,16 @@ export const CLICKER_PROFILE = {
     // whichever neighboring color touches it most — never just
     // deleted (see image-processing.js's buildColorRegions /
     // color-quantization.js's cleanupSmallRegions).
-    minRegionAreaMM2: 0.6,
+    //
+    // 0.15 (not the original 0.6) — audited against Bird/Fish/Cat plus
+    // synthetic ground-truth images: real anti-aliasing/dither noise in
+    // all three photos tops out at 0.01mm², while confirmed legitimate
+    // small details (Bird's eye 0.22mm², Fish's highlights 0.23mm²,
+    // Cat's facial details 0.38-0.47mm²) sit in an empty gap well above
+    // it. 0.15 keeps 15x+ margin over observed noise and 46-213% margin
+    // under every confirmed real detail, while clearing the ~0.4mm
+    // nozzle minimum-feature-width floor (0.6 discarded all of them).
+    minRegionAreaMM2: 0.15,
 
     // How many flat colors the TOP is quantized into (1 dominant +
     // up to colorCount-1 accents). Exposed as a live "จำนวนสี" UI
