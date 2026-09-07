@@ -1,8 +1,9 @@
 // =====================================
-// TH/EN localization — Name Keychain UI + shared header only.
-// Plain script (not a module) so script.js and font-select-ui.js can call
-// window.t()/window.applyLanguage() without import wiring. Clicker UI is
-// intentionally not covered yet.
+// TH/EN localization — Name Keychain UI, shared header, and the
+// customer-facing Clicker from Image UI.
+// Plain script (not a module) so script.js, font-select-ui.js, and the
+// Clicker modules can call window.t()/window.applyLanguage() without
+// import wiring.
 // =====================================
 
 (function () {
@@ -79,7 +80,36 @@
       "status.loadFailed": "โหลดแบบไม่สำเร็จ: {error}",
 
       "alert.saveSystemNotReady": "ระบบบันทึกแบบยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง",
-      "alert.saveFailed": "บันทึกแบบไม่สำเร็จ: {error}"
+      "alert.saveFailed": "บันทึกแบบไม่สำเร็จ: {error}",
+
+      "clicker.heading": "สร้าง Clicker จากรูปของคุณ",
+      "clicker.step1.selectImage": "1. อัปโหลดรูป",
+      "clicker.step2.selectSize": "2. เลือกขนาด",
+      "clicker.step3.selectColorCount": "3. เลือกจำนวนสี",
+      "clicker.step4.selectArtworkColor": "4. เลือกสีชิ้นงาน",
+      "clicker.step5.selectBaseColor": "5. เลือกสีฐาน",
+      "clicker.step6.addKeychainLoop": "6. เพิ่มห่วงพวงกุญแจ",
+      "clicker.size.unit": "{value} ซม.",
+      "clicker.colorCount.unit": "{value} สี",
+      "clicker.fileInput.chooseButton": "อัปโหลดรูป",
+      "clicker.fileInput.noFileChosen": "ยังไม่ได้อัปโหลดรูป",
+      "clicker.colorRegion.empty": "อัปโหลดรูปเพื่อแก้ไขสี",
+      "clicker.colorRegion.label": "สีที่ {n}",
+      "clicker.colorRegion.detectedTitle": "ตรวจพบ: {hex}",
+      "clicker.colorRegion.printColorTitle": "สีที่ใช้พิมพ์: {hex}",
+      "clicker.colorRegion.selectAriaLabel": "เลือกสีพิมพ์สำหรับ {label}",
+      "clicker.customColor": "กำหนดเอง",
+      "clicker.baseColor.customAriaLabel": "กำหนดสีฐานเอง",
+      "clicker.keychainLoop.on": "เปิด",
+      "clicker.keychainLoop.off": "ปิด",
+      "clicker.keychainLoop.positionLabel": "ตำแหน่งห่วง (หมุนทีละ 25°)",
+      "clicker.keychainLoop.rotateLeftAriaLabel": "หมุนห่วงทวนเข็มนาฬิกา 25 องศา",
+      "clicker.keychainLoop.rotateRightAriaLabel": "หมุนห่วงตามเข็มนาฬิกา 25 องศา",
+      "clicker.keychainLoop.noImageYet": "ยังไม่มีรูปให้ยึดห่วง",
+      "clicker.preview.result": "ตัวอย่างชิ้นงาน",
+      "clicker.preview.original": "รูปต้นฉบับ",
+      "clicker.preview.originalCanvasLabel": "ต้นฉบับ",
+      "clicker.preview.emptyState": "อัปโหลดรูปเพื่อดูผลลัพธ์"
     },
 
     en: {
@@ -151,7 +181,36 @@
       "status.loadFailed": "Failed to load design: {error}",
 
       "alert.saveSystemNotReady": "Save system is not ready yet. Please try again.",
-      "alert.saveFailed": "Failed to save design: {error}"
+      "alert.saveFailed": "Failed to save design: {error}",
+
+      "clicker.heading": "Create a Clicker from Your Photo",
+      "clicker.step1.selectImage": "1. Upload a Photo",
+      "clicker.step2.selectSize": "2. Choose a Size",
+      "clicker.step3.selectColorCount": "3. Choose Number of Colors",
+      "clicker.step4.selectArtworkColor": "4. Choose Artwork Colors",
+      "clicker.step5.selectBaseColor": "5. Choose a Base Color",
+      "clicker.step6.addKeychainLoop": "6. Add a Keychain Loop",
+      "clicker.size.unit": "{value} cm",
+      "clicker.colorCount.unit": "{value} colors",
+      "clicker.fileInput.chooseButton": "Upload Photo",
+      "clicker.fileInput.noFileChosen": "No photo uploaded",
+      "clicker.colorRegion.empty": "Upload a photo to edit colors",
+      "clicker.colorRegion.label": "Color {n}",
+      "clicker.colorRegion.detectedTitle": "Detected: {hex}",
+      "clicker.colorRegion.printColorTitle": "Print color: {hex}",
+      "clicker.colorRegion.selectAriaLabel": "Choose print color for {label}",
+      "clicker.customColor": "Custom",
+      "clicker.baseColor.customAriaLabel": "Choose a custom base color",
+      "clicker.keychainLoop.on": "On",
+      "clicker.keychainLoop.off": "Off",
+      "clicker.keychainLoop.positionLabel": "Loop Position (rotate 25° at a time)",
+      "clicker.keychainLoop.rotateLeftAriaLabel": "Rotate loop counter-clockwise 25°",
+      "clicker.keychainLoop.rotateRightAriaLabel": "Rotate loop clockwise 25°",
+      "clicker.keychainLoop.noImageYet": "Upload a photo first to attach a loop",
+      "clicker.preview.result": "Product Preview",
+      "clicker.preview.original": "Original Photo",
+      "clicker.preview.originalCanvasLabel": "Original",
+      "clicker.preview.emptyState": "Upload a photo to see the result"
     }
   };
 

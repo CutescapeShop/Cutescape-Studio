@@ -59,6 +59,12 @@ import { createHousingGeometries } from "./housing-geometry.js?v=housing-floor-v
 import { createKeychainLoopGeometry } from "./keychain-loop.js";
 import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
 
+// Same window.t() TH/EN mechanism as clicker-ui.js / i18n.js — see the
+// comment on the identical helper there.
+function ct(key, vars, fallback) {
+  return window.t ? window.t(key, vars) : fallback;
+}
+
 
 // ---------------- DOM references ----------------
 
@@ -526,11 +532,13 @@ function init() {
     updateKeychainLoopStatus(warning);
   }
 
+  let lastKeychainLoopWarning = null;
   function updateKeychainLoopStatus(warning) {
+    if (warning !== undefined) lastKeychainLoopWarning = warning;
     if (keychainLoopAngleLabel) keychainLoopAngleLabel.textContent = `${state.keychainLoopAngleDeg}°`;
     if (keychainLoopStatus) {
       keychainLoopStatus.textContent = state.keychainLoopEnabled
-        ? (warning || (keychainLoopMesh ? "" : "ยังไม่มีรูปให้ยึดห่วง"))
+        ? (lastKeychainLoopWarning || (keychainLoopMesh ? "" : ct("clicker.keychainLoop.noImageYet", null, "ยังไม่มีรูปให้ยึดห่วง")))
         : "";
     }
   }
@@ -661,12 +669,18 @@ function init() {
     housingCustomInput = document.createElement("input");
     housingCustomInput.type = "color";
     housingCustomInput.className = "color-palette-swatch housing-color-custom-input";
-    housingCustomInput.title = "กำหนดเอง";
-    housingCustomInput.setAttribute("aria-label", "กำหนดสี HOUSING เอง");
+    housingCustomInput.title = ct("clicker.customColor", null, "กำหนดเอง");
+    housingCustomInput.setAttribute("aria-label", ct("clicker.baseColor.customAriaLabel", null, "กำหนดสีฐานเอง"));
     housingCustomInput.addEventListener("input", () => applyHousingColor(housingCustomInput.value));
     housingColorGrid.appendChild(housingCustomInput);
 
     syncHousingColorGridState();
+
+    document.addEventListener("click", (ev) => {
+      if (!ev.target.closest("[data-lang-option]")) return;
+      housingCustomInput.title = ct("clicker.customColor", null, "กำหนดเอง");
+      housingCustomInput.setAttribute("aria-label", ct("clicker.baseColor.customAriaLabel", null, "กำหนดสีฐานเอง"));
+    });
   }
 
 
@@ -675,13 +689,19 @@ function init() {
   // rebuildKeychainLoop() alone, never the full HOUSING chamber/pocket/
   // plate rebuild above, and never touches TOP at all.
 
+  function updateKeychainLoopToggleText() {
+    if (!keychainLoopToggleButton) return;
+    keychainLoopToggleButton.textContent = state.keychainLoopEnabled
+      ? ct("clicker.keychainLoop.on", null, "เปิด")
+      : ct("clicker.keychainLoop.off", null, "ปิด");
+  }
+
   if (keychainLoopToggleButton) {
+    updateKeychainLoopToggleText();
     keychainLoopToggleButton.addEventListener("click", function () {
       state.keychainLoopEnabled = !state.keychainLoopEnabled;
       keychainLoopToggleButton.classList.toggle("active", state.keychainLoopEnabled);
-      keychainLoopToggleButton.textContent = state.keychainLoopEnabled
-        ? "พวงกุญแจ: เปิด"
-        : "พวงกุญแจ: ปิด";
+      updateKeychainLoopToggleText();
       if (keychainLoopControls) keychainLoopControls.hidden = !state.keychainLoopEnabled;
       rebuildKeychainLoop();
     });
@@ -699,6 +719,23 @@ function init() {
   if (keychainLoopRotateRightButton) {
     keychainLoopRotateRightButton.addEventListener("click", () => rotateKeychainLoop(1));
   }
+
+  function updateKeychainLoopRotateAriaLabels() {
+    if (keychainLoopRotateLeftButton) {
+      keychainLoopRotateLeftButton.setAttribute("aria-label", ct("clicker.keychainLoop.rotateLeftAriaLabel", null, "หมุนห่วงทวนเข็มนาฬิกา 25 องศา"));
+    }
+    if (keychainLoopRotateRightButton) {
+      keychainLoopRotateRightButton.setAttribute("aria-label", ct("clicker.keychainLoop.rotateRightAriaLabel", null, "หมุนห่วงตามเข็มนาฬิกา 25 องศา"));
+    }
+  }
+  updateKeychainLoopRotateAriaLabels();
+
+  document.addEventListener("click", (ev) => {
+    if (!ev.target.closest("[data-lang-option]")) return;
+    updateKeychainLoopToggleText();
+    updateKeychainLoopRotateAriaLabels();
+    updateKeychainLoopStatus();
+  });
 
 
   // ---------------- Export: CLICKER_TOP_BASE.stl + CLICKER_ACCENT_N.stl + CLICKER_HOUSING.stl ----------------

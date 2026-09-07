@@ -25,10 +25,19 @@ import { computeAutoFitTransform } from "./geometry-math.js";
 import { CLICKER_PROFILE } from "./stem-profile.js";
 import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
 
+// TH/EN strings for the customer-facing UI, via the same window.t()
+// mechanism i18n.js already exposes for Name Keychain — same pattern
+// script.js uses for its own dynamic status text. `fallback` keeps
+// this file working (in Thai) even if i18n.js hasn't loaded yet.
+function ct(key, vars, fallback) {
+  return window.t ? window.t(key, vars) : fallback;
+}
+
 
 // ---------------- DOM references (all new elements) ----------------
 
 const fileInput = document.getElementById("clickerFileInput");
+const fileInputNameEl = document.getElementById("clickerFileInputName");
 const thresholdSlider = document.getElementById("clickerThresholdSlider");
 const thresholdValue = document.getElementById("clickerThresholdValue");
 const invertButton = document.getElementById("clickerInvertButton");
@@ -47,8 +56,12 @@ const finalCanvas = document.getElementById("clickerFinalCanvas");
 // CLICKER_PROFILE.accent.colorCount.default rather than failing.
 const colorCountSlider = document.getElementById("clickerColorCountSlider");
 const colorCountValue = document.getElementById("clickerColorCountValue");
+const colorCountMinLabel = document.getElementById("clickerColorCountMinLabel");
+const colorCountMaxLabel = document.getElementById("clickerColorCountMaxLabel");
 const sizeSlider = document.getElementById("clickerSizeSlider");
 const sizeValue = document.getElementById("clickerSizeValue");
+const sizeMinLabel = document.getElementById("clickerSizeMinLabel");
+const sizeMaxLabel = document.getElementById("clickerSizeMaxLabel");
 
 // Editable TOP color regions (detected -> print color). Optional, same
 // fallback pattern as colorCountSlider above.
@@ -122,7 +135,7 @@ function init() {
     state.colorOverrides.set(sourceHex, targetHex);
     if (activePaletteTargetEl) {
       activePaletteTargetEl.style.background = targetHex;
-      activePaletteTargetEl.title = `สีที่ใช้พิมพ์: ${targetHex}`;
+      activePaletteTargetEl.title = ct("clicker.colorRegion.printColorTitle", { hex: targetHex }, `สีที่ใช้พิมพ์: ${targetHex}`);
     }
     // Preview must update immediately — no pipeline re-run, no geometry
     // change, just the existing material's color on the live scene.
@@ -217,14 +230,17 @@ function init() {
     if (!colorRegions) {
       const empty = document.createElement("p");
       empty.className = "clicker-color-region-empty";
-      empty.textContent = "อัปโหลดรูปเพื่อแก้ไขสี";
+      empty.textContent = ct("clicker.colorRegion.empty", null, "อัปโหลดรูปเพื่อแก้ไขสี");
       colorRegionRowsContainer.appendChild(empty);
       return;
     }
 
     const regions = [
-      { label: "TOP หลัก", sourceHex: colorRegions.dominantColorHex },
-      ...colorRegions.accentRegions.map((r, i) => ({ label: `สีเสริม ${i + 1}`, sourceHex: r.colorHex })),
+      { label: ct("clicker.colorRegion.label", { n: 1 }, "สีที่ 1"), sourceHex: colorRegions.dominantColorHex },
+      ...colorRegions.accentRegions.map((r, i) => ({
+        label: ct("clicker.colorRegion.label", { n: i + 2 }, `สีที่ ${i + 2}`),
+        sourceHex: r.colorHex,
+      })),
     ];
 
     for (const region of regions) {
@@ -238,7 +254,7 @@ function init() {
       const source = document.createElement("span");
       source.className = "color-region-swatch";
       source.style.background = region.sourceHex;
-      source.title = `ตรวจพบ: ${region.sourceHex}`;
+      source.title = ct("clicker.colorRegion.detectedTitle", { hex: region.sourceHex }, `ตรวจพบ: ${region.sourceHex}`);
 
       const arrow = document.createElement("span");
       arrow.className = "color-region-arrow";
@@ -250,8 +266,8 @@ function init() {
       target.type = "button";
       target.className = "color-region-target";
       target.style.background = printColor;
-      target.title = `สีที่ใช้พิมพ์: ${printColor}`;
-      target.setAttribute("aria-label", `เลือกสีพิมพ์สำหรับ ${region.label}`);
+      target.title = ct("clicker.colorRegion.printColorTitle", { hex: printColor }, `สีที่ใช้พิมพ์: ${printColor}`);
+      target.setAttribute("aria-label", ct("clicker.colorRegion.selectAriaLabel", { label: region.label }, `เลือกสีพิมพ์สำหรับ ${region.label}`));
       target.addEventListener("click", (ev) => {
         ev.stopPropagation();
         openTopColorPalette(target, region);
@@ -289,6 +305,7 @@ function init() {
 
   fileInput.addEventListener("change", async () => {
     const file = fileInput.files && fileInput.files[0];
+    updateFileInputNameLabel();
     if (!file) return;
 
     try {
@@ -331,6 +348,7 @@ function init() {
     colorCountSlider.max = CLICKER_PROFILE.accent.colorCount.max;
     colorCountSlider.step = 1;
     colorCountSlider.value = CLICKER_PROFILE.accent.colorCount.default;
+    updateColorCountMinMaxLabels();
 
     colorCountSlider.addEventListener("input", () => {
       updateColorCountLabel();
@@ -341,13 +359,15 @@ function init() {
   updateThresholdLabel();
   updateSmoothingLabel();
   updateColorCountLabel();
+  updateFileInputNameLabel();
   if (sizeSlider) {
     sizeSlider.min = CLICKER_PROFILE.body.minSizeMM;
     sizeSlider.max = CLICKER_PROFILE.body.maxSizeMM;
     sizeSlider.value = CLICKER_PROFILE.body.targetSize;
-    if (sizeValue) sizeValue.textContent = sizeSlider.value;
+    updateSizeMinMaxLabels();
+    updateSizeLabel();
     sizeSlider.addEventListener("input", () => {
-      if (sizeValue) sizeValue.textContent = String(selectedSizeMM());
+      updateSizeLabel();
       schedulePipeline();
     });
     sizeSlider.addEventListener("change", runPipelineNow);
@@ -356,6 +376,29 @@ function init() {
   document.getElementById("clickerExportButton")?.addEventListener("click", () => {
     if (pipelineTimer !== null) runPipelineNow();
   }, true);
+
+  // Re-render already-displayed dynamic text (slider labels, color-region
+  // rows/tooltips) in the new language on TH/EN toggle — same click i18n.js
+  // itself listens for. Only text changes: state (values, overrides,
+  // detected regions) is untouched, so this never re-runs the pipeline.
+  document.addEventListener("click", (ev) => {
+    if (!ev.target.closest("[data-lang-option]")) return;
+    closeColorPalette();
+    updateSizeMinMaxLabels();
+    updateSizeLabel();
+    updateColorCountMinMaxLabels();
+    updateColorCountLabel();
+    renderColorRegionRows();
+    updateFileInputNameLabel();
+  });
+}
+
+function updateFileInputNameLabel() {
+  if (!fileInputNameEl) return;
+  const file = fileInput?.files && fileInput.files[0];
+  fileInputNameEl.textContent = file
+    ? file.name
+    : ct("clicker.fileInput.noFileChosen", null, "ยังไม่ได้อัปโหลดรูป");
 }
 
 function updateThresholdLabel() {
@@ -367,7 +410,41 @@ function updateSmoothingLabel() {
 }
 
 function updateColorCountLabel() {
-  if (colorCountValue && colorCountSlider) colorCountValue.textContent = colorCountSlider.value;
+  if (colorCountValue && colorCountSlider) {
+    colorCountValue.textContent = ct("clicker.colorCount.unit", { value: colorCountSlider.value }, `${colorCountSlider.value} สี`);
+  }
+}
+
+function updateColorCountMinMaxLabels() {
+  if (colorCountMinLabel && colorCountSlider) {
+    colorCountMinLabel.textContent = ct("clicker.colorCount.unit", { value: colorCountSlider.min }, `${colorCountSlider.min} สี`);
+  }
+  if (colorCountMaxLabel && colorCountSlider) {
+    colorCountMaxLabel.textContent = ct("clicker.colorCount.unit", { value: colorCountSlider.max }, `${colorCountSlider.max} สี`);
+  }
+}
+
+// Display-only mm->cm conversion (divide by 10). Internal sizing stays in
+// mm everywhere else (selectedSizeMM(), CLICKER_PROFILE, geometry, export).
+function formatSizeCm(mm) {
+  const cm = Number(mm) / 10;
+  return Number.isInteger(cm) ? String(cm) : cm.toFixed(1);
+}
+
+function updateSizeLabel() {
+  const cm = formatSizeCm(selectedSizeMM());
+  if (sizeValue) sizeValue.textContent = ct("clicker.size.unit", { value: cm }, `${cm} ซม.`);
+}
+
+function updateSizeMinMaxLabels() {
+  if (sizeMinLabel && sizeSlider) {
+    const cm = formatSizeCm(sizeSlider.min);
+    sizeMinLabel.textContent = ct("clicker.size.unit", { value: cm }, `${cm} ซม.`);
+  }
+  if (sizeMaxLabel && sizeSlider) {
+    const cm = formatSizeCm(sizeSlider.max);
+    sizeMaxLabel.textContent = ct("clicker.size.unit", { value: cm }, `${cm} ซม.`);
+  }
 }
 
 function setDebugText(text) {

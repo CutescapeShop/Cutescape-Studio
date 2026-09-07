@@ -560,27 +560,35 @@
       <section class="studio clicker-studio" id="clickerStudio" data-product-section="clicker">
 
       <aside class="panel">
-        <h2>🖼️ Clicker from Image</h2>
+        <h2 data-i18n="clicker.heading">สร้าง Clicker จากรูปของคุณ</h2>
 
         <div class="field">
-          <label for="clickerFileInput">อัปโหลดรูป (PNG / JPG / WebP)</label>
+          <label for="clickerFileInput" data-i18n="clicker.step1.selectImage">1. อัปโหลดรูป</label>
+          <div class="clicker-file-input-row">
+            <label class="clicker-file-input-button" for="clickerFileInput" data-i18n="clicker.fileInput.chooseButton">อัปโหลดรูป</label>
+            <span class="clicker-file-input-name" id="clickerFileInputName" data-i18n="clicker.fileInput.noFileChosen">ยังไม่ได้อัปโหลดรูป</span>
+          </div>
           <input
             id="clickerFileInput"
             type="file"
             accept="image/png,image/jpeg,image/webp"
+            class="clicker-file-input-native"
           >
         </div>
 
         <div class="field">
-          <label for="clickerSizeSlider">ขนาด TOP ด้านยาวสุด (<span id="clickerSizeValue">35</span> mm)</label>
+          <label for="clickerSizeSlider" data-i18n="clicker.step2.selectSize">2. เลือกขนาด</label>
           <input id="clickerSizeSlider" type="range" min="20" max="70" step="1" value="35" aria-describedby="clickerSizeHelp">
-          <small id="clickerSizeHelp">ขนาดรูปคงสัดส่วนเดิม ส่วนยึดสวิตช์มีขนาดคงที่ และอาจยื่นพ้นรูปเมื่อเลือกขนาดเล็ก</small>
+          <div class="name-size-value">
+            <span id="clickerSizeMinLabel">2 ซม.</span>
+            <span id="clickerSizeValue">3.5 ซม.</span>
+            <span id="clickerSizeMaxLabel">7 ซม.</span>
+          </div>
+          <small id="clickerSizeHelp" hidden>ขนาดรูปคงสัดส่วนเดิม ส่วนยึดสวิตช์มีขนาดคงที่ และอาจยื่นพ้นรูปเมื่อเลือกขนาดเล็ก</small>
         </div>
 
         <div class="field">
-          <label for="clickerColorCountSlider">
-            จำนวนสี TOP (<span id="clickerColorCountValue">4</span>)
-          </label>
+          <label for="clickerColorCountSlider" data-i18n="clicker.step3.selectColorCount">3. เลือกจำนวนสี</label>
           <input
             id="clickerColorCountSlider"
             type="range"
@@ -589,28 +597,36 @@
             step="1"
             value="4"
           >
+          <div class="name-size-value">
+            <span id="clickerColorCountMinLabel">2 สี</span>
+            <span id="clickerColorCountValue">4 สี</span>
+            <span id="clickerColorCountMaxLabel">6 สี</span>
+          </div>
         </div>
 
         <div class="field">
-          <label>สี TOP (ตรวจพบ → สีที่ใช้พิมพ์)</label>
+          <label data-i18n="clicker.step4.selectArtworkColor">4. เลือกสีชิ้นงาน</label>
           <div id="clickerColorRegionRows" class="color-region-rows">
-            <p class="clicker-color-region-empty">อัปโหลดรูปเพื่อแก้ไขสี</p>
+            <p class="clicker-color-region-empty" data-i18n="clicker.colorRegion.empty">อัปโหลดรูปเพื่อแก้ไขสี</p>
           </div>
         </div>
 
         <hr>
 
         <div class="field">
-          <label>สี HOUSING</label>
+          <label data-i18n="clicker.step5.selectBaseColor">5. เลือกสีฐาน</label>
           <div id="clickerHousingColorGrid" class="housing-color-grid"></div>
         </div>
 
         <div class="field">
-          <button class="toggle-button" id="clickerKeychainLoopToggle" type="button">พวงกุญแจ: ปิด</button>
+          <div class="keychain-loop-header">
+            <label data-i18n="clicker.step6.addKeychainLoop">6. เพิ่มห่วงพวงกุญแจ</label>
+            <button class="toggle-button keychain-loop-onoff-button" id="clickerKeychainLoopToggle" type="button">ปิด</button>
+          </div>
         </div>
 
         <div class="field" id="clickerKeychainLoopControls" hidden>
-          <label>ตำแหน่งห่วง (หมุนทีละ 25°)</label>
+          <label data-i18n="clicker.keychainLoop.positionLabel">ตำแหน่งห่วง (หมุนทีละ 25°)</label>
           <div class="keychain-loop-rotate-row">
             <button class="toggle-button keychain-loop-rotate-button" id="clickerKeychainLoopRotateLeft" type="button" aria-label="หมุนห่วงทวนเข็มนาฬิกา 25 องศา">↶</button>
             <span id="clickerKeychainLoopAngle" class="keychain-loop-angle">0°</span>
@@ -619,12 +635,12 @@
           <p class="clicker-debug-info" id="clickerKeychainLoopStatus"></p>
         </div>
 
-        <button class="order-button" id="clickerExportButton" type="button">
+        <button class="order-button" id="clickerExportButton" type="button" hidden>
           Export STL (TOP + ACCENT + HOUSING)
         </button>
-        <p class="clicker-debug-info" id="clickerExportStatus"></p>
+        <p class="clicker-debug-info" id="clickerExportStatus" hidden></p>
 
-        <details class="clicker-advanced">
+        <details class="clicker-advanced" hidden>
           <summary>ขั้นสูง / ดีบัก</summary>
 
           <p class="clicker-phase-note">
@@ -692,28 +708,28 @@
       <div id="clickerColorPalettePopover" class="color-palette-popover" hidden>
         <div class="color-palette-groups" id="clickerColorPaletteGroups"></div>
         <div class="color-palette-custom">
-          <label for="clickerColorPaletteCustom">กำหนดเอง</label>
+          <label for="clickerColorPaletteCustom" data-i18n="clicker.customColor">กำหนดเอง</label>
           <input type="color" id="clickerColorPaletteCustom" value="#808080">
         </div>
       </div>
 
       <section class="preview-panel">
         <div class="preview-title">
-          <h2>ตัวอย่าง 3D</h2>
+          <h2 data-i18n="clicker.preview.result">ตัวอย่างชิ้นงาน</h2>
         </div>
         <div id="clickerViewer3D"></div>
 
         <div class="preview-title">
-          <h2>ตัวอย่าง 2D</h2>
+          <h2 data-i18n="clicker.preview.original">รูปต้นฉบับ</h2>
         </div>
 
-        <p class="clicker-empty-state" id="clickerEmptyState">
+        <p class="clicker-empty-state" id="clickerEmptyState" data-i18n="clicker.preview.emptyState">
           อัปโหลดรูปเพื่อดูผลลัพธ์
         </p>
 
         <div class="clicker-canvas-row" id="clickerCanvasRow">
           <div class="clicker-canvas-box clicker-canvas-box--compact">
-            <span>ต้นฉบับ</span>
+            <span data-i18n="clicker.preview.originalCanvasLabel">ต้นฉบับ</span>
             <canvas id="clickerOriginalCanvas"></canvas>
           </div>
         </div>
