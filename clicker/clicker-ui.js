@@ -23,6 +23,7 @@ import {
 
 import { computeAutoFitTransform } from "./geometry-math.js";
 import { CLICKER_PROFILE } from "./stem-profile.js";
+import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
 
 
 // ---------------- DOM references (all new elements) ----------------
@@ -55,62 +56,6 @@ const colorRegionRowsContainer = document.getElementById("clickerColorRegionRows
 const colorPalettePopover = document.getElementById("clickerColorPalettePopover");
 const colorPaletteGroups = document.getElementById("clickerColorPaletteGroups");
 const colorPaletteCustomInput = document.getElementById("clickerColorPaletteCustom");
-
-// Curated common filament colors, grouped by family, offered before the
-// custom picker so most choices don't need one.
-const CURATED_FILAMENT_PALETTE = [
-  { family: "ขาว", swatches: [{ hex: "#ffffff", name: "ขาว" }] },
-  { family: "ดำ", swatches: [{ hex: "#0a0a0a", name: "ดำ" }] },
-  { family: "เทา", swatches: [
-    { hex: "#4d4d4d", name: "เทาเข้ม" },
-    { hex: "#9e9e9e", name: "เทา" },
-    { hex: "#cfcfcf", name: "เทาอ่อน" },
-  ] },
-  { family: "ครีม / เบจ", swatches: [
-    { hex: "#f0e6d2", name: "ครีม" },
-    { hex: "#d8c3a5", name: "เบจ" },
-  ] },
-  { family: "น้ำตาล", swatches: [
-    { hex: "#6b4423", name: "น้ำตาลเข้ม" },
-    { hex: "#a9702f", name: "น้ำตาล" },
-  ] },
-  { family: "แดง", swatches: [
-    { hex: "#d32f2f", name: "แดง" },
-    { hex: "#8b1a1a", name: "แดงเข้ม" },
-  ] },
-  { family: "ชมพู", swatches: [
-    { hex: "#ffc1cc", name: "ชมพูอ่อน" },
-    { hex: "#ff7eb6", name: "ชมพู" },
-    { hex: "#d6336c", name: "บานเย็น" },
-  ] },
-  { family: "ส้ม", swatches: [
-    { hex: "#ff7f11", name: "ส้ม" },
-    { hex: "#ffa94d", name: "ส้มอ่อน" },
-  ] },
-  { family: "เหลือง", swatches: [
-    { hex: "#ffd60a", name: "เหลือง" },
-    { hex: "#fff275", name: "เหลืองอ่อน" },
-  ] },
-  { family: "เขียว", swatches: [
-    { hex: "#0f5132", name: "เขียวเข้ม" },
-    { hex: "#2e7d32", name: "เขียว" },
-    { hex: "#7cb342", name: "เขียวมะนาว" },
-  ] },
-  { family: "เขียวมิ้นท์ / เทอร์ควอยซ์", swatches: [
-    { hex: "#00897b", name: "เทอร์ควอยซ์" },
-    { hex: "#4dd0c4", name: "มิ้นท์" },
-  ] },
-  { family: "ฟ้า / น้ำเงิน", swatches: [
-    { hex: "#78c8ff", name: "ฟ้า" },
-    { hex: "#1565c0", name: "น้ำเงิน" },
-    { hex: "#0d1b6e", name: "กรมท่า" },
-  ] },
-  { family: "ม่วง", swatches: [
-    { hex: "#c77dff", name: "ม่วงอ่อน" },
-    { hex: "#a889ff", name: "ม่วง" },
-    { hex: "#7b2cbf", name: "ม่วงเข้ม" },
-  ] },
-];
 
 function selectedSizeMM() {
   return Math.max(CLICKER_PROFILE.body.minSizeMM, Math.min(CLICKER_PROFILE.body.maxSizeMM,
@@ -148,8 +93,13 @@ function init() {
   };
 
   let pipelineTimer = null;
-  let activePaletteSourceHex = null;
+  // Which TOP region (if any) the popover is currently open for, so a
+  // re-render (new pipeline run) can reopen it in place. Generic HOUSING
+  // use of the same popover (see window.openClickerColorPalette below)
+  // never sets this — it has no "region" concept to restore.
+  let activePaletteRegionKey = null;
   let activePaletteTargetEl = null;
+  let activePaletteOnSelect = null;
 
   function resolvePrintColor(sourceHex) {
     return state.colorOverrides.get(sourceHex) || sourceHex;
@@ -163,8 +113,9 @@ function init() {
 
   function closeColorPalette() {
     if (colorPalettePopover) colorPalettePopover.hidden = true;
-    activePaletteSourceHex = null;
+    activePaletteRegionKey = null;
     activePaletteTargetEl = null;
+    activePaletteOnSelect = null;
   }
 
   function applyColorSelection(sourceHex, targetHex) {
@@ -178,10 +129,18 @@ function init() {
     notifyColorOverrideChange();
   }
 
-  function openColorPalette(anchorEl, sourceHex) {
+  // Generic curated-palette popover, reused by both TOP color regions
+  // (below) and HOUSING (clicker-viewer.js, via window.openClickerColorPalette
+  // since this popover's DOM/rendering lives here). `onSelect(hex)` is
+  // called for every choice — a swatch click closes the popover after,
+  // dragging the custom picker does not, matching the original TOP-only
+  // behavior exactly. This function itself has no opinion about what a
+  // selection MEANS (a region override vs. a direct material color) —
+  // that's entirely the caller's `onSelect` implementation.
+  function openColorPalette(anchorEl, currentColorHex, onSelect) {
     if (!colorPalettePopover) return;
-    activePaletteSourceHex = sourceHex;
     activePaletteTargetEl = anchorEl;
+    activePaletteOnSelect = onSelect;
 
     const rect = anchorEl.getBoundingClientRect();
     const popoverWidth = 232;
@@ -189,7 +148,7 @@ function init() {
     colorPalettePopover.style.top = `${rect.bottom + 6}px`;
     colorPalettePopover.hidden = false;
 
-    const currentColor = resolvePrintColor(sourceHex).toLowerCase();
+    const currentColor = String(currentColorHex).toLowerCase();
     if (colorPaletteGroups) {
       colorPaletteGroups.innerHTML = "";
       for (const group of CURATED_FILAMENT_PALETTE) {
@@ -210,7 +169,7 @@ function init() {
           btn.title = swatch.name;
           if (swatch.hex.toLowerCase() === currentColor) btn.classList.add("active");
           btn.addEventListener("click", () => {
-            applyColorSelection(sourceHex, swatch.hex);
+            if (activePaletteOnSelect) activePaletteOnSelect(swatch.hex);
             closeColorPalette();
           });
           row.appendChild(btn);
@@ -221,12 +180,23 @@ function init() {
     }
     if (colorPaletteCustomInput) colorPaletteCustomInput.value = currentColor;
   }
+  // Exposed for HOUSING (clicker-viewer.js) — same cross-module
+  // window-exposure idiom already used for window.onClickerPipelineResult/
+  // window.setupColorButtons elsewhere in this project.
+  window.openClickerColorPalette = openColorPalette;
+
+  // TOP-region-specific opener: preserves the exact prior behavior
+  // (region-keyed override + reopen-after-rerender) on top of the now-generic openColorPalette.
+  function openTopColorPalette(anchorEl, region) {
+    activePaletteRegionKey = region.sourceHex;
+    openColorPalette(anchorEl, resolvePrintColor(region.sourceHex),
+      (newHex) => applyColorSelection(region.sourceHex, newHex));
+  }
 
   if (colorPaletteCustomInput) {
     // Live-update while dragging the native picker, same as a swatch click.
     colorPaletteCustomInput.addEventListener("input", () => {
-      if (!activePaletteSourceHex) return;
-      applyColorSelection(activePaletteSourceHex, colorPaletteCustomInput.value);
+      if (activePaletteOnSelect) activePaletteOnSelect(colorPaletteCustomInput.value);
     });
   }
 
@@ -239,7 +209,7 @@ function init() {
 
   function renderColorRegionRows() {
     if (!colorRegionRowsContainer) return;
-    const wasOpenFor = activePaletteSourceHex;
+    const wasOpenFor = activePaletteRegionKey;
     closeColorPalette();
     colorRegionRowsContainer.innerHTML = "";
 
@@ -284,7 +254,7 @@ function init() {
       target.setAttribute("aria-label", `เลือกสีพิมพ์สำหรับ ${region.label}`);
       target.addEventListener("click", (ev) => {
         ev.stopPropagation();
-        openColorPalette(target, region.sourceHex);
+        openTopColorPalette(target, region);
       });
 
       row.appendChild(label);
@@ -293,7 +263,7 @@ function init() {
       row.appendChild(target);
       colorRegionRowsContainer.appendChild(row);
 
-      if (wasOpenFor === region.sourceHex) openColorPalette(target, region.sourceHex);
+      if (wasOpenFor === region.sourceHex) openTopColorPalette(target, region);
     }
   }
   // runPipeline() below is a module-level function (shared shape with the

@@ -57,6 +57,7 @@ import {
 import { createAccentRegionGeometries } from "./image-geometry.js";
 import { createHousingGeometries } from "./housing-geometry.js?v=housing-floor-v4";
 import { createKeychainLoopGeometry } from "./keychain-loop.js";
+import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
 
 
 // ---------------- DOM references ----------------
@@ -66,7 +67,7 @@ const viewerEl = document.getElementById("clickerViewer3D");
 const exportButton = document.getElementById("clickerExportButton");
 const exportStatus = document.getElementById("clickerExportStatus");
 
-const housingColorsContainer = document.getElementById("clickerBaseColors");
+const housingColorGrid = document.getElementById("clickerHousingColorGrid");
 
 const keychainLoopToggleButton = document.getElementById("clickerKeychainLoopToggle");
 const keychainLoopControls = document.getElementById("clickerKeychainLoopControls");
@@ -617,12 +618,55 @@ function init() {
 
   // Only artwork uses the selected size; all mechanical builders use mm.
 
-  // ---------------- Controls: HOUSING color (same #clickerBaseColors UI as before) ----------------
+  // ---------------- Controls: HOUSING color (always-visible inline palette) ----------------
+  // Same curated color list as TOP (imported directly, not duplicated),
+  // rendered as an always-visible swatch grid instead of TOP's popover.
+  // Setting housingMaterial.color directly keeps the keychain loop mesh
+  // in sync automatically, since it shares this exact material object.
 
-  if (housingColorsContainer && typeof window.setupColorButtons === "function") {
-    window.setupColorButtons("clickerBaseColors", function (color) {
-      housingMaterial.color.set(color);
-    });
+  if (housingColorGrid) {
+    const housingSwatchButtons = [];
+    let housingCustomInput = null;
+
+    const syncHousingColorGridState = () => {
+      const currentHex = ("#" + housingMaterial.color.getHexString()).toLowerCase();
+      for (const btn of housingSwatchButtons) {
+        btn.classList.toggle("active", btn.dataset.hex === currentHex);
+      }
+      if (housingCustomInput && document.activeElement !== housingCustomInput) {
+        housingCustomInput.value = currentHex;
+      }
+    };
+
+    const applyHousingColor = (hex) => {
+      housingMaterial.color.set(hex);
+      syncHousingColorGridState();
+    };
+
+    for (const group of CURATED_FILAMENT_PALETTE) {
+      for (const swatch of group.swatches) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "color-palette-swatch";
+        btn.style.background = swatch.hex;
+        btn.title = swatch.name;
+        btn.dataset.hex = swatch.hex.toLowerCase();
+        btn.setAttribute("aria-label", swatch.name);
+        btn.addEventListener("click", () => applyHousingColor(swatch.hex));
+        housingSwatchButtons.push(btn);
+        housingColorGrid.appendChild(btn);
+      }
+    }
+
+    housingCustomInput = document.createElement("input");
+    housingCustomInput.type = "color";
+    housingCustomInput.className = "color-palette-swatch housing-color-custom-input";
+    housingCustomInput.title = "กำหนดเอง";
+    housingCustomInput.setAttribute("aria-label", "กำหนดสี HOUSING เอง");
+    housingCustomInput.addEventListener("input", () => applyHousingColor(housingCustomInput.value));
+    housingColorGrid.appendChild(housingCustomInput);
+
+    syncHousingColorGridState();
   }
 
 

@@ -1319,6 +1319,20 @@
       cursor: pointer;
     }
 
+    /* Always-visible HOUSING color grid: same swatch look as the TOP
+       popover (.color-palette-swatch), just laid out inline and compact
+       so it doesn't grow the left panel. */
+    .housing-color-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-width: 260px;
+    }
+
+    .housing-color-grid .housing-color-custom-input {
+      border: 2px solid white;
+    }
+
     /* =========================================
        Clicker optional keychain loop (HOUSING only).
        ========================================= */
