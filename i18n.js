@@ -109,7 +109,9 @@
       "clicker.preview.result": "ตัวอย่างชิ้นงาน",
       "clicker.preview.original": "รูปต้นฉบับ",
       "clicker.preview.originalCanvasLabel": "ต้นฉบับ",
-      "clicker.preview.emptyState": "อัปโหลดรูปเพื่อดูผลลัพธ์"
+      "clicker.preview.emptyState": "อัปโหลดรูปเพื่อดูผลลัพธ์",
+      "clicker.previewMode.assembled": "ประกอบ",
+      "clicker.previewMode.exploded": "แยกชิ้น"
     },
 
     en: {
@@ -210,7 +212,9 @@
       "clicker.preview.result": "Product Preview",
       "clicker.preview.original": "Original Photo",
       "clicker.preview.originalCanvasLabel": "Original",
-      "clicker.preview.emptyState": "Upload a photo to see the result"
+      "clicker.preview.emptyState": "Upload a photo to see the result",
+      "clicker.previewMode.assembled": "Assembled",
+      "clicker.previewMode.exploded": "Exploded"
     }
   };
 

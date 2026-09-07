@@ -767,6 +767,29 @@
       font-size: 13px;
     }
 
+    .clicker-preview-mode-toggle {
+      display: inline-flex;
+      border: 2px solid var(--sage-strong);
+      border-radius: 999px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .clicker-preview-mode-button {
+      border: none;
+      background: white;
+      color: var(--ink);
+      font-family: var(--font-display);
+      font-size: 13px;
+      padding: 7px 14px;
+      cursor: pointer;
+    }
+
+    .clicker-preview-mode-button.active {
+      background: var(--sage-strong);
+      color: white;
+    }
+
     .preview-stage {
       position: relative;
       flex: 1;

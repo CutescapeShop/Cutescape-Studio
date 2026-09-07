@@ -92,8 +92,10 @@ assert.match(viewerSource, /createTopRearShellGeometries/, "rear shell has its o
 assert.match(viewerSource, /createTopPedestalGeometry/, "MX pedestal has an independent build path");
 assert.doesNotMatch(viewerSource, /TOP cavity failed/, "cavity failure must not abort TOP geometry");
 assert.match(viewerSource, /PREVIEW_PIECE_GAP_MM\s*=\s*12\.0/, "preview separates TOP and HOUSING by a 12 mm edge gap");
-assert.match(viewerSource, /topGroup\.position\.x\s*=\s*-previewCenterOffsetMM/, "TOP moves left only in its preview group");
-assert.match(viewerSource, /housingGroup\.position\.x\s*=\s*previewCenterOffsetMM/, "HOUSING moves right only in its preview group");
+assert.match(viewerSource, /topGroup\.position\.set\(-previewCenterOffsetMM,\s*0,\s*0\)/, "exploded mode moves TOP left, X-axis only");
+assert.match(viewerSource, /housingGroup\.position\.set\(previewCenterOffsetMM,\s*0,\s*0\)/, "exploded mode moves HOUSING right, X-axis only");
+assert.match(viewerSource, /topGroup\.position\.set\(0,\s*0,\s*ASSEMBLED_Z_LIFT_MM\)/, "assembled mode centers TOP over HOUSING and lifts it to HOUSING's rim height");
+assert.match(viewerSource, /housingGroup\.position\.set\(0,\s*0,\s*0\)/, "assembled mode leaves HOUSING at the shared origin");
 assert.match(viewerSource, /root\.matrixWorld\.clone\(\)\.invert\(\)/, "export cancels each preview root transform");
 assert.match(viewerSource, /multiplyMatrices\(\s*rootInverse,\s*object\.matrixWorld\s*\)/s, "export retains only modeling transforms relative to the preview root");
 assert.doesNotMatch(viewerSource, /applyMatrix4\(object\.matrixWorld\)/, "STL export must not bake preview offsets");

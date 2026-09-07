@@ -82,6 +82,9 @@ const keychainLoopRotateRightButton = document.getElementById("clickerKeychainLo
 const keychainLoopAngleLabel = document.getElementById("clickerKeychainLoopAngle");
 const keychainLoopStatus = document.getElementById("clickerKeychainLoopStatus");
 
+const previewModeAssembledButton = document.getElementById("clickerPreviewModeAssembled");
+const previewModeExplodedButton = document.getElementById("clickerPreviewModeExploded");
+
 const FIXED_CLICKER_SCALE_MULTIPLIER = 1;
 
 // If the Phase-2 3D markup isn't present, stay inert — mirrors the
@@ -201,6 +204,14 @@ function init() {
   // Export explicitly removes these root-group transforms below.
   const PREVIEW_PIECE_GAP_MM = 12.0;
 
+  // PREVIEW-ONLY zero-gap contact: HOUSING rim Z=17.237 minus TOP rear
+  // local Z=-6.5874. This is geometric seating, not switch-rest height.
+  // TOP/ACCENT share HOUSING's X/Y center. Export cancels this transform
+  // (see traverseExportRoot below), same as the exploded offset.
+  const ASSEMBLED_Z_LIFT_MM = 23.8244;
+
+  let previewMode = "assembled";
+
   function disposeGroupChildren(group) {
     group.children.forEach((child) => {
       if (child.geometry) child.geometry.dispose();
@@ -285,12 +296,18 @@ function init() {
     const housingPreviewWidthMM = topPreviewWidthMM + CLICKER_PROFILE.housing.offsetMM * 2;
     const topBounds = modelingBounds([topGroup, accentGroup]);
     const housingBounds = modelingBounds([housingGroup]);
-    const previewCenterOffsetMM = fitView && !topBounds.isEmpty() && !housingBounds.isEmpty()
-      ? (topBounds.max.x + PREVIEW_PIECE_GAP_MM - housingBounds.min.x) / 2
-      : (topPreviewWidthMM / 2 + PREVIEW_PIECE_GAP_MM + housingPreviewWidthMM / 2) / 2;
-    topGroup.position.x = -previewCenterOffsetMM;
-    accentGroup.position.x = -previewCenterOffsetMM;
-    housingGroup.position.x = previewCenterOffsetMM;
+    if (previewMode === "exploded") {
+      const previewCenterOffsetMM = fitView && !topBounds.isEmpty() && !housingBounds.isEmpty()
+        ? (topBounds.max.x + PREVIEW_PIECE_GAP_MM - housingBounds.min.x) / 2
+        : (topPreviewWidthMM / 2 + PREVIEW_PIECE_GAP_MM + housingPreviewWidthMM / 2) / 2;
+      topGroup.position.set(-previewCenterOffsetMM, 0, 0);
+      accentGroup.position.set(-previewCenterOffsetMM, 0, 0);
+      housingGroup.position.set(previewCenterOffsetMM, 0, 0);
+    } else {
+      topGroup.position.set(0, 0, ASSEMBLED_Z_LIFT_MM);
+      accentGroup.position.set(0, 0, ASSEMBLED_Z_LIFT_MM);
+      housingGroup.position.set(0, 0, 0);
+    }
     if (fitView && !topBounds.isEmpty() && !housingBounds.isEmpty()) {
       const bounds = topBounds.translate(topGroup.position).union(housingBounds.translate(housingGroup.position));
       const center = bounds.getCenter(new THREE.Vector3());
@@ -315,10 +332,28 @@ function init() {
     }
     console.info("Clicker preview layout", JSON.stringify({
       previewOnly: true,
+      mode: previewMode,
       gapMM: PREVIEW_PIECE_GAP_MM,
-      topX: topGroup.position.x,
-      housingX: housingGroup.position.x,
+      topPosition: topGroup.position.toArray(),
+      housingPosition: housingGroup.position.toArray(),
     }));
+  }
+
+  function setPreviewMode(mode) {
+    if (mode !== "assembled" && mode !== "exploded") return;
+    if (previewMode === mode) return;
+    previewMode = mode;
+    // Preserve the user's current camera/orbit — only the groups move.
+    updatePreviewLayout(false);
+    if (previewModeAssembledButton) previewModeAssembledButton.classList.toggle("active", mode === "assembled");
+    if (previewModeExplodedButton) previewModeExplodedButton.classList.toggle("active", mode === "exploded");
+  }
+
+  if (previewModeAssembledButton) {
+    previewModeAssembledButton.addEventListener("click", () => setPreviewMode("assembled"));
+  }
+  if (previewModeExplodedButton) {
+    previewModeExplodedButton.addEventListener("click", () => setPreviewMode("exploded"));
   }
 
   function recomputeAutoFit() {
