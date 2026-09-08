@@ -25,6 +25,7 @@ import ClipperLib from
   "https://cdn.jsdelivr.net/npm/clipper-lib@6.4.2/+esm";
 
 import { quantizeImageColors } from "./color-quantization.js";
+import { fitContourNetwork } from "./contour-fitting.js";
 
 // A separate ClipperLib usage scale for this module only — independent
 // from the CLIPPER_SCALE used by the Name Keychain die-cut outline code
@@ -707,9 +708,9 @@ export function buildColorRegions(imageData, baseMask, options = {}) {
   }
 
   const accentRegions = [];
+  const rawRegions = [];
 
   for (let clusterIdx = 0; clusterIdx < quantized.colorHexByCluster.length; clusterIdx++) {
-    if (clusterIdx === quantized.dominantIndex) continue; // dominant -> TOP_BASE, handled by the caller
 
     const clusterMask = new Uint8Array(width * height);
     let any = false;
@@ -722,6 +723,8 @@ export function buildColorRegions(imageData, baseMask, options = {}) {
     if (!any) continue; // this cluster ended up empty after cleanup — nothing to trace
 
     const rawLoops = traceContours(clusterMask, width, height);
+    rawRegions.push({ colorHex: quantized.colorHexByCluster[clusterIdx], loops: rawLoops });
+    if (clusterIdx === quantized.dominantIndex) continue;
     const loops = smoothLoops(rawLoops, smoothing);
     if (loops.length === 0) continue;
 
@@ -731,5 +734,23 @@ export function buildColorRegions(imageData, baseMask, options = {}) {
   return {
     dominantColorHex: quantized.colorHexByCluster[quantized.dominantIndex],
     accentRegions,
+    rawRegions,
+    rawSilhouetteLoops: traceContours(baseMask, width, height),
+  };
+}
+
+// Resizing changes fitting tolerances, never quantization or mechanical inputs.
+// Fit every color together, including the dominant color, so a shared edge is
+// emitted identically on both sides. Exterior contacts remain pinned.
+export function fitArtworkColorRegions(regions, mmPerPixel) {
+  if (!regions?.rawRegions) return regions;
+  const fitted = fitContourNetwork([
+    { id: "exterior", loops: regions.rawSilhouetteLoops, locked: true },
+    ...regions.rawRegions,
+  ], mmPerPixel);
+  return {
+    ...regions,
+    accentRegions: fitted.groups.slice(1).filter((region) => region.colorHex !== regions.dominantColorHex),
+    contourDiagnostics: fitted.diagnostics,
   };
 }

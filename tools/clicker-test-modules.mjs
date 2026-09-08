@@ -28,7 +28,7 @@ export async function loadClickerModules(overrides = {}) {
     return url;
   }
   const modules = {};
-  for (const name of ["geometry-math", "keycap-geometry", "housing-geometry", "image-processing", "stem-profile", "color-quantization", "keychain-loop"]) {
+  for (const name of ["geometry-math", "keycap-geometry", "housing-geometry", "image-processing", "stem-profile", "color-quantization", "keychain-loop", "contour-fitting", "image-geometry"]) {
     modules[name] = await import(await moduleURL(`clicker/${name}.js`));
   }
   modules.three = await import(threeURL);

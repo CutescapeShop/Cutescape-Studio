@@ -18,6 +18,7 @@ import {
   getImageDataFromImage,
   processImageToPaths,
   buildColorRegions,
+  fitArtworkColorRegions,
   signedArea,
 } from "./image-processing.js";
 
@@ -97,6 +98,7 @@ function init() {
     imageKey: null,
     silhouetteCache: new Map(),
     colorCache: new Map(),
+    contourCache: new Map(),
     // Detected TOP color hex -> user-chosen print color hex. Keyed by the
     // ORIGINAL detected color, not by region index, so it survives cache
     // hits and slider tweaks that don't change detection. Display-only:
@@ -529,6 +531,15 @@ function runPipeline(state) {
         });
         setLimitedCache(state.colorCache, colorKey, colorRegions);
       }
+      const printFit = computeAutoFitTransform(loops, sizeMM, sizeMM);
+      const fittedKey = `${colorKey}|curve-mm:${printFit.scale.toPrecision(15)}`;
+      let fittedColors = state.contourCache.get(fittedKey);
+      if (!fittedColors) {
+        fittedColors = fitArtworkColorRegions(colorRegions, printFit.scale);
+        setLimitedCache(state.contourCache, fittedKey, fittedColors);
+      }
+      colorRegions = fittedColors;
+      colorKey = fittedKey;
       colorElapsedMs = performance.now() - tColor0;
     }
   } catch (err) {
@@ -553,6 +564,7 @@ function runPipeline(state) {
       silhouetteCacheHit,
       colorMs: colorElapsedMs,
       colorCacheHit,
+      contours: colorRegions?.contourDiagnostics || null,
       previewDrawMs,
     },
   };
