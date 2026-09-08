@@ -54,7 +54,7 @@ function buildHousingAt(outerLoopsPx, sizeMM) {
     CLICKER_PROFILE.topShell, CLICKER_PROFILE.topSocket
   );
   const diagnostics = {};
-  createHousingGeometries(outerLoopsPx, autoFit, 1, CLICKER_PROFILE.housing, diagnostics, topShell.pedestalLocation);
+  createHousingGeometries(outerLoopsPx, autoFit, 1, CLICKER_PROFILE.housing, diagnostics, topShell.pedestalLocation, topShell.outerMMLoops);
   return diagnostics;
 }
 

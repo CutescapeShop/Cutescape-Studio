@@ -1,0 +1,33 @@
+{
+  "commit": "555325d",
+  "hashesByThreeRevision": {
+    "167": {
+      "Cat 20": "1a8512e6b62dbfda99d33b0732bc27fa7b5051e5d978f45acac738b1c1862121",
+      "Cat 35": "20c0789693c28a9d6c2c83d3934ecbf2f549216e41d9849d8214daef58b5ff4a",
+      "Cat 70": "b9e2d83ba570dfb23895d309d1f7f50b70f11bff9abd7f947e7515b49c1dc11b",
+      "Fish 20": "d656f94078b9480907dda3850599e48298b142d98eb0f2fbd0c96ee63a32c8fe",
+      "Fish 35": "58844aab0516e8d11fc0dbf323d1bc599942be8a17717757630c3e9474f8415a",
+      "Fish 70": "dd96f27173c52491deddd8caed7a5a5cdc39f3d66efd527e94326e63abdae89e",
+      "Bird (synthetic) 20": "01e4589fff7f5d1588936a513ba4055942b2a0173874c32aaff9ecdbb4d61062",
+      "Bird (synthetic) 35": "65bd51c4d8ae442919ae88f106e77fa284262eb3f25da53888a831c6a0ac4570",
+      "Bird (synthetic) 70": "a67a752925723cbff5d095bed0d4df28589fe502f11baa60d578235af121e16a",
+      "squirrel (synthetic) 20": "f73d514e83cbad5bbcae0a3579267db97f3280ed98ccf876e77220b4b88e7c5c",
+      "squirrel (synthetic) 35": "24af7f2c038f8e45c69bb4a5711638adc4309b5f437ef7389e9963b635f17a25",
+      "squirrel (synthetic) 70": "4e2b1e17f1de32a58d2a99d025f4f91dee28bdd34982061df2750bbc898468cd"
+    },
+    "185": {
+      "Cat 20": "04d68fe7477761c02a4b6f60b7fce4e61714760ec2d63b733e95b973fe3898c5",
+      "Cat 35": "b82783d26be62d5ede66b8c7f891111a9fdb82925e8f8b3749b2673076ce5263",
+      "Cat 70": "c9bc789895f46e2b53fa95e01480364dab076b329ca30a67f2ee9a429b211015",
+      "Fish 20": "ab8c26f193c5ac6326cad5a16bce6ce87ad34e53a03e5bf668fee78eaa440348",
+      "Fish 35": "0d7f52b848218913c5f4cd0dbf7ae292426db2afe7e0ad5de844f9bbff848ede",
+      "Fish 70": "f6612c0847143d6b2014fe0dd05cb0a40468de919a460ce5c772eddafab341bb",
+      "Bird (synthetic) 20": "d7efe57eb228452a24690a4cf07ca3dcd550142fc6ff77a80b10bf2500c582af",
+      "Bird (synthetic) 35": "e5106f697764a0793f7d6bcd6e216ad714a26f86d100862b3a828070ed53cb21",
+      "Bird (synthetic) 70": "9120eda8fab30eef62f64d70810cffccefd5a600e78b0aaaddc1bf9b6015e341",
+      "squirrel (synthetic) 20": "8e749453b4bc336bbf5417392f54eb83b66e04e7563f710d9a82dc1ae07f5a98",
+      "squirrel (synthetic) 35": "38f27fd3b9290dcb31a5ededc046a96e4f5f8ee39cc988525089d50b974f77f6",
+      "squirrel (synthetic) 70": "3ccd6cc9cecbb8bc1288596229e47491041f6fd298117814bc6e76431e7512df"
+    }
+  }
+}

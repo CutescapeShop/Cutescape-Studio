@@ -277,6 +277,7 @@ function init() {
   let currentAutoFit = null;
   let topGeometryWarning = null;
   let topGeometryDiagnostics = null;
+  let movingTopMMLoops = null;
   let lastViewerTimings = null;
 
   function modelingBounds(groups) {
@@ -384,6 +385,7 @@ function init() {
     disposeGroupChildren(topGroup);
     topGeometryWarning = null;
     topGeometryDiagnostics = null;
+    movingTopMMLoops = null;
     if (!currentAutoFit || !state.outerLoops || state.outerLoops.length === 0) return timings;
 
     // TOP ARTWORK — unchanged call, unchanged position/scale.
@@ -450,6 +452,7 @@ function init() {
     const warnings = [...shellResult.warnings];
     if (pedestalResult.warning) warnings.push(pedestalResult.warning);
     topGeometryWarning = warnings.length > 0 ? warnings.join("; ") : null;
+    movingTopMMLoops = shellResult.outerMMLoops;
     topGeometryDiagnostics = {
       ...shellResult.diagnostics,
       pedestalLocation: pedestalResult.location
@@ -518,7 +521,8 @@ function init() {
       FIXED_CLICKER_SCALE_MULTIPLIER,
       CLICKER_PROFILE.housing,
       housingStageTimings,
-      topGeometryDiagnostics?.pedestalLocation || null
+      topGeometryDiagnostics?.pedestalLocation || null,
+      movingTopMMLoops
     );
     for (const geom of housingGeometries) {
       housingGroup.add(new THREE.Mesh(geom, housingMaterial));

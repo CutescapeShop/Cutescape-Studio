@@ -149,7 +149,8 @@ assert.match(housingSource, /imageHolesIgnored/, "source-image holes are diagnos
 assert.match(housingSource, /buildFunctionalHousingGeometry/, "functional housing regions share one connected boundary mesh");
 assert.match(housingSource, /analyzeHousingTopology/, "HOUSING reports open and non-manifold edges");
 assert.match(housingSource, /addPlanarRegion\(positions, outer, \[\], zRanges\.floor\[0\], -1\)/, "rear floor is a solid outer-silhouette cap");
-assert.match(housingSource, /chamberLoopsUsed:\s*chamberLoop \? 1 : 0/, "only a validated structural inset becomes the upper chamber");
+// Full chamber containment and clearance are measured in size-control.test.mjs;
+// the former source-text assertion assumed a single inset chamber.
 assert.match(housingSource, /silhouette-inset-patched/, "confirmed chamber patch remains available");
 assert.match(housingSource, /functionalCenter/, "HOUSING functional cutouts share TOP's MX location");
 assert.doesNotMatch(housingSource, /buildSolidLayer|buildUpperShellLayer/, "old stacked extrusions with coplanar caps are removed");

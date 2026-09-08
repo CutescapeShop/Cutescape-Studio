@@ -32,5 +32,6 @@ export async function loadClickerModules(overrides = {}) {
     modules[name] = await import(await moduleURL(`clicker/${name}.js`));
   }
   modules.three = await import(threeURL);
+  modules.STLExporter = (await import(new URL("../examples/jsm/exporters/STLExporter.js", threeURL))).STLExporter;
   return modules;
 }

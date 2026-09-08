@@ -105,10 +105,10 @@ export const CLICKER_PROFILE = {
   },
 
   housing: {
-    // How far HOUSING's outer edge is offset OUTWARD (in real mm, not
-    // pixels) beyond TOP's own outer silhouette, forming the visible
-    // rim around the switch housing. Config-only for now — a future
-    // version may expose this as a live slider.
+    movingClearanceMM: 0.4, // Fixed XY clearance per side of the complete moving TOP.
+    // Legacy outline margin used to preserve the existing functional
+    // chamber candidate. Final outer walls are derived from the enlarged
+    // moving-TOP chamber plus wallThicknessMM, not this margin.
     offsetMM: 2.7, // measured (median of ~2.5-3.0mm range)
 
     // Total housing height, floor to open top rim.

@@ -219,3 +219,16 @@ export const SYNTHETIC_FIXTURES = {
   Fish: highContrastWithDither,
   Dog: continuousTone,
 };
+
+// XY mechanics stress fixture only: a large tail, narrow neck and feet
+// create concavities. This is not a reconstruction of the user's artwork.
+export function syntheticSquirrel() {
+  const img = new Image(400, 400);
+  img.ellipse(105, 175, 80, 145, "#ad7044");
+  img.ellipse(210, 270, 100, 85, "#ad7044");
+  img.ellipse(265, 180, 48, 100, "#ad7044");
+  img.ellipse(290, 110, 65, 50, "#ad7044");
+  img.ellipse(270, 60, 20, 40, "#ad7044");
+  img.ellipse(270, 345, 80, 20, "#ad7044");
+  return img;
+}

@@ -166,6 +166,20 @@ function loopContainsLoop(container, candidate) {
 // otherwise valid but doesn't quite cover the plate opening — see the
 // chamber fallback below.
 const MM_CLIPPER_SCALE = 1000;
+// Physical-mm offsets keep mechanical clearance independent of image scale.
+function offsetMechanicalLoops(loops, distanceMM) {
+  const paths = loops.map((loop) => {
+    const path = loop.map((p) => ({ X: Math.round(p.x * MM_CLIPPER_SCALE), Y: Math.round(p.y * MM_CLIPPER_SCALE) }));
+    if (!ClipperLib.Clipper.Orientation(path)) path.reverse();
+    return path;
+  });
+  const offsetter = new ClipperLib.ClipperOffset(2, 0.002 * MM_CLIPPER_SCALE);
+  offsetter.AddPaths(paths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+  const result = new ClipperLib.Paths();
+  offsetter.Execute(result, distanceMM * MM_CLIPPER_SCALE);
+  if (!result.length) throw new Error("Mechanical chamber offset failed");
+  return unionMechanicalRegions(result.map((path) => path.map((p) => ({ x: p.X / MM_CLIPPER_SCALE, y: p.Y / MM_CLIPPER_SCALE }))));
+}
 function unionLoopWithRect(loopMM, rectMM) {
   const scale = MM_CLIPPER_SCALE;
   const toPath = (loop) => loop.map((p) => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }));
@@ -264,13 +278,17 @@ function buildSolidPrismGeometry(outer, zBottom, zTop) {
 }
 
 /** Build one manifold stepped cavity housing with no internal seam caps. */
-function buildFunctionalHousingGeometry(outer, pocket, plate, chamber, zRanges) {
+function buildFunctionalHousingGeometry(outer, pocket, plate, chamber, zRanges, otherChambers = []) {
   const positions = [];
 
   // Exterior: one closed rear cap, continuous perimeter wall, one top rim.
   addPlanarRegion(positions, outer, [], zRanges.floor[0], -1);
   addLoopWall(positions, outer, zRanges.floor[0], zRanges.chamber[1]);
-  addPlanarRegion(positions, outer, [chamber], zRanges.chamber[1], 1);
+  addPlanarRegion(positions, outer, [chamber, ...otherChambers], zRanges.chamber[1], 1);
+  for (const loop of otherChambers) {
+    addPlanarRegion(positions, loop, [], zRanges.chamber[0], 1);
+    addLoopWall(positions, loop, zRanges.chamber[0], zRanges.chamber[1], true);
+  }
 
   // Functional interior only. Each horizontal transition fills exactly
   // the material gained/lost as the cutout footprint changes with Z.
@@ -364,6 +382,7 @@ function analyzeHousingTopology(geometries, rearZ, expectedRearOuterLoops, toler
  * @param {object} housingProfile CLICKER_PROFILE.housing
  * @param {object|null} diagnostics populated with timing/topology details
  * @param {{x:number,y:number}|null} functionalCenter MX position shared with TOP
+ * @param {Array<Array<{x:number,y:number}>>} movingTopMMLoops Complete TOP structural footprint, including support extensions
  * @returns {THREE.BufferGeometry[]}
  */
 export function createHousingGeometries(
@@ -372,7 +391,8 @@ export function createHousingGeometries(
   scaleMultiplier,
   housingProfile,
   diagnostics = null,
-  functionalCenter = null
+  functionalCenter = null,
+  movingTopMMLoops = null
 ) {
   const totalStartedAt = performance.now();
   if (!outerLoops || outerLoops.length === 0 || !autoFit) return [];
@@ -549,6 +569,25 @@ export function createHousingGeometries(
     warnings.push("No housing outer region can contain the centered switch pocket; emitted a closed solid housing.");
   }
 
+  // Preserve the functional opening selected above, including local repairs.
+  // The moving footprint includes TOP's support extensions, not artwork alone.
+  const functionalChamberLoopMM = chamberLoop;
+  if (!movingTopMMLoops?.length) throw new Error("Complete moving TOP footprint is required for housing clearance");
+  const movingFootprint = movingTopMMLoops;
+  const chamberLoopsMM = unionMechanicalRegions([
+    ...offsetMechanicalLoops(movingFootprint, housingProfile.movingClearanceMM),
+    ...(chamberLoop ? [chamberLoop] : []),
+    // Retain the existing plate-repair envelope explicitly. A legacy
+    // candidate can have opposite winding after pixel-to-mm conversion.
+    translateLoop(roundedRectPolygon(plate.widthMM + 1, plate.depthMM + 1, plate.cornerRadiusMM, 6), cutoutCenter),
+  ]);
+  const enlargedOuter = offsetMechanicalLoops(chamberLoopsMM, housingProfile.wallThicknessMM);
+  housingOuterMMLoops.splice(0, housingOuterMMLoops.length, ...enlargedOuter);
+  functionalOuterIndex = housingOuterMMLoops.findIndex((outer) => containsMechanicalRegion([outer], pocketLoop));
+  chamberLoop = chamberLoopsMM.find((loop) => containsMechanicalRegion([loop], plateLoop));
+  if (functionalOuterIndex < 0 || !chamberLoop) throw new Error("Enlarged chamber must retain the switch opening");
+  chamberSource = "moving-top-clearance-union";
+
   const zRanges = {
     floor: [0, housingProfile.floorThicknessMM],
     pocket: [housingProfile.floorThicknessMM, plateZBottom],
@@ -558,16 +597,26 @@ export function createHousingGeometries(
 
   const meshBuildStartedAt = performance.now();
   const geometries = housingOuterMMLoops.map((outer, index) => {
+    const localChambers = chamberLoopsMM.filter((loop) => containsMechanicalRegion([outer], loop));
     if (index === functionalOuterIndex && chamberLoop) {
       return buildFunctionalHousingGeometry(
         outer,
         pocketLoop,
         plateLoop,
         chamberLoop,
-        zRanges
+        zRanges,
+        localChambers.filter((loop) => loop !== chamberLoop)
       );
     }
-    return buildSolidPrismGeometry(outer, 0, housingProfile.heightMM);
+    const positions = [];
+    addPlanarRegion(positions, outer, [], 0, -1);
+    addLoopWall(positions, outer, 0, housingProfile.heightMM);
+    addPlanarRegion(positions, outer, localChambers, housingProfile.heightMM, 1);
+    for (const loop of localChambers) {
+      addPlanarRegion(positions, loop, [], plateZTop, 1);
+      addLoopWall(positions, loop, plateZTop, housingProfile.heightMM, true);
+    }
+    return geometryFromPositions(positions);
   });
   const meshBuildMs = performance.now() - meshBuildStartedAt;
   const topology = analyzeHousingTopology(
@@ -586,7 +635,7 @@ export function createHousingGeometries(
       imageHolesIgnored,
       structuralOuterRegions: housingOuterMMLoops.length,
       chamberCandidates: chamberCandidatesMM.length,
-      chamberLoopsUsed: chamberLoop ? 1 : 0,
+      chamberLoopsUsed: chamberLoopsMM.length,
       chamberSource,
       functionalBlockExtended,
       functionalOuterIndex,
@@ -599,6 +648,8 @@ export function createHousingGeometries(
       // pocket/plate cutouts. Nothing in this file reads these fields
       // back; every existing consumer of `diagnostics` is unaffected.
       housingOuterMMLoops,
+      chamberLoopsMM,
+      functionalChamberLoopMM,
       pocketLoopMM: pocketLoop,
       plateLoopMM: plateLoop,
       zRanges,

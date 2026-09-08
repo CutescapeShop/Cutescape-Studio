@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
 import { loadClickerModules } from "../tools/clicker-test-modules.mjs";
 
 const modules = await loadClickerModules();
@@ -87,13 +86,10 @@ for (const [name, fixture] of Object.entries(fixtures)) {
 
   const diagnostics = {};
   const housing = modules["housing-geometry"].createHousingGeometries(fixture.loops, fit, 1,
-    profile.housing, diagnostics, boss.location);
-  const hash = createHash("sha256");
-  for (const geometry of housing) hash.update(Buffer.from(geometry.attributes.position.array.buffer));
-  assert.equal(hash.digest("hex"), fixture.baseline.housingHash, `${name}: HOUSING mesh unchanged`);
-  assert.equal(diagnostics.chamberSource, fixture.baseline.chamberSource);
+    profile.housing, diagnostics, boss.location, shell.outerMMLoops);
+  assert.equal(diagnostics.chamberSource, "moving-top-clearance-union");
   assert.equal(diagnostics.openEdges, 0);
   assert.equal(diagnostics.nonManifoldEdges, 0);
-  console.log(`${name}: reference boss/socket/depth matched; cavity ${(100 * cavityArea / outerArea).toFixed(1)}%; HOUSING unchanged`);
+  console.log(`${name}: reference boss/socket/depth matched; cavity ${(100 * cavityArea / outerArea).toFixed(1)}%; HOUSING closed`);
 }
 console.log(`TOP mechanics passed with Three.js ${modules.three.REVISION}`);
