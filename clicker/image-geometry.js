@@ -71,12 +71,16 @@ export function createAccentRegionGeometries(accentRegions, autoFit, scaleMultip
 
       const mmOuter = outer.map((p) => {
         const { mmX, mmY } = pxPointToMM(p, autoFit, scaleMultiplier);
-        return { x: mmX, y: mmY };
+        // Triangulate at the precision used by BufferGeometry and binary STL.
+        // Otherwise almost-collinear doubles can form cap triangles that
+        // collapse when their vertices are stored as Float32. This produces
+        // the same final boundary coordinates, including shared color edges.
+        return { x: Math.fround(mmX), y: Math.fround(mmY) };
       });
       const mmHoles = holes.map((hole) =>
         hole.map((p) => {
           const { mmX, mmY } = pxPointToMM(p, autoFit, scaleMultiplier);
-          return { x: mmX, y: mmY };
+          return { x: Math.fround(mmX), y: Math.fround(mmY) };
         })
       );
 

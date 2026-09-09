@@ -45,7 +45,13 @@ function nowMs() {
     : Date.now();
 }
 
-function buildShapeFromMMLoops(outer, holes) {
+function buildShapeFromMMLoops(outer, holes, float32Contours = false) {
+  // Prototype-only precision alignment; exact mode retains its original mesh.
+  if (float32Contours) {
+    const rounded = loop => loop.map(p => ({ x: Math.fround(p.x), y: Math.fround(p.y) }));
+    outer = rounded(outer);
+    holes = holes.map(rounded);
+  }
   const shape = new THREE.Shape();
   outer.forEach((p, i) => {
     if (i === 0) shape.moveTo(p.x, p.y);
@@ -297,7 +303,7 @@ function getCachedInsetCavities(outerLoop, mmOuter, autoFit, scaleMultiplier, wa
  * @param {number} thicknessMM mm
  * @returns {THREE.BufferGeometry[]}
  */
-export function createTopBaseGeometries(outerLoops, autoFit, scaleMultiplier, zOffset, thicknessMM) {
+export function createTopBaseGeometries(outerLoops, autoFit, scaleMultiplier, zOffset, thicknessMM, float32Contours = false) {
   if (!outerLoops || outerLoops.length === 0 || !autoFit) return [];
 
   const shapes = groupLoopsIntoShapes(outerLoops);
@@ -317,7 +323,7 @@ export function createTopBaseGeometries(outerLoops, autoFit, scaleMultiplier, zO
       })
     );
 
-    const shape = buildShapeFromMMLoops(mmOuter, mmHoles);
+    const shape = buildShapeFromMMLoops(mmOuter, mmHoles, float32Contours);
     const geometry = new THREE.ExtrudeGeometry(shape, {
       depth: Math.max(0.05, thicknessMM),
       bevelEnabled: false,
@@ -341,7 +347,7 @@ export function createTopBaseGeometries(outerLoops, autoFit, scaleMultiplier, zO
  * @param {number} transitionThicknessMM mm
  * @returns {THREE.BufferGeometry[]}
  */
-export function createTopTransitionGeometries(outerLoops, autoFit, scaleMultiplier, transitionThicknessMM, structuralMMLoops = null) {
+export function createTopTransitionGeometries(outerLoops, autoFit, scaleMultiplier, transitionThicknessMM, structuralMMLoops = null, float32Contours = false) {
   if (!outerLoops || outerLoops.length === 0 || !autoFit) return [];
 
   const shapes = structuralMMLoops
@@ -357,7 +363,7 @@ export function createTopTransitionGeometries(outerLoops, autoFit, scaleMultipli
     // not carry artwork/alpha holes into it: those openings belong to
     // the visible front layer only. Preserving them here would punch
     // through the TOP and expose the socket boss from the front.
-    const shape = buildShapeFromMMLoops(mmOuter, []);
+    const shape = buildShapeFromMMLoops(mmOuter, [], float32Contours);
     const geometry = new THREE.ExtrudeGeometry(shape, {
       depth: Math.max(0.05, transitionThicknessMM),
       bevelEnabled: false,
@@ -379,7 +385,9 @@ export function createTopRearShellGeometries(
   bodyDepthMM,
   backingThicknessMM,
   cavityProfile,
-  topSocketProfile = null
+  topSocketProfile = null,
+  placementOverride = null,
+  float32Contours = false
 ) {
   if (!outerLoops || outerLoops.length === 0 || !autoFit) {
     return { geometries: [], outerMMLoops: [], cavityLoops: [], diagnostics: null, warnings: ["No outer silhouette"] };
@@ -430,7 +438,7 @@ export function createTopRearShellGeometries(
   const placementClearRadius = placement?.cavityClearRadiusMM ?? 2.3125;
   // Use the old placement inputs even when the recovered cavity is larger.
   // This preserves the functional center consumed by HOUSING and exports.
-  const pedestalLocation = findPedestalLocation(outerMMLoops, placementCavities,
+  const pedestalLocation = placementOverride ? { ...placementOverride } : findPedestalLocation(outerMMLoops, placementCavities,
     placementRadius, placementClearRadius, cavityProfile.minimumWallMM);
 
   diagnostics.minimumBossReliefAdded = false;
@@ -481,7 +489,7 @@ export function createTopRearShellGeometries(
   const geometries = [];
   outerMMLoops.forEach((mmOuter, index) => {
     const chosenCavity = perShapeCavity[index] || (index === fallbackShapeIndex ? fallbackCavity : null);
-    const shape = buildShapeFromMMLoops(mmOuter, chosenCavity ? [chosenCavity] : []);
+    const shape = buildShapeFromMMLoops(mmOuter, chosenCavity ? [chosenCavity] : [], float32Contours);
     const extrusionStartedAt = nowMs();
     const geometry = new THREE.ExtrudeGeometry(shape, {
       depth: Math.max(0.05, bodyDepthMM),

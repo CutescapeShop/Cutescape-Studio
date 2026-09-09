@@ -392,7 +392,8 @@ export function createHousingGeometries(
   housingProfile,
   diagnostics = null,
   functionalCenter = null,
-  movingTopMMLoops = null
+  movingTopMMLoops = null,
+  float32Contours = false
 ) {
   const totalStartedAt = performance.now();
   if (!outerLoops || outerLoops.length === 0 || !autoFit) return [];
@@ -596,23 +597,28 @@ export function createHousingGeometries(
   };
 
   const meshBuildStartedAt = performance.now();
+  // Quantize only the prototype's mesh inputs, never its dimensional model.
+  // This matches final STL precision before cap triangulation so tiny bridge
+  // triangles cannot collapse later. Exact-silhouette geometry is unchanged.
+  const meshLoop = loop => float32Contours
+    ? loop.map(p => ({ x: Math.fround(p.x), y: Math.fround(p.y) })) : loop;
   const geometries = housingOuterMMLoops.map((outer, index) => {
     const localChambers = chamberLoopsMM.filter((loop) => containsMechanicalRegion([outer], loop));
     if (index === functionalOuterIndex && chamberLoop) {
       return buildFunctionalHousingGeometry(
-        outer,
-        pocketLoop,
-        plateLoop,
-        chamberLoop,
+        meshLoop(outer),
+        meshLoop(pocketLoop),
+        meshLoop(plateLoop),
+        meshLoop(chamberLoop),
         zRanges,
-        localChambers.filter((loop) => loop !== chamberLoop)
+        localChambers.filter((loop) => loop !== chamberLoop).map(meshLoop)
       );
     }
     const positions = [];
-    addPlanarRegion(positions, outer, [], 0, -1);
-    addLoopWall(positions, outer, 0, housingProfile.heightMM);
-    addPlanarRegion(positions, outer, localChambers, housingProfile.heightMM, 1);
-    for (const loop of localChambers) {
+    addPlanarRegion(positions, meshLoop(outer), [], 0, -1);
+    addLoopWall(positions, meshLoop(outer), 0, housingProfile.heightMM);
+    addPlanarRegion(positions, meshLoop(outer), localChambers.map(meshLoop), housingProfile.heightMM, 1);
+    for (const loop of localChambers.map(meshLoop)) {
       addPlanarRegion(positions, loop, [], plateZTop, 1);
       addLoopWall(positions, loop, plateZTop, housingProfile.heightMM, true);
     }

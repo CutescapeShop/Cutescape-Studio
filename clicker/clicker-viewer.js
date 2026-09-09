@@ -57,6 +57,7 @@ import {
 import { createAccentRegionGeometries } from "./image-geometry.js";
 import { createHousingGeometries } from "./housing-geometry.js?v=housing-floor-v4";
 import { createKeychainLoopGeometry } from "./keychain-loop.js";
+import { smoothBorderPrototype } from "./border-prototype.js";
 import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
 
 // Same window.t() TH/EN mechanism as clicker-ui.js / i18n.js — see the
@@ -275,6 +276,9 @@ function init() {
   // computed once from the outer silhouette whenever it (or the scale
   // slider) changes.
   let currentAutoFit = null;
+  let structuralLoops = null;
+  const borderPrototype = document.getElementById("clickerBorderPrototype");
+  borderPrototype?.addEventListener("change", () => rebuildAll());
   let topGeometryWarning = null;
   let topGeometryDiagnostics = null;
   let movingTopMMLoops = null;
@@ -368,6 +372,8 @@ function init() {
       state.sizeMM,
       state.sizeMM
     );
+    structuralLoops = borderPrototype?.value === "border"
+      ? smoothBorderPrototype(state.outerLoops, currentAutoFit.scale) : state.outerLoops;
     updatePreviewLayout();
   }
 
@@ -391,11 +397,12 @@ function init() {
     // TOP ARTWORK — unchanged call, unchanged position/scale.
     const artworkStartedAt = performance.now();
     const topBaseGeometries = createTopBaseGeometries(
-      state.outerLoops,
+      structuralLoops,
       currentAutoFit,
       FIXED_CLICKER_SCALE_MULTIPLIER,
       0,
-      CLICKER_PROFILE.topBase.thicknessMM
+      CLICKER_PROFILE.topBase.thicknessMM,
+      structuralLoops !== state.outerLoops
     );
     for (const geom of topBaseGeometries) {
       topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
@@ -404,8 +411,18 @@ function init() {
 
     // Rear shell uses every substantial inset loop. Cavity topology
     // never controls whether the shell itself is returned.
+    // Keep the existing switch/boss XY placement in both presentation modes.
+    let prototypePlacement = null;
+    if (structuralLoops !== state.outerLoops) {
+      const original = createTopRearShellGeometries(state.outerLoops, currentAutoFit,
+        FIXED_CLICKER_SCALE_MULTIPLIER, CLICKER_PROFILE.topShell.bodyDepthMM,
+        CLICKER_PROFILE.topShell.transitionThicknessMM, CLICKER_PROFILE.topShell,
+        CLICKER_PROFILE.topSocket);
+      prototypePlacement = original.pedestalLocation;
+      original.geometries.forEach(geometry => geometry.dispose());
+    }
     const shellResult = createTopRearShellGeometries(
-      state.outerLoops,
+      structuralLoops,
       currentAutoFit,
       FIXED_CLICKER_SCALE_MULTIPLIER,
       CLICKER_PROFILE.topShell.bodyDepthMM,
@@ -415,13 +432,16 @@ function init() {
         bossKeepOutMM: CLICKER_PROFILE.topShell.bossKeepOutMM,
         switchPlacement: CLICKER_PROFILE.topShell.switchPlacement,
       },
-      CLICKER_PROFILE.topSocket
+      CLICKER_PROFILE.topSocket,
+      prototypePlacement,
+      structuralLoops !== state.outerLoops
     );
     const backingStartedAt = performance.now();
     const transitionGeometries = createTopTransitionGeometries(
-      state.outerLoops, currentAutoFit, FIXED_CLICKER_SCALE_MULTIPLIER,
+      structuralLoops, currentAutoFit, FIXED_CLICKER_SCALE_MULTIPLIER,
       CLICKER_PROFILE.topShell.transitionThicknessMM,
-      shellResult.diagnostics?.structuralExtension ? shellResult.outerMMLoops : null
+      shellResult.diagnostics?.structuralExtension ? shellResult.outerMMLoops : null,
+      structuralLoops !== state.outerLoops
     );
     for (const geom of transitionGeometries) topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
     timings.backingExtrusionMs = performance.now() - backingStartedAt;
@@ -516,13 +536,14 @@ function init() {
 
     const housingStageTimings = {};
     const housingGeometries = createHousingGeometries(
-      state.outerLoops,
+      structuralLoops,
       currentAutoFit,
       FIXED_CLICKER_SCALE_MULTIPLIER,
       CLICKER_PROFILE.housing,
       housingStageTimings,
       topGeometryDiagnostics?.pedestalLocation || null,
-      movingTopMMLoops
+      movingTopMMLoops,
+      structuralLoops !== state.outerLoops
     );
     for (const geom of housingGeometries) {
       housingGroup.add(new THREE.Mesh(geom, housingMaterial));
