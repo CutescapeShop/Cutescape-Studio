@@ -133,7 +133,9 @@
       "clicker.loadDesign.notFound": "ไม่พบแบบรหัสนี้",
       "clicker.loadDesign.wrongProduct": "รหัสนี้ไม่ใช่แบบ Clicker",
       "clicker.loadDesign.loadSuccess": "โหลดแบบ {id} สำเร็จ",
-      "clicker.loadDesign.loadFailed": "โหลดแบบไม่สำเร็จ: {error}"
+      "clicker.loadDesign.loadFailed": "โหลดแบบไม่สำเร็จ: {error}",
+
+      "clicker.export3mf.button": "ส่งออก 3MF (TOP + ACCENT + HOUSING)"
     },
 
     en: {
@@ -258,7 +260,9 @@
       "clicker.loadDesign.notFound": "Design not found",
       "clicker.loadDesign.wrongProduct": "This code is not a Clicker design",
       "clicker.loadDesign.loadSuccess": "Design {id} loaded successfully",
-      "clicker.loadDesign.loadFailed": "Failed to load design: {error}"
+      "clicker.loadDesign.loadFailed": "Failed to load design: {error}",
+
+      "clicker.export3mf.button": "Export 3MF (TOP + ACCENT + HOUSING)"
     }
   };
 

@@ -60,6 +60,7 @@ import { createKeychainLoopGeometry } from "./keychain-loop.js";
 import { smoothBorderPrototype } from "./border-prototype.js";
 import { createBorderMaterial } from "./border-material.js";
 import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
+import { build3MF } from "./mf3-exporter.js";
 
 // Same window.t() TH/EN mechanism as clicker-ui.js / i18n.js — see the
 // comment on the identical helper there.
@@ -73,6 +74,7 @@ function ct(key, vars, fallback) {
 const viewerEl = document.getElementById("clickerViewer3D");
 
 const exportButton = document.getElementById("clickerExportButton");
+const export3MFButton = document.getElementById("clickerExport3MFButton");
 const exportStatus = document.getElementById("clickerExportStatus");
 
 const housingColorGrid = document.getElementById("clickerHousingColorGrid");
@@ -927,15 +929,15 @@ function init() {
   };
 
 
-  // ---------------- Export: CLICKER_TOP_BASE.stl + CLICKER_ACCENT_N.stl + CLICKER_HOUSING.stl ----------------
+  // ---------------- Export: shared group-gathering (STL + 3MF both use this) ----------------
+  //
+  // Both the STL export below and the 3MF export further down consume the
+  // EXACT SAME baked meshes — this function is the one and only place that
+  // walks topGroup/accentGroup/housingGroup and bakes out the exploded/
+  // assembled preview transform. Neither export format re-derives or
+  // reinterprets geometry; they only serialize whatever this returns.
 
-  exportButton.addEventListener("click", function () {
-    if (!state.outerLoops || state.outerLoops.length === 0) {
-      if (exportStatus) exportStatus.textContent = "กรุณาอัปโหลดรูปก่อน export";
-      return;
-    }
-
-    const exporter = new STLExporter();
+  function gatherExportGroups() {
     productGroup.updateMatrixWorld(true);
 
     const topExportGroup = new THREE.Group();
@@ -948,12 +950,13 @@ function init() {
 
       root.traverse(function (object) {
         if (!object.isMesh) return;
-        // Disabled raised regions must be absent from the printable STL too.
+        // Disabled raised regions must be absent from the printable output too.
         if (kind === "accent" && !object.visible) return;
 
         // Keep child-local modeling transforms, but cancel the logical
         // root transform used only for the exploded preview. This makes
-        // STL coordinates identical whether preview separation is on or off.
+        // exported coordinates identical whether preview separation is on
+        // or off — same for STL and 3MF.
         const exportMatrix = new THREE.Matrix4().multiplyMatrices(
           rootInverse,
           object.matrixWorld
@@ -979,6 +982,21 @@ function init() {
     traverseExportRoot(topGroup, "top");
     traverseExportRoot(accentGroup, "accent");
     traverseExportRoot(housingGroup, "housing");
+
+    return { topExportGroup, housingExportGroup, accentExportGroupsByColor };
+  }
+
+
+  // ---------------- Export: CLICKER_TOP_BASE.stl + CLICKER_ACCENT_N.stl + CLICKER_HOUSING.stl ----------------
+
+  exportButton.addEventListener("click", function () {
+    if (!state.outerLoops || state.outerLoops.length === 0) {
+      if (exportStatus) exportStatus.textContent = "กรุณาอัปโหลดรูปก่อน export";
+      return;
+    }
+
+    const exporter = new STLExporter();
+    const { topExportGroup, housingExportGroup, accentExportGroupsByColor } = gatherExportGroups();
 
     function downloadSTL(group, filename) {
       const data = exporter.parse(group, { binary: true });
@@ -1016,6 +1034,102 @@ function init() {
         ? ` + ${accentExportGroupsByColor.size} ACCENT (${colorList})`
         : "";
       exportStatus.textContent = `Export แล้ว: CLICKER_TOP_BASE.stl${accentNote} + CLICKER_HOUSING.stl`;
+    }
+  });
+
+
+  // ---------------- Export: CLICKER.3mf (standard 3MF Core Spec — one file, ----------------
+  // ---------------- separate named objects, base-material color hints)    ----------------
+  //
+  // No Bambu-proprietary project metadata, no AMS slot assignment — see
+  // the "IMPORTANT BORDER LIMITATION" note below. Geometry comes ONLY from
+  // gatherExportGroups() above, identical to the STL path.
+
+  // Flattens one export group's mesh(es) into a single combined vertex/
+  // triangle list, in the same per-mesh traversal order and matrixWorld-
+  // baked-coordinate approach STLExporter itself uses — this is pure
+  // format conversion of the already-final geometry, not a re-derivation.
+  function collectTriangles(group) {
+    const vertices = [];
+    const triangles = [];
+    const v = new THREE.Vector3();
+
+    group.updateMatrixWorld(true);
+    group.traverse(function (object) {
+      if (!object.isMesh) return;
+      const geometry = object.geometry;
+      const index = geometry.index;
+      const positionAttribute = geometry.getAttribute("position");
+      if (!positionAttribute) return;
+
+      const vertexOffset = vertices.length;
+      for (let i = 0; i < positionAttribute.count; i++) {
+        v.fromBufferAttribute(positionAttribute, i).applyMatrix4(object.matrixWorld);
+        vertices.push([v.x, v.y, v.z]);
+      }
+
+      const triCount = index ? index.count / 3 : positionAttribute.count / 3;
+      for (let i = 0; i < triCount; i++) {
+        const a = index ? index.getX(i * 3) : i * 3;
+        const b = index ? index.getX(i * 3 + 1) : i * 3 + 1;
+        const c = index ? index.getX(i * 3 + 2) : i * 3 + 2;
+        triangles.push([vertexOffset + a, vertexOffset + b, vertexOffset + c]);
+      }
+    });
+
+    return { vertices, triangles };
+  }
+
+  function addExportObject(objects, name, colorHex, group) {
+    const { vertices, triangles } = collectTriangles(group);
+    if (triangles.length === 0) return; // e.g. no accent regions at all
+    objects.push({ name, colorHex, vertices, triangles });
+  }
+
+  export3MFButton?.addEventListener("click", function () {
+    if (!state.outerLoops || state.outerLoops.length === 0) {
+      if (exportStatus) exportStatus.textContent = "กรุณาอัปโหลดรูปก่อน export";
+      return;
+    }
+
+    const { topExportGroup, housingExportGroup, accentExportGroupsByColor } = gatherExportGroups();
+
+    const objects = [];
+
+    // TOP_BASE — ALWAYS the flat topBaseMaterial color, even when Smooth
+    // Border is on. The border's on-canvas appearance is a per-fragment
+    // shader mix (see border-material.js), not a uniform material color,
+    // so it has no valid single 3MF color hint. Per the audited plan, we
+    // deliberately do NOT split TOP_BASE by the border mask to work around
+    // this — the border geometry/material itself is completely untouched
+    // here; only the 3MF color HINT falls back to the plain TOP_BASE color.
+    addExportObject(objects, "TOP_BASE", "#" + topBaseMaterial.color.getHexString(), topExportGroup);
+
+    let accentIndex = 1;
+    for (const [hex, group] of accentExportGroupsByColor) {
+      addExportObject(objects, `ACCENT_${accentIndex}`, hex, group);
+      accentIndex++;
+    }
+
+    // HOUSING already includes the keychain-loop mesh when enabled — it's
+    // added directly into housingGroup by rebuildKeychainLoop() and shares
+    // housingMaterial, so gatherExportGroups() picks it up automatically,
+    // exactly as the STL export already does.
+    addExportObject(objects, "HOUSING", "#" + housingMaterial.color.getHexString(), housingExportGroup);
+
+    const data = build3MF(objects);
+    const blob = new Blob([data], { type: "model/3mf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "CLICKER.3mf";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    if (exportStatus) {
+      exportStatus.textContent = `Export 3MF แล้ว: CLICKER.3mf (${objects.map((o) => o.name).join(", ")})`;
     }
   });
 }

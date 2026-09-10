@@ -224,6 +224,7 @@ const clickerShopModeTab = document.querySelector('[data-clicker-mode="shop"]');
 const clickerModeTabsWrap = document.getElementById("clickerModeTabsWrap");
 const clickerLoadDesignFieldEl = document.getElementById("clickerLoadDesignField");
 const clickerStlExportButton = document.getElementById("clickerExportButton");
+const clicker3MFExportButton = document.getElementById("clickerExport3MFButton");
 const clickerSendDesignButtonEl = document.getElementById("clickerSendDesignButton");
 const clickerDesignIdResultEl = document.getElementById("clickerDesignIdResult");
 
@@ -244,6 +245,10 @@ function setClickerMode(mode) {
 
   if (clickerStlExportButton) {
     clickerStlExportButton.hidden = !isShop;
+  }
+
+  if (clicker3MFExportButton) {
+    clicker3MFExportButton.hidden = !isShop;
   }
 
   if (clickerSendDesignButtonEl) {
