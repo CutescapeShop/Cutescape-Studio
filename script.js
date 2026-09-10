@@ -176,7 +176,7 @@ if (shopModeTab) {
 }
 
 if (nameModeTabsWrap) {
-  nameModeTabsWrap.style.display = isShopUrl ? "flex" : "none";
+  nameModeTabsWrap.style.display = "none";
 }
 
 function setNameMode(mode) {
@@ -209,7 +209,7 @@ nameModeTabs.forEach(function (tab) {
   });
 });
 
-setNameMode("customer");
+setNameMode(isShopUrl ? "shop" : "customer");
 
 
 // =====================================
@@ -233,7 +233,7 @@ if (clickerShopModeTab) {
 }
 
 if (clickerModeTabsWrap) {
-  clickerModeTabsWrap.style.display = isShopUrl ? "flex" : "none";
+  clickerModeTabsWrap.style.display = "none";
 }
 
 function setClickerMode(mode) {
@@ -270,7 +270,7 @@ clickerModeTabs.forEach(function (tab) {
   });
 });
 
-setClickerMode("customer");
+setClickerMode(isShopUrl ? "shop" : "customer");
 
 
 // =====================================
