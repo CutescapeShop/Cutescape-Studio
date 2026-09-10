@@ -244,6 +244,7 @@ function init() {
     // rows). Display/material only — never affects which regions exist,
     // their shape, or the dominant-color selection itself.
     colorOverrides: {},
+    disabledColors: new Set(),
     // Optional keychain loop — attaches to HOUSING only (see
     // stem-profile.js's keychainLoop section for why). Populated after
     // every rebuildHousing() with the exact final boundary/cutout loops
@@ -531,7 +532,10 @@ function init() {
       });
       accentMaterialsBySourceHex.set(colorHex, material);
       for (const geom of geometries) {
-        accentGroup.add(new THREE.Mesh(geom, material));
+        const mesh = new THREE.Mesh(geom, material);
+        mesh.userData.sourceHex = colorHex;
+        mesh.visible = !state.disabledColors.has(colorHex);
+        accentGroup.add(mesh);
       }
     }
     return performance.now() - startedAt;
@@ -670,6 +674,7 @@ function init() {
     state.outerLoops = nextLoops;
     state.colorRegions = nextColors;
     state.colorOverrides = (result && result.colorOverrides) || {};
+    state.disabledColors = new Set(result?.disabledColors || []);
     state.sizeMM = Math.max(CLICKER_PROFILE.body.minSizeMM, Math.min(CLICKER_PROFILE.body.maxSizeMM,
       Number(result?.sizeMM) || CLICKER_PROFILE.body.targetSize));
     state.silhouetteKey = nextSilhouetteKey;
@@ -699,6 +704,15 @@ function init() {
   window.onClickerColorOverrideChange = function (overrides) {
     state.colorOverrides = overrides || {};
     applyColorOverrides();
+  };
+
+  // Keep the already-built regions intact so enabling restores the exact mesh.
+  // Only accents participate; the dominant TOP_BASE and mechanics stay present.
+  window.onClickerRegionSelectionChange = function (disabledColors) {
+    state.disabledColors = new Set(disabledColors || []);
+    for (const mesh of accentGroup.children) {
+      mesh.visible = !state.disabledColors.has(mesh.userData.sourceHex);
+    }
   };
 
 
@@ -837,6 +851,8 @@ function init() {
 
       root.traverse(function (object) {
         if (!object.isMesh) return;
+        // Disabled raised regions must be absent from the printable STL too.
+        if (kind === "accent" && !object.visible) return;
 
         // Keep child-local modeling transforms, but cancel the logical
         // root transform used only for the exploded preview. This makes

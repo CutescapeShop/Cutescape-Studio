@@ -104,6 +104,7 @@ function init() {
     // hits and slider tweaks that don't change detection. Display-only:
     // never fed back into detection/segmentation/geometry.
     colorOverrides: new Map(),
+    disabledColors: new Set(),
     lastColorRegions: null,
   };
 
@@ -275,6 +276,21 @@ function init() {
         openTopColorPalette(target, region);
       });
 
+      if (region.sourceHex !== colorRegions.dominantColorHex) {
+        const enabled = document.createElement("input");
+        enabled.type = "checkbox";
+        enabled.checked = !state.disabledColors.has(region.sourceHex);
+        enabled.setAttribute("aria-label", `Enable ${region.label}`);
+        enabled.addEventListener("change", () => {
+          if (enabled.checked) state.disabledColors.delete(region.sourceHex);
+          else state.disabledColors.add(region.sourceHex);
+          target.disabled = !enabled.checked;
+          closeColorPalette();
+          window.onClickerRegionSelectionChange?.([...state.disabledColors]);
+        });
+        target.disabled = !enabled.checked;
+        row.appendChild(enabled);
+      }
       row.appendChild(label);
       row.appendChild(source);
       row.appendChild(arrow);
@@ -578,6 +594,7 @@ function runPipeline(state) {
       // User-chosen print colors, keyed by detected hex. The viewer
       // applies these to materials only — never to geometry.
       colorOverrides: Object.fromEntries(state.colorOverrides),
+      disabledColors: [...state.disabledColors],
       sizeMM,
       geometryKey: `${silhouetteKey}|size:${sizeMM}`,
       silhouetteKey,
