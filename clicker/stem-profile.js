@@ -187,7 +187,7 @@ export const CLICKER_PROFILE = {
     colorCount: {
       default: 4,
       min: 2,
-      max: 6,
+      max: 16,
     },
   },
 
