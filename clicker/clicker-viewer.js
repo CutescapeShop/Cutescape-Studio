@@ -836,6 +836,7 @@ function init() {
 
     housingCustomInput = document.createElement("input");
     housingCustomInput.type = "color";
+    housingCustomInput.id = "clickerHousingColor";
     housingCustomInput.className = "color-palette-swatch housing-color-custom-input";
     housingCustomInput.title = ct("clicker.customColor", null, "กำหนดเอง");
     housingCustomInput.setAttribute("aria-label", ct("clicker.baseColor.customAriaLabel", null, "กำหนดสีฐานเอง"));
@@ -904,6 +905,26 @@ function init() {
     updateKeychainLoopRotateAriaLabels();
     updateKeychainLoopStatus();
   });
+
+  // Exposed for the Shop/Admin design loader (clicker-shop-loader.js) —
+  // thin setters that drive the exact toggle/rebuild each matching control
+  // already uses (clicking borderPrototype/keychainLoopToggleButton,
+  // calling rebuildKeychainLoop()), so restoring a saved design never
+  // bypasses or duplicates any locked geometry/material logic.
+  window.setClickerBorderEnabled = function (enabled) {
+    const isEnabled = borderPrototype?.value === "border";
+    if (!!enabled !== isEnabled) borderPrototype?.click();
+  };
+
+  window.setClickerKeychainLoopEnabled = function (enabled) {
+    if (!!enabled !== state.keychainLoopEnabled) keychainLoopToggleButton?.click();
+  };
+
+  window.setClickerKeychainLoopAngleDeg = function (deg) {
+    const normalized = ((Number(deg) % 360) + 360) % 360;
+    state.keychainLoopAngleDeg = normalized;
+    rebuildKeychainLoop();
+  };
 
 
   // ---------------- Export: CLICKER_TOP_BASE.stl + CLICKER_ACCENT_N.stl + CLICKER_HOUSING.stl ----------------

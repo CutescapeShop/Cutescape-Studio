@@ -562,6 +562,28 @@
       <aside class="panel">
         <h2 data-i18n="clicker.heading">สร้าง Clicker จากรูปของคุณ</h2>
 
+        <div class="name-mode-tabs" id="clickerModeTabsWrap" style="display:flex; gap:8px; margin-bottom:16px;">
+          <button type="button" data-clicker-mode="customer" style="flex:1;">Customer Mode</button>
+          <button type="button" data-clicker-mode="shop" style="flex:1;">Shop Mode</button>
+        </div>
+
+        <div class="field load-design-field" id="clickerLoadDesignField" hidden>
+          <label for="clickerLoadDesignInput" data-i18n="clicker.loadDesign.label">โหลดแบบ Clicker ด้วยรหัส (สำหรับร้าน)</label>
+          <div style="display:flex; gap:8px;">
+            <input
+              id="clickerLoadDesignInput"
+              type="text"
+              placeholder="เช่น CLK0910-XXXX"
+              data-i18n-placeholder="clicker.loadDesign.placeholder"
+              autocomplete="off"
+              style="flex:1;"
+            >
+            <button type="button" id="clickerLoadDesignButton" data-i18n="clicker.loadDesign.button">เปิดแบบ</button>
+          </div>
+          <p class="clicker-debug-info" id="clickerLoadDesignStatus"></p>
+          <img id="clickerLoadDesignPreviewImage" alt="" hidden>
+        </div>
+
         <div class="field">
           <label for="clickerFileInput" data-i18n="clicker.step1.selectImage">1. อัปโหลดรูป</label>
           <div class="clicker-file-input-row">
@@ -775,6 +797,7 @@
 <script type="module" src="clicker/clicker-ui.js"></script>
 <script type="module" src="clicker/clicker-viewer.js?v=housing-floor-v4"></script>
 <script type="module" src="clicker/clicker-design-handoff.js"></script>
+<script type="module" src="clicker/clicker-shop-loader.js"></script>
 
 </body>
 </html>

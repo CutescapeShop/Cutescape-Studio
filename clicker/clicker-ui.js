@@ -440,6 +440,48 @@ function init() {
         : CLICKER_PROFILE.accent.colorCount.default,
     };
   };
+
+  // Exposed for the Shop/Admin design loader (clicker-shop-loader.js) —
+  // restores previously-saved per-region choices onto whatever regions the
+  // pipeline just (re)detected from the same image/settings. Mirrors
+  // exactly what clicking a swatch / unchecking a region's enable checkbox
+  // already does (applyColorSelection / the checkbox "change" handler in
+  // renderColorRegionRows below), just driven from saved data.
+  window.setClickerColorOverrides = function (overrides) {
+    state.colorOverrides = new Map(Object.entries(overrides || {}));
+    renderColorRegionRows();
+    notifyColorOverrideChange();
+  };
+
+  window.setClickerDisabledColors = function (disabledColors) {
+    state.disabledColors = new Set(disabledColors || []);
+    renderColorRegionRows();
+    window.onClickerRegionSelectionChange?.([...state.disabledColors]);
+  };
+
+  // Loads a previously-saved source image (a data URL, from a Clicker
+  // handoff payload) through the EXACT same downscale + pipeline path the
+  // customer's own file-input upload uses (see the fileInput "change"
+  // handler above) — just driven from a data URL instead of a File.
+  // Resolves once this run's pipeline has actually finished, so the caller
+  // can safely apply color overrides / disabled regions right after.
+  window.setClickerSourceImage = function (dataURL) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const { imageData } = getImageDataFromImage(img, 512);
+        state.imageData = imageData;
+        state.imageKey = fingerprintImageData(imageData);
+        if (emptyState) emptyState.style.display = "none";
+        if (canvasRow) canvasRow.style.display = "flex";
+        drawOriginal(imageData);
+        runPipelineNow();
+        resolve();
+      };
+      img.onerror = reject;
+      img.src = dataURL;
+    });
+  };
 }
 
 function updateFileInputNameLabel() {

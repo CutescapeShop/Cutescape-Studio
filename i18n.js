@@ -122,7 +122,18 @@
       "clicker.sendDesign.tellStaff": "กรุณาแจ้งรหัสนี้กับพนักงาน",
       "clicker.sendDesign.notReady": "กรุณาอัปโหลดรูปก่อนส่งแบบให้ร้าน",
       "clicker.sendDesign.saveSystemNotReady": "ระบบบันทึกแบบยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง",
-      "clicker.sendDesign.error": "บันทึกแบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+      "clicker.sendDesign.error": "บันทึกแบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+
+      "clicker.loadDesign.label": "โหลดแบบ Clicker ด้วยรหัส (สำหรับร้าน)",
+      "clicker.loadDesign.placeholder": "เช่น CLK0910-XXXX",
+      "clicker.loadDesign.button": "เปิดแบบ",
+      "clicker.loadDesign.enterCode": "กรุณาใส่รหัสแบบ",
+      "clicker.loadDesign.loadSystemNotReady": "ระบบโหลดแบบยังไม่พร้อมใช้งาน",
+      "clicker.loadDesign.loading": "กำลังโหลด...",
+      "clicker.loadDesign.notFound": "ไม่พบแบบรหัสนี้",
+      "clicker.loadDesign.wrongProduct": "รหัสนี้ไม่ใช่แบบ Clicker",
+      "clicker.loadDesign.loadSuccess": "โหลดแบบ {id} สำเร็จ",
+      "clicker.loadDesign.loadFailed": "โหลดแบบไม่สำเร็จ: {error}"
     },
 
     en: {
@@ -236,7 +247,18 @@
       "clicker.sendDesign.tellStaff": "Please give this code to our staff.",
       "clicker.sendDesign.notReady": "Please upload a photo before sending to the shop",
       "clicker.sendDesign.saveSystemNotReady": "Save system is not ready yet. Please try again.",
-      "clicker.sendDesign.error": "Failed to save design. Please try again."
+      "clicker.sendDesign.error": "Failed to save design. Please try again.",
+
+      "clicker.loadDesign.label": "Load a Clicker Design by Code (Shop)",
+      "clicker.loadDesign.placeholder": "e.g. CLK0910-XXXX",
+      "clicker.loadDesign.button": "Load Design",
+      "clicker.loadDesign.enterCode": "Please enter a design code",
+      "clicker.loadDesign.loadSystemNotReady": "Load system is not ready yet",
+      "clicker.loadDesign.loading": "Loading...",
+      "clicker.loadDesign.notFound": "Design not found",
+      "clicker.loadDesign.wrongProduct": "This code is not a Clicker design",
+      "clicker.loadDesign.loadSuccess": "Design {id} loaded successfully",
+      "clicker.loadDesign.loadFailed": "Failed to load design: {error}"
     }
   };
 

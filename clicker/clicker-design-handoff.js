@@ -55,6 +55,16 @@ function init() {
     return designId;
   }
 
+  // Realtime Database object keys can't contain "#" (or ".", "$", "/",
+  // "[", "]") — colorOverrides is keyed by detected hex ("#rrggbb"), so
+  // strip the leading "#" for storage. clicker-shop-loader.js adds it
+  // back before calling window.setClickerColorOverrides.
+  function stripHashKeys(obj) {
+    return Object.fromEntries(
+      Object.entries(obj || {}).map(([hex, value]) => [hex.replace(/^#/, ""), value])
+    );
+  }
+
   // Everything needed to reopen and reproduce this exact Clicker design —
   // NOT the printable STL/geometry itself, just the same inputs the
   // customer's own browser used to build it (source image + pipeline
@@ -88,7 +98,11 @@ function init() {
       colorCount: pipelineConfig.colorCount,
 
       // Per-region print-color choices + which accent regions are enabled.
-      colorOverrides: viewerConfig.colorOverrides,
+      // Realtime Database object keys can't contain "#", so detected-hex
+      // keys are stored without their leading "#" (values are untouched —
+      // only object KEYS hit this restriction). clicker-shop-loader.js
+      // reverses this on load.
+      colorOverrides: stripHashKeys(viewerConfig.colorOverrides),
       disabledColors: viewerConfig.disabledColors,
 
       // Base (housing) color.

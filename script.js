@@ -213,6 +213,62 @@ setNameMode("customer");
 
 
 // =====================================
+// Customer Mode / Shop Mode (Clicker) — same isShopUrl gate and
+// customer/shop toggle pattern as Name Keychain above, applied to
+// Clicker's own controls (clicker/clicker-shop-loader.js owns the actual
+// saved-design loading/reconstruction logic).
+// =====================================
+
+const clickerModeTabs = document.querySelectorAll("[data-clicker-mode]");
+const clickerShopModeTab = document.querySelector('[data-clicker-mode="shop"]');
+const clickerModeTabsWrap = document.getElementById("clickerModeTabsWrap");
+const clickerLoadDesignFieldEl = document.getElementById("clickerLoadDesignField");
+const clickerStlExportButton = document.getElementById("clickerExportButton");
+const clickerSendDesignButtonEl = document.getElementById("clickerSendDesignButton");
+const clickerDesignIdResultEl = document.getElementById("clickerDesignIdResult");
+
+if (clickerShopModeTab) {
+  clickerShopModeTab.hidden = !isShopUrl;
+}
+
+if (clickerModeTabsWrap) {
+  clickerModeTabsWrap.style.display = isShopUrl ? "flex" : "none";
+}
+
+function setClickerMode(mode) {
+  const isShop = mode === "shop";
+
+  if (clickerLoadDesignFieldEl) {
+    clickerLoadDesignFieldEl.hidden = !isShop;
+  }
+
+  if (clickerStlExportButton) {
+    clickerStlExportButton.hidden = !isShop;
+  }
+
+  if (clickerSendDesignButtonEl) {
+    clickerSendDesignButtonEl.hidden = isShop;
+  }
+
+  if (clickerDesignIdResultEl && isShop) {
+    clickerDesignIdResultEl.hidden = true;
+  }
+
+  clickerModeTabs.forEach(function (tab) {
+    tab.style.fontWeight = tab.dataset.clickerMode === mode ? "700" : "400";
+  });
+}
+
+clickerModeTabs.forEach(function (tab) {
+  tab.addEventListener("click", function () {
+    setClickerMode(tab.dataset.clickerMode);
+  });
+});
+
+setClickerMode("customer");
+
+
+// =====================================
 // ส่งแบบให้ร้าน (บันทึกการออกแบบ - พวงกุญแจชื่อเท่านั้น)
 // =====================================
 

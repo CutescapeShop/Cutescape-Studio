@@ -738,6 +738,15 @@
       color: var(--ink);
     }
 
+    #clickerLoadDesignPreviewImage {
+      display: block;
+      margin-top: 8px;
+      max-width: 160px;
+      max-height: 160px;
+      border-radius: 12px;
+      border: 2px solid var(--sage-strong, #b7cdb0);
+    }
+
     .preview-panel {
       min-height: 560px;
       padding: 24px;
@@ -1416,7 +1425,8 @@
     }
 
     #clickerKeychainLoopStatus:empty,
-    #clickerSendDesignStatus:empty {
+    #clickerSendDesignStatus:empty,
+    #clickerLoadDesignStatus:empty {
       display: none;
     }
 
