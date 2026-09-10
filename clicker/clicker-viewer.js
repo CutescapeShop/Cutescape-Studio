@@ -58,6 +58,7 @@ import { createAccentRegionGeometries } from "./image-geometry.js";
 import { createHousingGeometries } from "./housing-geometry.js?v=housing-floor-v4";
 import { createKeychainLoopGeometry } from "./keychain-loop.js";
 import { smoothBorderPrototype } from "./border-prototype.js";
+import { createBorderMaterial } from "./border-material.js";
 import { CURATED_FILAMENT_PALETTE } from "./color-palette.js";
 
 // Same window.t() TH/EN mechanism as clicker-ui.js / i18n.js — see the
@@ -144,6 +145,7 @@ function init() {
     roughness: 0.4,
     metalness: 0.02,
   });
+  const borderSurface = createBorderMaterial(topBaseMaterial);
 
   const mainLight = new THREE.DirectionalLight(0xffffff, 2.6);
   mainLight.position.set(20, 35, 55);
@@ -218,9 +220,9 @@ function init() {
       if (child.geometry) child.geometry.dispose();
       if (child.material) {
         if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
-        else if (child.material !== topBaseMaterial && child.material !== housingMaterial) {
+        else if (child.material !== topBaseMaterial && child.material !== housingMaterial && child.material !== borderSurface.material) {
           // Only dispose materials WE created dynamically per-rebuild
-          // (accent materials). The two reused materials above must
+          // (accent materials). The reused materials above must
           // never be disposed here.
           child.material.dispose();
         }
@@ -270,6 +272,7 @@ function init() {
     for (const [sourceHex, material] of accentMaterialsBySourceHex) {
       material.color.set(resolvePrintColor(sourceHex));
     }
+    borderSurface.material.color.copy(topBaseMaterial.color);
   }
 
   // The shared transform TOP/ACCENT/HOUSING's outer boundary all use —
@@ -278,7 +281,17 @@ function init() {
   let currentAutoFit = null;
   let structuralLoops = null;
   const borderPrototype = document.getElementById("clickerBorderPrototype");
-  borderPrototype?.addEventListener("change", () => rebuildAll());
+  const borderColorControls = document.getElementById("clickerBorderColorControls");
+  const borderColorInput = document.getElementById("clickerBorderColor");
+  const syncBorderControl = () => {
+    if (borderColorControls) borderColorControls.hidden = borderPrototype?.value !== "border";
+  };
+  borderColorInput?.addEventListener("input", () => borderSurface.color.set(borderColorInput.value));
+  borderPrototype?.addEventListener("change", () => {
+    syncBorderControl();
+    rebuildAll();
+  });
+  syncBorderControl();
   let topGeometryWarning = null;
   let topGeometryDiagnostics = null;
   let movingTopMMLoops = null;
@@ -405,7 +418,7 @@ function init() {
       structuralLoops !== state.outerLoops
     );
     for (const geom of topBaseGeometries) {
-      topGroup.add(new THREE.Mesh(geom, topBaseMaterial));
+      topGroup.add(new THREE.Mesh(geom, borderPrototype?.value === "border" ? borderSurface.material : topBaseMaterial));
     }
     timings.artworkExtrusionMs = performance.now() - artworkStartedAt;
 
@@ -606,6 +619,10 @@ function init() {
   function rebuildAll() {
     const startedAt = performance.now();
     recomputeAutoFit();
+    if (currentAutoFit && borderPrototype?.value === "border") {
+      borderSurface.update(state.outerLoops, currentAutoFit, FIXED_CLICKER_SCALE_MULTIPLIER);
+    }
+    borderSurface.material.color.copy(topBaseMaterial.color);
     const top = rebuildTopBaseAndSocket();
     const accentExtrusionMs = rebuildAccent();
     const housing = rebuildHousing();
@@ -674,6 +691,7 @@ function init() {
     // materials; this covers the case where neither ran (e.g. only the
     // export-size number changed) but overrides did.
     else applyColorOverrides();
+    borderSurface.material.color.copy(topBaseMaterial.color);
   };
 
   // Hook clicker-ui.js's color-row picker calls on every selection —
