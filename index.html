@@ -646,6 +646,17 @@
           <p class="clicker-debug-info" id="clickerKeychainLoopStatus"></p>
         </div>
 
+        <button class="order-button" id="clickerSendDesignButton" type="button" data-i18n="clicker.sendDesign.button">
+          ส่งแบบให้ร้าน
+        </button>
+        <p class="clicker-debug-info" id="clickerSendDesignStatus"></p>
+
+        <div class="design-id-result" id="clickerDesignIdResult" hidden>
+          <span data-i18n="clicker.sendDesign.successPrefix">รหัสแบบของคุณ:</span>
+          <strong id="clickerDesignIdValue"></strong>
+          <p data-i18n="clicker.sendDesign.tellStaff">กรุณาแจ้งรหัสนี้กับพนักงาน</p>
+        </div>
+
         <button class="order-button" id="clickerExportButton" type="button" hidden>
           Export STL (TOP + ACCENT + HOUSING)
         </button>
@@ -763,6 +774,7 @@
 <script type="module" src="viewer.js"></script>
 <script type="module" src="clicker/clicker-ui.js"></script>
 <script type="module" src="clicker/clicker-viewer.js?v=housing-floor-v4"></script>
+<script type="module" src="clicker/clicker-design-handoff.js"></script>
 
 </body>
 </html>

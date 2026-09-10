@@ -114,7 +114,15 @@
       "clicker.preview.originalCanvasLabel": "ต้นฉบับ",
       "clicker.preview.emptyState": "อัปโหลดรูปเพื่อดูผลลัพธ์",
       "clicker.previewMode.assembled": "ประกอบ",
-      "clicker.previewMode.exploded": "แยกชิ้น"
+      "clicker.previewMode.exploded": "แยกชิ้น",
+
+      "clicker.sendDesign.button": "ส่งแบบให้ร้าน",
+      "clicker.sendDesign.saving": "กำลังบันทึก...",
+      "clicker.sendDesign.successPrefix": "รหัสแบบของคุณ:",
+      "clicker.sendDesign.tellStaff": "กรุณาแจ้งรหัสนี้กับพนักงาน",
+      "clicker.sendDesign.notReady": "กรุณาอัปโหลดรูปก่อนส่งแบบให้ร้าน",
+      "clicker.sendDesign.saveSystemNotReady": "ระบบบันทึกแบบยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง",
+      "clicker.sendDesign.error": "บันทึกแบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
     },
 
     en: {
@@ -220,7 +228,15 @@
       "clicker.preview.originalCanvasLabel": "Original",
       "clicker.preview.emptyState": "Upload a photo to see the result",
       "clicker.previewMode.assembled": "Assembled",
-      "clicker.previewMode.exploded": "Exploded"
+      "clicker.previewMode.exploded": "Exploded",
+
+      "clicker.sendDesign.button": "Send to Shop",
+      "clicker.sendDesign.saving": "Saving...",
+      "clicker.sendDesign.successPrefix": "Your design code:",
+      "clicker.sendDesign.tellStaff": "Please give this code to our staff.",
+      "clicker.sendDesign.notReady": "Please upload a photo before sending to the shop",
+      "clicker.sendDesign.saveSystemNotReady": "Save system is not ready yet. Please try again.",
+      "clicker.sendDesign.error": "Failed to save design. Please try again."
     }
   };
 

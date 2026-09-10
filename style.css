@@ -1415,7 +1415,8 @@
       gap: 12px;
     }
 
-    #clickerKeychainLoopStatus:empty {
+    #clickerKeychainLoopStatus:empty,
+    #clickerSendDesignStatus:empty {
       display: none;
     }
 

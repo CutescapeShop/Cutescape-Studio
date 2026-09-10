@@ -409,6 +409,37 @@ function init() {
     renderColorRegionRows();
     updateFileInputNameLabel();
   });
+
+  // Exposed for the "ส่งแบบให้ร้าน" handoff (clicker-design-handoff.js) —
+  // same cross-module window-exposure idiom as window.onClickerPipelineResult
+  // above. Re-encodes the SAME downscaled ImageData the pipeline already
+  // runs on, so reopening this later reproduces the exact silhouette.
+  window.getClickerSourceImage = function () {
+    if (!state.imageData) return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = state.imageData.width;
+    canvas.height = state.imageData.height;
+    canvas.getContext("2d").putImageData(state.imageData, 0, 0);
+    return {
+      dataURL: canvas.toDataURL("image/png"),
+      width: state.imageData.width,
+      height: state.imageData.height,
+    };
+  };
+
+  // The remaining pipeline inputs needed to reproduce the exact silhouette
+  // and color regions (size lives with clicker-viewer.js's state instead —
+  // see window.getClickerViewerConfig there).
+  window.getClickerPipelineConfig = function () {
+    return {
+      threshold: Number(thresholdSlider.value),
+      invert: state.invert,
+      smoothing: Number(smoothingSlider.value),
+      colorCount: colorCountSlider
+        ? Number(colorCountSlider.value)
+        : CLICKER_PROFILE.accent.colorCount.default,
+    };
+  };
 }
 
 function updateFileInputNameLabel() {

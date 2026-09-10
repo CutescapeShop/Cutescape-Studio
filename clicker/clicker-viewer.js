@@ -762,6 +762,35 @@ function init() {
     }
   };
 
+  // Exposed for the "ส่งแบบให้ร้าน" handoff (clicker-design-handoff.js) —
+  // every piece of viewer-owned state (materials, toggles, keychain loop)
+  // needed alongside clicker-ui.js's image/pipeline config to reproduce
+  // this exact configuration later. Read-only snapshot — never mutates
+  // state, geometry, or materials.
+  window.getClickerViewerConfig = function () {
+    return {
+      hasDesign: !!(state.outerLoops && state.outerLoops.length > 0),
+      sizeMM: state.sizeMM,
+      colorOverrides: { ...state.colorOverrides },
+      disabledColors: [...state.disabledColors],
+      baseColor: "#" + housingMaterial.color.getHexString(),
+      borderEnabled: borderPrototype?.value === "border",
+      borderColor: "#" + borderSurface.color.getHexString(),
+      keychainLoopEnabled: state.keychainLoopEnabled,
+      keychainLoopAngleDeg: state.keychainLoopAngleDeg,
+    };
+  };
+
+  // Preview-only PNG snapshot of the current 3D scene, for the shop to see
+  // at a glance without reopening the design. Forces a fresh render of the
+  // frame right before reading pixels back, since the renderer is created
+  // without preserveDrawingBuffer (the default rAF loop already re-renders
+  // every frame, so this never changes anything visible on screen).
+  window.getClickerPreviewSnapshot = function () {
+    renderer.render(scene, camera);
+    return renderer.domElement.toDataURL("image/png");
+  };
+
 
   // Only artwork uses the selected size; all mechanical builders use mm.
 
