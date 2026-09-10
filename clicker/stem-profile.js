@@ -42,8 +42,8 @@ export const CLICKER_PROFILE = {
     // Longest side of TOP artwork, preserving the source aspect ratio.
     // Mechanical dimensions are independent of this image transform.
     targetSize: 35.0,
-    minSizeMM: 20,
-    maxSizeMM: 70,
+    minSizeMM: 35,
+    maxSizeMM: 100,
   },
 
   topSocket: {

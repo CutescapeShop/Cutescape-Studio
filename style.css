@@ -1415,6 +1415,10 @@
       gap: 12px;
     }
 
+    #clickerKeychainLoopStatus:empty {
+      display: none;
+    }
+
     .keychain-loop-header label {
       margin-bottom: 0;
     }

@@ -283,15 +283,62 @@ function init() {
   let structuralLoops = null;
   const borderPrototype = document.getElementById("clickerBorderPrototype");
   const borderColorControls = document.getElementById("clickerBorderColorControls");
-  const borderColorInput = document.getElementById("clickerBorderColor");
+  const borderColorGrid = document.getElementById("clickerBorderColorGrid");
   const syncBorderControl = () => {
-    if (borderColorControls) borderColorControls.hidden = borderPrototype?.value !== "border";
+    const enabled = borderPrototype?.value === "border";
+    if (borderColorControls) borderColorControls.hidden = !enabled;
+    if (borderPrototype) {
+      borderPrototype.textContent = enabled
+        ? ct("clicker.keychainLoop.on", null, "เปิด") : ct("clicker.keychainLoop.off", null, "ปิด");
+      borderPrototype.classList.toggle("active", enabled);
+      borderPrototype.setAttribute("aria-pressed", String(enabled));
+    }
   };
-  borderColorInput?.addEventListener("input", () => borderSurface.color.set(borderColorInput.value));
-  borderPrototype?.addEventListener("change", () => {
+  borderPrototype?.addEventListener("click", () => {
+    borderPrototype.value = borderPrototype.value === "border" ? "exact" : "border";
     syncBorderControl();
     rebuildAll();
   });
+  if (borderColorGrid) {
+    const swatchButtons = [];
+    const customInput = document.createElement("input");
+    customInput.type = "color";
+    customInput.id = "clickerBorderColor";
+    customInput.className = "color-palette-swatch housing-color-custom-input";
+    const syncPalette = () => {
+      const hex = "#" + borderSurface.color.getHexString();
+      for (const button of swatchButtons) button.classList.toggle("active", button.dataset.hex === hex);
+      if (document.activeElement !== customInput) customInput.value = hex;
+    };
+    const applyBorderColor = hex => {
+      borderSurface.color.set(hex);
+      syncPalette();
+    };
+    for (const group of CURATED_FILAMENT_PALETTE) for (const swatch of group.swatches) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "color-palette-swatch";
+      button.style.background = swatch.hex;
+      button.title = swatch.name;
+      button.dataset.hex = swatch.hex.toLowerCase();
+      button.setAttribute("aria-label", swatch.name);
+      button.addEventListener("click", () => applyBorderColor(swatch.hex));
+      swatchButtons.push(button);
+      borderColorGrid.appendChild(button);
+    }
+    customInput.addEventListener("input", () => applyBorderColor(customInput.value));
+    borderColorGrid.appendChild(customInput);
+    const localizeBorderControls = () => {
+      syncBorderControl();
+      customInput.title = ct("clicker.customColor", null, "กำหนดเอง");
+      customInput.setAttribute("aria-label", ct("clicker.borderColor.customAriaLabel", null, "กำหนดสีขอบเอง"));
+    };
+    localizeBorderControls();
+    syncPalette();
+    document.addEventListener("click", ev => {
+      if (ev.target.closest("[data-lang-option]")) localizeBorderControls();
+    });
+  }
   syncBorderControl();
   let topGeometryWarning = null;
   let topGeometryDiagnostics = null;

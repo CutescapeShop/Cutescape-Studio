@@ -578,11 +578,11 @@
 
         <div class="field">
           <label for="clickerSizeSlider" data-i18n="clicker.step2.selectSize">2. เลือกขนาด</label>
-          <input id="clickerSizeSlider" type="range" min="20" max="70" step="1" value="35" aria-describedby="clickerSizeHelp">
+          <input id="clickerSizeSlider" type="range" min="35" max="100" step="1" value="35" aria-describedby="clickerSizeHelp">
           <div class="name-size-value">
-            <span id="clickerSizeMinLabel">2 ซม.</span>
+            <span id="clickerSizeMinLabel">3.5 ซม.</span>
             <span id="clickerSizeValue">3.5 ซม.</span>
-            <span id="clickerSizeMaxLabel">7 ซม.</span>
+            <span id="clickerSizeMaxLabel">10 ซม.</span>
           </div>
           <small id="clickerSizeHelp" hidden>ขนาดรูปคงสัดส่วนเดิม ส่วนยึดสวิตช์มีขนาดคงที่ และอาจยื่นพ้นรูปเมื่อเลือกขนาดเล็ก</small>
         </div>
@@ -620,7 +620,18 @@
 
         <div class="field">
           <div class="keychain-loop-header">
-            <label data-i18n="clicker.step6.addKeychainLoop">6. เพิ่มห่วงพวงกุญแจ</label>
+            <label for="clickerBorderPrototype" data-i18n="clicker.step6.addBorder">6. เพิ่มขอบรอบรูป</label>
+            <button class="toggle-button keychain-loop-onoff-button" id="clickerBorderPrototype" type="button" value="exact" aria-pressed="false">ปิด</button>
+          </div>
+          <div id="clickerBorderColorControls" hidden>
+            <label data-i18n="clicker.borderColor.label">สีขอบ</label>
+            <div id="clickerBorderColorGrid" class="housing-color-grid"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="keychain-loop-header">
+            <label data-i18n="clicker.step7.addKeychainLoop">7. เพิ่มห่วงพวงกุญแจ</label>
             <button class="toggle-button keychain-loop-onoff-button" id="clickerKeychainLoopToggle" type="button">ปิด</button>
           </div>
         </div>
@@ -720,16 +731,6 @@
             <button type="button" class="clicker-preview-mode-button active" id="clickerPreviewModeAssembled" data-i18n="clicker.previewMode.assembled">ประกอบ</button>
             <button type="button" class="clicker-preview-mode-button" id="clickerPreviewModeExploded" data-i18n="clicker.previewMode.exploded">แยกชิ้น</button>
           </div>
-        </div>
-        <label for="clickerBorderPrototype">Border prototype</label>
-        <select id="clickerBorderPrototype">
-          <option value="exact">Exact silhouette (current behavior)</option>
-          <option value="border">Smooth border +1.5 mm</option>
-        </select>
-        <div id="clickerBorderColorControls" hidden>
-          <label for="clickerBorderColor">Border color</label>
-          <input id="clickerBorderColor" type="color" value="#2455a4" class="color-palette-swatch housing-color-custom-input">
-          <small>Preview color only. STL does not store colors.</small>
         </div>
         <div id="clickerViewer3D"></div>
 

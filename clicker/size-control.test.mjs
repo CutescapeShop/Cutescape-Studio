@@ -48,8 +48,8 @@ function closed(geometry) {
   for (const edge of edges.values()) assert.deepEqual(edge, [2, 0], "closed consistently oriented mesh");
 }
 assert.equal(p.body.targetSize, 35);
-assert.equal(p.body.minSizeMM, 20);
-assert.equal(p.body.maxSizeMM, 70);
+assert.equal(p.body.minSizeMM, 35);
+assert.equal(p.body.maxSizeMM, 100);
 
 for (const [name, fixture] of Object.entries(fixtures)) for (const size of [20, 35, 70]) {
   const fit = m["geometry-math"].computeAutoFitTransform(fixture.loops, size, size);
