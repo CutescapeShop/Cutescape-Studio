@@ -65,7 +65,7 @@ import {
 // file that needs ClipperLib defines its own copy, same pattern used
 // throughout /clicker/).
 const PX_CLIPPER_SCALE = 100;
-const offsetCacheByLoops = new WeakMap();
+const offsetCache = new Map();
 
 /**
  * Offset a set of PIXEL-space loops by a SIGNED distance — positive
@@ -86,19 +86,23 @@ const offsetCacheByLoops = new WeakMap();
 function offsetLoopsSignedPX(pxLoops, offsetPx, diagnostics = null) {
   if (!offsetPx || pxLoops.length === 0) return pxLoops;
 
-  const cacheKey = offsetPx.toPrecision(15);
-  let loopCache = offsetCacheByLoops.get(pxLoops);
-  if (loopCache?.has(cacheKey)) {
-    if (diagnostics) diagnostics.cacheHit = true;
-    return loopCache.get(cacheKey);
-  }
-
   const scale = PX_CLIPPER_SCALE;
   const arcTolerance = Math.max(1, 0.05 * scale);
 
   const scaledPaths = pxLoops.map((loop) =>
     loop.map((p) => ({ X: Math.round(p.x * scale), Y: Math.round(p.y * scale) }))
   );
+
+  // Match the exact Clipper inputs, including path order and winding. Do not
+  // round the offset or hash the coordinates: either could alias other inputs.
+  // Non-finite inputs bypass caching because JSON would serialize them as null.
+  const cacheKey = Number.isFinite(offsetPx * scale) && scaledPaths.every((path) =>
+    path.every((p) => Number.isFinite(p.X) && Number.isFinite(p.Y)))
+    ? JSON.stringify([scale, arcTolerance, offsetPx * scale, scaledPaths]) : null;
+  if (cacheKey !== null && offsetCache.has(cacheKey)) {
+    if (diagnostics) diagnostics.cacheHit = true;
+    return offsetCache.get(cacheKey);
+  }
 
   const offsetter = new ClipperLib.ClipperOffset(2, arcTolerance);
   offsetter.AddPaths(scaledPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
@@ -114,12 +118,11 @@ function offsetLoopsSignedPX(pxLoops, offsetPx, diagnostics = null) {
     return offsetPx > 0 ? pxLoops : [];
   }
   const loops = result.map((path) => path.map((pt) => ({ x: pt.X / scale, y: pt.Y / scale })));
-  if (!loopCache) {
-    loopCache = new Map();
-    offsetCacheByLoops.set(pxLoops, loopCache);
+  if (cacheKey !== null) {
+    offsetCache.set(cacheKey, loops);
+    // Bound retained geometry across designs and sizes (outer and inner offsets).
+    while (offsetCache.size > 8) offsetCache.delete(offsetCache.keys().next().value);
   }
-  loopCache.set(cacheKey, loops);
-  while (loopCache.size > 4) loopCache.delete(loopCache.keys().next().value);
   if (diagnostics) diagnostics.cacheHit = false;
   return loops;
 }
