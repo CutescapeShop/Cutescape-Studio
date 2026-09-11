@@ -185,7 +185,7 @@ function buildModelXML(objects, layout) {
 
   // One component assembly keeps every TOP region rigid, without changing any
   // local mesh coordinates or relative Z heights. Only build items translate.
-  objectBlocks.push(`<object id="${layout[0].id}" type="model" name="TOP"><components>` +
+  objectBlocks.push(`<object id="${layout[0].id}" type="model" name="${escapeXml(layout[0].name)}"><components>` +
     layout[0].parts.map(({ index }) => `<component objectid="${objectIdFor(index)}"/>`).join("") +
     `</components></object>`);
   for (const piece of layout) {
@@ -437,5 +437,43 @@ export function build3MF(objects) {
     { name: "3D/3dmodel.model", data: modelXml },
     { name: "Metadata/model_settings.config", data: modelSettingsXml },
     { name: "Metadata/project_settings.config", data: projectSettingsJson },
+  ]);
+}
+
+// Coordinates remain STL-baked. Only the assembly reverses the presentation
+// rotation and moves the complete keychain onto the configured P2S plate.
+export function buildNameKeychain3MF(objects, inverseRotation) {
+  if (objects.length !== 2 || objects[0].name !== "BASE" || objects[1].name !== "TEXT") {
+    throw new Error("Name Keychain requires BASE and TEXT parts.");
+  }
+  if (inverseRotation.length !== 9 || !inverseRotation.every(Number.isFinite)) {
+    throw new Error("Invalid keychain placement rotation.");
+  }
+  const r = inverseRotation, min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  for (const obj of objects) {
+    if (!obj.vertices.length || !obj.triangles.length) throw new Error("Empty keychain part.");
+    for (const v of obj.vertices) {
+      for (let axis = 0; axis < 3; axis++) {
+        const value = r[axis] * v[0] + r[3 + axis] * v[1] + r[6 + axis] * v[2];
+        if (!Number.isFinite(value)) throw new Error("Invalid keychain vertex.");
+        min[axis] = Math.min(min[axis], value);
+        max[axis] = Math.max(max[axis], value);
+      }
+    }
+  }
+  if (max[0] - min[0] > 246 || max[1] - min[1] > 246) {
+    throw new Error("Keychain does not fit the P2S plate with 5 mm margins.");
+  }
+  const transform = [...r, 128 - (min[0] + max[0]) / 2,
+    128 - (min[1] + max[1]) / 2, -min[2]].join(" ");
+  const layout = [{ id: objectIdFor(objects.length), name: "NAME_KEYCHAIN",
+    parts: objects.map((obj, index) => ({ obj, index })), transform }];
+  const { palette, slotByObjectIndex } = assignFilamentSlots(objects);
+  return buildZip([
+    { name: "[Content_Types].xml", data: CONTENT_TYPES_XML },
+    { name: "_rels/.rels", data: RELS_XML },
+    { name: "3D/3dmodel.model", data: buildModelXML(objects, layout) },
+    { name: "Metadata/model_settings.config", data: buildModelSettingsConfigXML(layout, slotByObjectIndex, palette.length) },
+    { name: "Metadata/project_settings.config", data: buildProjectSettingsConfigJSON(palette) },
   ]);
 }

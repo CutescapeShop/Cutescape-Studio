@@ -25,7 +25,7 @@
       "field.outlineThickness": "ความหนาขอบไดคัท",
       "field.baseColor": "สีฐาน",
       "field.textColor": "สีตัวอักษร",
-      "field.loadDesign": "โหลดแบบด้วยรหัส (สำหรับร้าน)",
+      "field.loadDesign": "โหลดแบบพวงกุญแจชื่อด้วยรหัส",
 
       "shape.outline": "ไดคัทตามชื่อ",
       "shape.capsule": "แคปซูล",
@@ -91,7 +91,7 @@
       "clicker.step6.addBorder": "6. เพิ่มขอบรอบรูป",
       "clicker.borderColor.label": "สีขอบ",
       "clicker.borderColor.customAriaLabel": "กำหนดสีขอบเอง",
-      "clicker.step7.addKeychainLoop": "7. เพิ่มห่วงพวงกุญแจ",
+      "clicker.step6.addKeychainLoop": "6. เพิ่มห่วงพวงกุญแจ",
       "clicker.size.unit": "{value} ซม.",
       "clicker.colorCount.unit": "{value} สี",
       "clicker.fileInput.chooseButton": "อัปโหลดรูป",
@@ -124,7 +124,7 @@
       "clicker.sendDesign.saveSystemNotReady": "ระบบบันทึกแบบยังไม่พร้อมใช้งาน กรุณาลองใหม่อีกครั้ง",
       "clicker.sendDesign.error": "บันทึกแบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
 
-      "clicker.loadDesign.label": "โหลดแบบ Clicker ด้วยรหัส (สำหรับร้าน)",
+      "clicker.loadDesign.label": "โหลดแบบ Clicker ด้วยรหัส",
       "clicker.loadDesign.placeholder": "เช่น CLK0910-XXXX",
       "clicker.loadDesign.button": "เปิดแบบ",
       "clicker.loadDesign.enterCode": "กรุณาใส่รหัสแบบ",
@@ -135,7 +135,8 @@
       "clicker.loadDesign.loadSuccess": "โหลดแบบ {id} สำเร็จ",
       "clicker.loadDesign.loadFailed": "โหลดแบบไม่สำเร็จ: {error}",
 
-      "clicker.export3mf.button": "ส่งออก 3MF (TOP + ACCENT + HOUSING)"
+      "name.export3mf.button": "ส่งออก 3MF",
+      "clicker.export3mf.button": "ส่งออก 3MF"
     },
 
     en: {
@@ -218,7 +219,7 @@
       "clicker.step6.addBorder": "6. Add a Border",
       "clicker.borderColor.label": "Border Color",
       "clicker.borderColor.customAriaLabel": "Choose a custom border color",
-      "clicker.step7.addKeychainLoop": "7. Add a Keychain Loop",
+      "clicker.step6.addKeychainLoop": "6. Add a Keychain Loop",
       "clicker.size.unit": "{value} cm",
       "clicker.colorCount.unit": "{value} colors",
       "clicker.fileInput.chooseButton": "Upload Photo",
@@ -262,6 +263,7 @@
       "clicker.loadDesign.loadSuccess": "Design {id} loaded successfully",
       "clicker.loadDesign.loadFailed": "Failed to load design: {error}",
 
+      "name.export3mf.button": "Export 3MF",
       "clicker.export3mf.button": "Export 3MF (TOP + ACCENT + HOUSING)"
     }
   };

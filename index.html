@@ -50,6 +50,22 @@
           <button type="button" data-name-mode="shop" style="flex:1;">Shop Mode</button>
         </div>
 
+        <div class="field load-design-field" id="loadDesignField">
+          <label for="loadDesignInput" data-i18n="field.loadDesign">โหลดแบบพวงกุญแจชื่อด้วยรหัส</label>
+          <div style="display:flex; gap:8px;">
+            <input
+              id="loadDesignInput"
+              type="text"
+              placeholder="เช่น KC-XXXXXXXX"
+              data-i18n-placeholder="placeholder.designCode"
+              autocomplete="off"
+              style="flex:1;"
+            >
+            <button type="button" id="loadDesignButton">เปิดแบบ</button>
+          </div>
+          <p class="clicker-debug-info" id="loadDesignStatus"></p>
+        </div>
+
         <div class="field">
           <label for="nameInput" data-i18n="field.name">ชื่อ</label>
 
@@ -479,9 +495,11 @@
           </div>
         </div>
 
-        <button class="order-button" id="orderButton" data-i18n="button.confirmOrder">
+        <button class="order-button" id="orderButton" type="button" hidden data-i18n="button.confirmOrder">
           ยืนยันแบบนี้
         </button>
+
+        <button class="order-button secondary" id="nameExport3MFButton" type="button" hidden data-i18n="name.export3mf.button">Export 3MF</button>
 
         <button class="order-button secondary" id="sendDesignButton" type="button" data-i18n="button.sendToShop">
           ส่งแบบให้ร้าน
@@ -490,22 +508,6 @@
         <div class="design-id-result" id="designIdResult" hidden>
           <span data-i18n="result.savedPrefix">บันทึกแบบเรียบร้อย! รหัสแบบของคุณคือ</span>
           <strong id="designIdValue"></strong>
-        </div>
-
-        <div class="field load-design-field" id="loadDesignField">
-          <label for="loadDesignInput" data-i18n="field.loadDesign">โหลดแบบด้วยรหัส (สำหรับร้าน)</label>
-          <div style="display:flex; gap:8px;">
-            <input
-              id="loadDesignInput"
-              type="text"
-              placeholder="เช่น KC-XXXXXXXX"
-              data-i18n-placeholder="placeholder.designCode"
-              autocomplete="off"
-              style="flex:1;"
-            >
-            <button type="button" id="loadDesignButton">Load Design</button>
-          </div>
-          <p class="clicker-debug-info" id="loadDesignStatus"></p>
         </div>
 
       </aside>
@@ -568,7 +570,7 @@
         </div>
 
         <div class="field load-design-field" id="clickerLoadDesignField" hidden>
-          <label for="clickerLoadDesignInput" data-i18n="clicker.loadDesign.label">โหลดแบบ Clicker ด้วยรหัส (สำหรับร้าน)</label>
+          <label for="clickerLoadDesignInput" data-i18n="clicker.loadDesign.label">โหลดแบบ Clicker ด้วยรหัส</label>
           <div style="display:flex; gap:8px;">
             <input
               id="clickerLoadDesignInput"
@@ -640,7 +642,7 @@
           <div id="clickerHousingColorGrid" class="housing-color-grid"></div>
         </div>
 
-        <div class="field">
+        <div class="field" id="clickerBorderField" hidden>
           <div class="keychain-loop-header">
             <label for="clickerBorderPrototype" data-i18n="clicker.step6.addBorder">6. เพิ่มขอบรอบรูป</label>
             <button class="toggle-button keychain-loop-onoff-button" id="clickerBorderPrototype" type="button" value="exact" aria-pressed="false">ปิด</button>
@@ -653,7 +655,7 @@
 
         <div class="field">
           <div class="keychain-loop-header">
-            <label data-i18n="clicker.step7.addKeychainLoop">7. เพิ่มห่วงพวงกุญแจ</label>
+            <label data-i18n="clicker.step6.addKeychainLoop">6. เพิ่มห่วงพวงกุญแจ</label>
             <button class="toggle-button keychain-loop-onoff-button" id="clickerKeychainLoopToggle" type="button">ปิด</button>
           </div>
         </div>

@@ -186,9 +186,10 @@ function setNameMode(mode) {
     loadDesignFieldEl.hidden = !isShop;
   }
 
-  if (stlExportButton) {
-    stlExportButton.hidden = !isShop;
-  }
+  // STL export button stays hidden in every mode (HTML `hidden` default) —
+  // 3MF is now the only visible Name Keychain export control, shop or not.
+  const name3MFButton = document.getElementById("nameExport3MFButton");
+  if (name3MFButton) name3MFButton.hidden = !isShop;
 
   if (sendDesignButtonEl) {
     sendDesignButtonEl.hidden = isShop;
@@ -243,9 +244,8 @@ function setClickerMode(mode) {
     clickerLoadDesignFieldEl.hidden = !isShop;
   }
 
-  if (clickerStlExportButton) {
-    clickerStlExportButton.hidden = !isShop;
-  }
+  // STL export button stays hidden in every mode (HTML `hidden` default) —
+  // 3MF is now the only visible Clicker export control, shop or not.
 
   if (clicker3MFExportButton) {
     clicker3MFExportButton.hidden = !isShop;

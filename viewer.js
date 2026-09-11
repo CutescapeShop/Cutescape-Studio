@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { buildNameKeychain3MF } from "./clicker/mf3-exporter.js";
 import { computeOutline } from "./outline-clipper.js";
 import { createOutlineJobs } from "./outline-jobs.js";
 
@@ -1979,6 +1980,8 @@ const outlineJobs = createOutlineJobs(
 );
 
 function updateExportAvailability() {
+  const mf3Button = document.getElementById("nameExport3MFButton");
+  if (mf3Button) mf3Button.disabled = fontLoading || renderedRevision !== geometryRevision;
   const button = document.getElementById("orderButton");
   if (button) button.disabled = fontLoading || renderedRevision !== geometryRevision;
 }
@@ -2447,6 +2450,42 @@ loadSelectedFont();
 // ปุ่มยืนยันแบบ
 // ================================
 const orderButton = document.getElementById("orderButton");
+
+document.getElementById("nameExport3MFButton")?.addEventListener("click", () => {
+  if (new URLSearchParams(window.location.search).get("shop") !== "1" ||
+      fontLoading || renderedRevision !== geometryRevision) return;
+  try {
+    productGroup.updateMatrixWorld(true);
+    const objects = [["BASE", baseMaterial], ["TEXT", textMaterial]].map(([name, material]) => {
+      const vertices = [], triangles = [];
+      productGroup.traverse((object) => {
+        if (!object.isMesh || object.material !== material) return;
+        // Match STL's Float32 matrix baking exactly, without touching live meshes.
+        const geometry = object.geometry.clone();
+        geometry.applyMatrix4(object.matrixWorld);
+        const position = geometry.getAttribute("position"), index = geometry.index;
+        const start = vertices.length;
+        for (let i = 0; i < position.count; i++) vertices.push([position.getX(i), position.getY(i), position.getZ(i)]);
+        const count = index ? index.count : position.count;
+        for (let i = 0; i < count; i += 3) triangles.push([0, 1, 2].map(j => start + (index ? index.getX(i + j) : i + j)));
+        geometry.dispose();
+      });
+      return { name, colorHex: `#${material.color.getHexString(THREE.SRGBColorSpace)}`, vertices, triangles };
+    });
+    const r = new THREE.Matrix4().makeRotationFromEuler(productGroup.rotation).invert().elements;
+    const data = buildNameKeychain3MF(objects, [r[0], r[1], r[2], r[4], r[5], r[6], r[8], r[9], r[10]]);
+    const url = URL.createObjectURL(new Blob([data], { type: "model/3mf" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${(nameInput.value || "Cute").trim().replace(/[^\p{L}\p{N}_-]+/gu, "_")}.3mf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    window.alert(error.message);
+  }
+});
 
 if (orderButton) {
   orderButton.addEventListener("click", function () {

@@ -1131,6 +1131,12 @@
       color: var(--ink-soft);
     }
 
+    /* Name Keychain load-by-code status strip: collapse completely (no
+       padding/background/gap) until JS actually puts a message in it. */
+    #loadDesignStatus:empty {
+      display: none;
+    }
+
     /* Custom localized "choose image" control. The real <input type="file">
        stays functional but visually hidden (not display:none — that can
        break keyboard/label activation in some browsers); a styled <label>
