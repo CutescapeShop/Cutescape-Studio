@@ -29,13 +29,13 @@ export const FACE_DETAIL_DEPTH_MM = 1; // shallow raised layer, printed on top
 
 export const FACE = {
   faceVariant: "plain", // future: "plain" | "eyelashes"
-  eyeCenterY: 104,
-  eyeSpacingX: 9, // half-distance between the two eye centers
-  eyeWidth: 10,
-  eyeHeight: 12,
-  mouthCenterY: 92,
-  mouthWidth: 6,
-  mouthHeight: 3,
+  eyeCenterY: 99,
+  eyeSpacingX: 11, // half-distance between the two eye centers
+  eyeWidth: 12,
+  eyeHeight: 14,
+  mouthCenterY: 85,
+  mouthWidth: 7,
+  mouthHeight: 3.5,
 };
 
 function pointsToShape(points) {
