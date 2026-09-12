@@ -27,41 +27,44 @@
 
 export const DOLL_HEIGHT_MM = 135;
 
-// Named silhouette landmarks (mm). Chibi proportions: oversized head,
-// short soft torso, short chubby limbs — modeled after traditional
-// paper-doll/embroidered-doll references (not a copy of any specific
-// character artwork).
+// Named silhouette landmarks (mm), derived from the bald base-doll
+// reference's visible proportions (round oversized head sitting almost
+// directly on the shoulders, narrow-ish shoulders, short soft torso,
+// straight close-together legs) — not an invented "chibi ratio". Feet
+// sit at y=0 and the head's crown is always placed at y=DOLL_HEIGHT_MM
+// (see buildRightHalf() below), so the doll is always exactly
+// DOLL_HEIGHT_MM tall regardless of these landmarks' absolute values —
+// only their RATIOS to each other (matched to the reference) matter.
 export const PROPORTIONS = {
-  footHeight: 8,
-  footHalfWidthOuter: 12,
-  footHalfWidthInner: 3, // half-gap between feet/legs
-  hipY: 42,
-  legHalfWidthOuter: 12,
-  waistY: 56,
-  waistHalfWidth: 17,
-  shoulderY: 68,
-  shoulderHalfWidth: 23,
-  neckHalfWidth: 11,
-  neckY: 74, // very short neck — head sits almost directly on the shoulders
-  headRadiusX: 28,
-  headRadiusY: 32,
+  footHeight: 6,
+  footHalfWidthOuter: 10,
+  footHalfWidthInner: 4, // half-gap between feet/legs
+  hipY: 44,
+  legHalfWidthOuter: 10, // straight, only mild taper — not stick-thin
+  waistY: 60,
+  waistHalfWidth: 14,
+  shoulderY: 74,
+  shoulderHalfWidth: 19, // close to head width, not wider than it
+  neckHalfWidth: 10,
+  neckY: 79, // almost no neck — head sits directly on the shoulders
+  headRadiusX: 29,
+  headRadiusY: 29, // round head (rx == ry), not a tall oval
   headSegments: 14, // per side, for a smooth-enough printable curve
   cornerRadius: 3.5, // fillet radius applied to torso/leg joints
   cornerSegments: 5,
 };
 
-// Simple capsule arm: short and chubby, with its two top corners
-// filleted and a fully rounded hand end. One arm half-width throughout
-// (no separate wider/narrower hand) to keep it a plainly convex,
-// self-intersection-proof shape.
+// Arm: an angled, gently tapered capsule from a shoulder attach point
+// (overlapping inside the torso, so it reads as attached with no
+// visible seam) down and slightly outward to a rounded mitten hand
+// near hip height — matching the reference's relaxed hanging arm,
+// rather than a straight vertical rectangle.
 export const ARM_PROPORTIONS = {
-  innerX: 16, // overlaps inside the torso outline at the shoulder
-  outerX: 34,
-  topY: 70, // above shoulderY, so the overlap fully covers the seam
-  handBottomY: 52,
-  handCornerSegments: 10,
-  cornerRadius: 3,
-  cornerSegments: 4,
+  shoulder: { x: 12, y: 76 }, // overlaps inside the torso at the shoulder
+  hand: { x: 33, y: 40 }, // down and outward, ending near hip height
+  shoulderHalfWidth: 8,
+  handRadius: 8,
+  handSegments: 10,
 };
 
 function ovalPoint(cx, cy, rx, ry, angleDeg) {
@@ -161,39 +164,50 @@ export function buildBodyOutline(overrides = {}) {
 }
 
 /**
- * One arm's outline: a short, chubby capsule with its two top (shoulder)
- * corners filleted and a fully rounded hand end. `side` is +1 for the
- * right arm or -1 for the left arm — flips which edge (innerX vs
- * outerX) is which so the rounded hand end is always on the outward
- * side.
+ * One arm's outline: an angled, tapered capsule from the shoulder
+ * attach point to a rounded hand, built directly in the axis/
+ * perpendicular frame of the shoulder->hand line so it can point in
+ * any direction (not just straight down). `side` is +1 for the right
+ * arm or -1 for the left arm — mirrors both points' X so the same
+ * shape definition works for both sides.
  */
 export function buildArmOutline(side, overrides = {}) {
   const a = { ...ARM_PROPORTIONS, ...overrides };
-  const inner = side * a.innerX;
-  const outer = side * a.outerX;
+  const shoulder = { x: side * a.shoulder.x, y: a.shoulder.y };
+  const hand = { x: side * a.hand.x, y: a.hand.y };
 
-  const keyPoints = [
-    { x: inner, y: a.topY },
-    { x: outer, y: a.topY },
-    { x: outer, y: a.handBottomY },
+  const dx = hand.x - shoulder.x;
+  const dy = hand.y - shoulder.y;
+  const len = Math.hypot(dx, dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  // Perpendicular to the shoulder->hand axis, used to offset the two
+  // sides of the capsule and to sweep the rounded hand cap.
+  const px = -uy;
+  const py = ux;
+
+  const w = a.shoulderHalfWidth;
+  const r = a.handRadius;
+  const pts = [
+    { x: shoulder.x + px * w, y: shoulder.y + py * w },
+    { x: hand.x + px * r, y: hand.y + py * r },
   ];
-  const pts = roundedPolyline(keyPoints, a.cornerRadius, a.cornerSegments);
 
-  // Rounded hand end: a half-oval sampled from the outer edge, under
-  // the hand, to the inner edge.
-  const cx = (inner + outer) / 2;
-  const rx = Math.abs(outer - inner) / 2;
-  const cy = a.handBottomY;
-  for (let i = 1; i < a.handCornerSegments; i++) {
-    // angle 0 = outer edge, sweeping down and across to angle 180 = inner edge.
-    const rad = (Math.PI * i) / a.handCornerSegments;
+  // Rounded hand cap: sweeps from the +perpendicular edge, past the
+  // hand center along the arm's own axis (so it bulges further from
+  // the shoulder, not sideways), to the -perpendicular edge.
+  for (let i = 1; i < a.handSegments; i++) {
+    const t = (Math.PI * i) / a.handSegments;
+    const localX = Math.cos(t) * r;
+    const localY = Math.sin(t) * r;
     pts.push({
-      x: cx + side * rx * Math.cos(rad),
-      y: cy - rx * Math.sin(rad),
+      x: hand.x + localX * px + localY * ux,
+      y: hand.y + localX * py + localY * uy,
     });
   }
 
-  pts.push({ x: inner, y: a.handBottomY });
+  pts.push({ x: hand.x - px * r, y: hand.y - py * r });
+  pts.push({ x: shoulder.x - px * w, y: shoulder.y - py * w });
   return pts;
 }
 
