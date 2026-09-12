@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dress-up / Paper Doll — Base Doll Prototype</title>
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.167.1/build/three.module.js"
+  }
+}
+  </script>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #fafafa;
+      color: #333;
+    }
+    header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #e5e5e5;
+      background: #fff;
+    }
+    header h1 {
+      font-size: 18px;
+      margin: 0 0 4px;
+    }
+    header p {
+      margin: 0;
+      font-size: 13px;
+      color: #777;
+    }
+    main {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+    #dressupViewer3D {
+      width: 100%;
+      height: 560px;
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #f0f0f0;
+    }
+    #dressupHeightLabel {
+      font-size: 13px;
+      color: #555;
+    }
+    #dressupExportStatus {
+      font-size: 13px;
+      color: #4a7c2f;
+    }
+    .notes {
+      margin-top: 24px;
+      font-size: 13px;
+      color: #777;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dress-up / Paper Doll — Base Doll Prototype</h1>
+    <p>Isolated prototype. Does not affect Name Keychain, Letter Beads, or Clicker.</p>
+  </header>
+  <main>
+    <div id="dressupViewer3D"></div>
+    <div class="controls">
+      <button id="dressupExportButton" type="button">Export STL</button>
+      <span id="dressupHeightLabel"></span>
+      <span id="dressupExportStatus"></span>
+    </div>
+    <div class="notes">
+      <p>First prototype: base doll silhouette only (no hair, clothing, or accessories).
+      Chibi proportions, 135&nbsp;mm target height, flat 2.5D body with simple
+      raised printed eyes and mouth (no eye sockets or cabochon attachment
+      system yet — a separate glass-eye version will be tested later).</p>
+      <p>Exports two STL files: the base body silhouette and the shallow raised
+      face details, so the face can be printed as a second color.</p>
+    </div>
+  </main>
+  <script type="module" src="./dressup-viewer.js"></script>
+</body>
+</html>
